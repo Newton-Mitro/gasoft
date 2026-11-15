@@ -1,0 +1,72 @@
+@if (view !== 'index') {
+  <div class="page-heading">
+    <div>
+      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
+      <p class="eyebrow">{{ view === 'create' ? 'NEW RECORD' : view === 'edit' ? 'EDIT RECORD' : 'NEW LOCATION' }}</p>
+      <h1>
+        {{ view === 'create' ? 'Create warehouse' : view === 'edit' ? 'Edit warehouse' : 'Add warehouse location' }}
+      </h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+  </div>
+  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading warehouse…</div> }
+  @if (!loading) {
+    <app-record-form
+      [pageKey]="pageKey"
+      [title]="view === 'location' ? 'Warehouse location' : title"
+      [formMode]="formMode"
+      [fields]="activeFields"
+      [form]="form"
+      [error]="error"
+      [saving]="saving"
+      (valueChange)="setFormValue($event.key, $event.value)"
+      (submitForm)="submit()"
+      (cancel)="closeForm()"
+    />
+  }
+} @else {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">COMPANY WORKSPACE</p>
+      <h1>{{ title }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> New warehouse</a>
+  </div>
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading warehouses…</div> }
+  @if (!loading) {
+    <section class="table-panel panel">
+      <div class="table-header">
+        <div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span></div>
+      </div>
+      @if (!rows.length) {
+        <div class="empty-state">
+          <span class="empty-icon">▤</span>
+          <h3>Nothing here yet</h3>
+          <p>Create a warehouse to start tracking stock locations.</p>
+          <a class="button secondary" [routerLink]="[indexPath, 'create']">Create first warehouse</a>
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Code</th><th>Name</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (warehouse of rows; track warehouse.id) {
+                <tr>
+                  <td>{{ warehouse.code }}</td>
+                  <td>{{ warehouse.name }}</td>
+                  <td class="action-cell">
+                    <a class="button secondary table-action" [routerLink]="[indexPath, warehouse.id, 'edit']">Edit</a>
+                    <a class="button secondary table-action" [routerLink]="[indexPath, warehouse.id, 'locations', 'create']">Add location</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+}

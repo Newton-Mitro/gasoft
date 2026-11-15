@@ -1,0 +1,1176 @@
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
+
+:root {
+  color-scheme: light;
+  --accent: #1a5944;
+  --accent-hover: #134a38;
+  --accent-soft: #e8f4ec;
+  --accent-text: #287453;
+  --accent-dark: #102d27;
+  --accent-contrast: #1b513c;
+  --focus-color: #6ca982;
+  --nav-active-bg: var(--accent);
+  --nav-active-text: #fff;
+  --nav-hover-bg: color-mix(in srgb, var(--accent) 18%, transparent);
+  --error-text: #9e3b35;
+  --success-text: #246644;
+  --sidebar-text: color-mix(in srgb, #bfd0c9 76%, var(--accent) 24%);
+  --sidebar-muted: color-mix(in srgb, #9eb3ac 72%, var(--accent) 28%);
+  --app-bg: color-mix(in srgb, #f5f8f5 94%, var(--accent) 6%);
+  --surface: color-mix(in srgb, #fff 98%, var(--accent) 2%);
+  --surface-muted: color-mix(in srgb, #f8faf8 90%, var(--accent) 10%);
+  --surface-raised: color-mix(in srgb, #f0f7f1 86%, var(--accent) 14%);
+  --border: color-mix(in srgb, #e1ebe3 78%, var(--accent) 22%);
+  --text: color-mix(in srgb, #233d31 68%, var(--accent) 32%);
+  --text-strong: color-mix(in srgb, #173b30 58%, var(--accent) 42%);
+  --text-muted: color-mix(in srgb, #718078 62%, var(--accent) 38%);
+  --scrollbar-thumb: color-mix(in srgb, var(--accent) 25%, #d7e1d9);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--accent) 42%, #aebfb2);
+  --scrollbar-track: transparent;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background: var(--app-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+}
+
+[data-accent="ocean"] {
+  --accent: #2563a6;
+  --accent-hover: #1d4f87;
+  --accent-soft: #e6f0fb;
+  --accent-text: #2a639c;
+  --accent-dark: #183454;
+  --accent-contrast: #184a7b;
+  --focus-color: #6ba2de;
+}
+
+[data-accent="violet"] {
+  --accent: #7554a5;
+  --accent-hover: #60428d;
+  --accent-soft: #f0eafa;
+  --accent-text: #684897;
+  --accent-dark: #37284f;
+  --accent-contrast: #503775;
+  --focus-color: #a68bcc;
+}
+
+[data-accent="amber"] {
+  --accent: #9a641e;
+  --accent-hover: #7d5016;
+  --accent-soft: #fbf1df;
+  --accent-text: #875617;
+  --accent-dark: #493416;
+  --accent-contrast: #6e4815;
+  --focus-color: #d29d4f;
+}
+
+[data-accent="rose"] {
+  --accent: #a64363;
+  --accent-hover: #87354f;
+  --accent-soft: #faeaf0;
+  --accent-text: #913653;
+  --accent-dark: #4a2633;
+  --accent-contrast: #772d45;
+  --focus-color: #d77f9b;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: color-mix(in srgb, #111815 91%, var(--accent) 9%);
+  --surface: color-mix(in srgb, #1b2420 86%, var(--accent) 14%);
+  --surface-muted: color-mix(in srgb, #222c27 78%, var(--accent) 22%);
+  --surface-raised: color-mix(in srgb, #26342c 72%, var(--accent) 28%);
+  --border: color-mix(in srgb, #35443b 76%, var(--accent) 24%);
+  --text: color-mix(in srgb, #d9e3dc 78%, var(--accent) 22%);
+  --text-strong: color-mix(in srgb, #edf4ef 78%, var(--accent) 22%);
+  --text-muted: color-mix(in srgb, #a4b2a9 72%, var(--accent) 28%);
+  --accent-soft: color-mix(in srgb, var(--accent) 23%, #1b2420);
+  --accent-text: color-mix(in srgb, var(--accent) 58%, #e8f2eb);
+  --accent-contrast: #102119;
+  --nav-active-bg: color-mix(in srgb, var(--accent) 52%, #1b2420);
+  --nav-active-text: #fff;
+  --nav-hover-bg: color-mix(in srgb, var(--accent) 16%, transparent);
+  --error-text: #ffb9b2;
+  --success-text: #a7e0b7;
+  --sidebar-text: color-mix(in srgb, #bfd0c9 76%, var(--accent) 24%);
+  --sidebar-muted: color-mix(in srgb, #9eb3ac 72%, var(--accent) 28%);
+  --scrollbar-thumb: color-mix(in srgb, var(--accent) 38%, #64736a);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--accent) 56%, #89988e);
+  --scrollbar-track: transparent;
+}
+
+* { box-sizing: border-box; }
+* {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+*::-webkit-scrollbar-thumb {
+  min-height: 36px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--scrollbar-thumb);
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-corner { background: transparent; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+body { color: var(--text); background: var(--app-bg); }
+a { color: inherit; text-decoration: none; }
+button, input, select { font: inherit; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 2px;
+}
+
+html[data-theme="dark"] .auth-page,
+html[data-theme="dark"] .auth-form-wrap {
+  background: var(--app-bg);
+}
+html[data-theme="dark"] .auth-card h2,
+html[data-theme="dark"] .page-heading h1,
+html[data-theme="dark"] .panel h2,
+html[data-theme="dark"] .metric-card strong,
+html[data-theme="dark"] .table-header h2,
+html[data-theme="dark"] .form-panel-heading h2 {
+  color: var(--text-strong);
+}
+html[data-theme="dark"] .auth-card>label,
+html[data-theme="dark"] .auth-card .form-row>label,
+html[data-theme="dark"] .field-grid label,
+html[data-theme="dark"] .report-filters label,
+html[data-theme="dark"] td,
+html[data-theme="dark"] .document-line label,
+html[data-theme="dark"] .journal-totals>div {
+  color: var(--text);
+}
+html[data-theme="dark"] .muted,
+html[data-theme="dark"] .page-description,
+html[data-theme="dark"] .welcome-panel>p,
+html[data-theme="dark"] .lower-panel p:not(.eyebrow),
+html[data-theme="dark"] .journal-lines-heading p,
+html[data-theme="dark"] .metric-label,
+html[data-theme="dark"] .quick-links strong,
+html[data-theme="dark"] .check-row strong,
+html[data-theme="dark"] .table-header>div>span,
+html[data-theme="dark"] .document-lines-heading h3,
+html[data-theme="dark"] .journal-lines-heading h3,
+html[data-theme="dark"] .document-line-total,
+html[data-theme="dark"] .quick-links b,
+html[data-theme="dark"] .empty-state h3,
+html[data-theme="dark"] .form-intro,
+html[data-theme="dark"] .section-caption {
+  color: var(--text-muted);
+}
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .metric-card,
+html[data-theme="dark"] .loading-card,
+html[data-theme="dark"] .report-total,
+html[data-theme="dark"] .form-panel,
+html[data-theme="dark"] .auth-card input,
+html[data-theme="dark"] .auth-card select,
+html[data-theme="dark"] .field-grid input:not([type="checkbox"]),
+html[data-theme="dark"] .field-grid select,
+html[data-theme="dark"] .report-filters input,
+html[data-theme="dark"] .document-line input,
+html[data-theme="dark"] .document-line select,
+html[data-theme="dark"] .journal-line input,
+html[data-theme="dark"] .journal-line select,
+html[data-theme="dark"] .search-box,
+html[data-theme="dark"] .date-chip,
+html[data-theme="dark"] .button.secondary,
+html[data-theme="dark"] .remove-line {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+}
+html[data-theme="dark"] .metric-card,
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .loading-card,
+html[data-theme="dark"] .report-total,
+html[data-theme="dark"] .form-panel {
+  box-shadow: 0 2px 8px #00000028;
+}
+html[data-theme="dark"] th,
+html[data-theme="dark"] .journal-totals,
+html[data-theme="dark"] .field-grid .checkbox-label,
+html[data-theme="dark"] .table-badge,
+html[data-theme="dark"] .quick-icon,
+html[data-theme="dark"] .metric-icon.green,
+html[data-theme="dark"] .panel-icon,
+html[data-theme="dark"] .form-mark,
+html[data-theme="dark"] .form-note {
+  color: var(--text);
+  background: var(--surface-muted);
+}
+html[data-theme="dark"] .form-actions {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border-color: var(--border);
+}
+html[data-theme="dark"] .quick-links,
+html[data-theme="dark"] .quick-links a,
+html[data-theme="dark"] .check-row,
+html[data-theme="dark"] .table-header,
+html[data-theme="dark"] td,
+html[data-theme="dark"] th,
+html[data-theme="dark"] .document-lines,
+html[data-theme="dark"] .journal-lines {
+  border-color: var(--border);
+}
+html[data-theme="dark"] tbody tr:hover {
+  background: var(--surface-muted);
+}
+html[data-theme="dark"] .button.primary,
+html[data-theme="dark"] .account-page .button.primary {
+  color: #fff;
+  background: var(--accent);
+}
+html[data-theme="dark"] .auth-card input,
+html[data-theme="dark"] .auth-card select,
+html[data-theme="dark"] .field-grid input,
+html[data-theme="dark"] .field-grid select,
+html[data-theme="dark"] .report-filters input,
+html[data-theme="dark"] .document-line input,
+html[data-theme="dark"] .document-line select,
+html[data-theme="dark"] .journal-line input,
+html[data-theme="dark"] .journal-line select {
+  color-scheme: dark;
+}
+.button.primary,
+.account-page .button.primary {
+  background: var(--accent);
+}
+.text-link,
+.back-link,
+.auth-forgot a,
+.auth-switch a,
+.report-total.highlight strong {
+  color: var(--accent);
+}
+html[data-accent] .button.primary,
+html[data-accent] .account-page .button.primary {
+  background: var(--accent) !important;
+}
+html[data-accent] .button.primary:hover:not(:disabled),
+html[data-accent] .account-page .button.primary:hover:not(:disabled) {
+  background: var(--accent-hover) !important;
+}
+html[data-accent] .text-link,
+html[data-accent] .back-link,
+html[data-accent] .auth-forgot a,
+html[data-accent] .auth-switch a {
+  color: var(--accent-text) !important;
+}
+html[data-theme="dark"] .auth-card .alert.error {
+  color: #ffb9b2;
+  background: #3a2423;
+  border-color: #68403e;
+}
+html[data-theme="dark"] .auth-card .alert.success,
+html[data-theme="dark"] .alert.success {
+  color: #a7e0b7;
+  background: #203629;
+  border-color: #385b43;
+}
+html[data-theme="dark"] .alert.error {
+  color: #ffb9b2;
+  background: #3a2423;
+  border-color: #68403e;
+}
+html[data-theme="dark"] .topbar {
+  background: var(--surface);
+  border-color: var(--border);
+}
+html[data-theme="dark"] .breadcrumb,
+html[data-theme="dark"] .breadcrumb strong,
+html[data-theme="dark"] .status-pill,
+html[data-theme="dark"] .empty-state p,
+html[data-theme="dark"] .metric-card small,
+html[data-theme="dark"] .quick-links small,
+html[data-theme="dark"] .check-row small {
+  color: var(--text-muted);
+}
+html[data-theme="dark"] .mobile-menu {
+  color: var(--text);
+  background: var(--surface);
+}
+html[data-theme="dark"] .auth-card input,
+html[data-theme="dark"] .auth-card select,
+html[data-theme="dark"] .field-grid input:not([type="checkbox"]),
+html[data-theme="dark"] .field-grid select,
+html[data-theme="dark"] .report-filters input,
+html[data-theme="dark"] .document-line input,
+html[data-theme="dark"] .document-line select,
+html[data-theme="dark"] .journal-line input,
+html[data-theme="dark"] .journal-line select {
+  box-shadow: none;
+}
+html[data-theme="dark"] .form-panel-heading,
+html[data-theme="dark"] .form-panel::before {
+  border-color: var(--border);
+}
+
+.auth-page { min-height: 100vh; display: grid; grid-template-columns: minmax(340px, .87fr) 1.13fr; background: #fff; }
+.auth-brand { min-height: 100vh; display: flex; flex-direction: column; padding: 38px 9%; color: #fff; background: var(--accent-dark); }
+.brand { display: inline-flex; align-items: center; gap: 9px; color: #173c2f; font-size: 19px; font-weight: 750; letter-spacing: -.7px; }
+.brand:hover { color: #173c2f; }
+.brand-mark { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 8px; color: #1d593d; background: #d7eddd; font-size: 15px; font-weight: 800; }
+.auth-brand .brand { color: #fff; }
+.auth-brand .brand-mark { color: #184a36; }
+.brand-copy { max-width: 430px; margin: auto 0; padding: 45px 0; }
+.brand-copy .eyebrow { color: #9dc9ac; }
+.brand-copy h1 { margin: 0 0 17px; color: #fff; font-size: clamp(32px, 4vw, 49px); font-weight: 600; letter-spacing: -1.7px; line-height: 1.12; }
+.brand-copy>p:last-child { max-width: 340px; color: #c2d4cb; font-size: 14px; line-height: 1.7; }
+.brand-foot { color: #a7bdb2; font-size: 11px; }
+.auth-form-wrap { min-height: 100vh; display: grid; place-items: center; padding: 40px; }
+.auth-card { width: min(100%, 410px); }
+.auth-card .eyebrow { margin-bottom: 8px; color: #609073; }
+.auth-card h2 { margin: 0; color: #193d30; font-size: 26px; font-weight: 650; letter-spacing: -.7px; }
+.muted { margin: 9px 0 23px; color: #829087; font-size: 12px; line-height: 1.6; }
+.auth-card>label,.auth-card .form-row>label { display: flex; flex-direction: column; gap: 7px; margin: 0 0 15px; color: #53665b; font-size: 11px; font-weight: 600; }
+.auth-card input,.auth-card select { height: 40px; width: 100%; padding: 0 11px; border: 1px solid #dfe8e1; border-radius: 6px; background: #fff; color: #2e4639; font-size: 12px; outline: 0; }
+.auth-card input:focus,.auth-card select:focus { border-color: #5a9a75; box-shadow: 0 0 0 2px #5a9a7518; }
+.auth-card .alert { margin: 0 0 16px; padding: 11px 14px; border: 1px solid; border-radius: 7px; font-size: 12px; line-height: 1.55; }
+.auth-card .alert.error { color: #9e3b35; background: #fff6f5; border-color: #f1d3d0; }
+.auth-card .alert.success { color: #246644; background: #f3fbf5; border-color: #d4ead9; }
+.auth-forgot { margin: -5px 0 14px; text-align: right; font-size: 11px; }
+.auth-forgot a { color: #256246; font-weight: 650; }
+.auth-card label small { color: #829087; font-size: 10px; font-weight: 400; }
+.form-row { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; }
+.auth-card .full { width: 100%; height: 42px; margin-top: 6px; }
+.auth-switch { margin: 19px 0 0; text-align: center; color: #7d8b82; font-size: 11px; }
+.auth-switch a { color: #256246; font-weight: 700; }
+.register-wrap { padding: 32px 38px; }
+.register-card { width: min(100%, 570px); }
+.register-card .muted { margin-bottom: 16px; }
+.register-card .form-row { gap: 12px; }
+.register-card>label,.register-card .form-row>label { margin-bottom: 11px; }
+.register-card input,.register-card select { height: 37px; }
+.register-card .full { margin-top: 1px; }
+@media(max-width:850px) { .auth-page { grid-template-columns: 1fr; } .auth-brand { min-height: 220px; padding: 23px 7%; } .brand-copy { margin: 27px 0 15px; padding: 0; } .brand-copy h1 { font-size: 31px; } .brand-copy>p:last-child { margin-bottom: 0; font-size: 12px; } .brand-foot { display: none; } .auth-form-wrap { min-height: auto; padding: 38px 24px 50px; } .register-wrap { padding: 30px 24px 45px; } }
+@media(max-width:500px) { .form-row { grid-template-columns: 1fr; gap: 0; } .auth-brand { min-height: 190px; } .brand-copy { margin-top: 24px; } .brand-copy h1 { font-size: 27px; } .auth-card h2 { font-size: 23px; } }
+
+.heading-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.tax-reference-panel { margin-bottom: 16px; }
+@media(max-width:600px) { .heading-actions { width: 100%; } .heading-actions .button { flex: 1; } }
+
+html[data-accent] body,
+html[data-accent] .app-shell,
+html[data-accent] .main-content,
+html[data-accent] .content-area > *,
+html[data-accent] .auth-page,
+html[data-accent] .auth-form-wrap {
+  color: var(--text);
+  background-color: var(--app-bg);
+}
+html[data-accent] .panel,
+html[data-accent] .metric-card,
+html[data-accent] .loading-card,
+html[data-accent] .report-total,
+html[data-accent] .form-panel,
+html[data-accent] .table-header,
+html[data-accent] .auth-card input,
+html[data-accent] .auth-card select,
+html[data-accent] .account-panel input,
+html[data-accent] .field-grid input:not([type="checkbox"]),
+html[data-accent] .field-grid select,
+html[data-accent] .report-filters input,
+html[data-accent] .document-line input,
+html[data-accent] .document-line select,
+html[data-accent] .journal-line input,
+html[data-accent] .journal-line select,
+html[data-accent] .search-box,
+html[data-accent] .date-chip,
+html[data-accent] .button.secondary,
+html[data-accent] .remove-line {
+  color: var(--text);
+  background-color: var(--surface);
+  border-color: var(--border);
+}
+html[data-accent] .journal-totals,
+html[data-accent] .field-grid .checkbox-label,
+html[data-accent] .table-badge,
+html[data-accent] .quick-icon,
+html[data-accent] .form-mark,
+html[data-accent] .form-note,
+html[data-accent] .account-panel input[readonly] {
+  color: var(--text);
+  background-color: var(--surface-muted);
+  border-color: var(--border);
+}
+html[data-accent] .document-line,
+html[data-accent] .journal-line {
+  background-color: var(--surface-raised);
+  border-color: var(--border);
+}
+html[data-accent] .page-heading h1,
+html[data-accent] .panel h2,
+html[data-accent] .metric-card strong,
+html[data-accent] .table-header h2,
+html[data-accent] .form-panel-heading h2,
+html[data-accent] .auth-card h2,
+html[data-accent] .quick-links strong,
+html[data-accent] .check-row strong,
+html[data-accent] .empty-state h3,
+html[data-accent] .document-lines-heading h3,
+html[data-accent] .journal-lines-heading h3,
+html[data-accent] .journal-totals strong {
+  color: var(--text-strong);
+}
+html[data-accent] .page-description,
+html[data-accent] .muted,
+html[data-accent] .form-intro,
+html[data-accent] .welcome-panel > p,
+html[data-accent] .lower-panel p:not(.eyebrow),
+html[data-accent] .metric-label,
+html[data-accent] .metric-card small,
+html[data-accent] .quick-links small,
+html[data-accent] .check-row small,
+html[data-accent] .table-header > div > span,
+html[data-accent] .empty-state p,
+html[data-accent] .document-lines-heading p,
+html[data-accent] .journal-lines-heading p,
+html[data-accent] .action-hint,
+html[data-accent] .filter-hint {
+  color: var(--text-muted);
+}
+html[data-accent] .auth-card > label,
+html[data-accent] .auth-card .form-row > label,
+html[data-accent] .account-panel label,
+html[data-accent] .field-grid label,
+html[data-accent] .report-filters label,
+html[data-accent] td,
+html[data-accent] .document-line label,
+html[data-accent] .journal-totals > div {
+  color: var(--text);
+}
+html[data-accent] .page-heading h1,
+html[data-accent] .panel-heading h2,
+html[data-accent] .account-panel input,
+html[data-accent] .auth-card h2,
+html[data-accent] .field-grid input,
+html[data-accent] .field-grid select,
+html[data-accent] .report-filters input,
+html[data-accent] .document-line input,
+html[data-accent] .document-line select,
+html[data-accent] .journal-line input,
+html[data-accent] .journal-line select,
+html[data-accent] .search-box input {
+  color: var(--text-strong);
+}
+html[data-accent] .panel-heading h2 {
+  color: var(--text-strong);
+}
+html[data-accent] .panel-heading p,
+html[data-accent] .account-panel label small,
+html[data-accent] .password-hint {
+  color: var(--text-muted);
+}
+html[data-accent] .content-area :is(h1, h2, h3, h4, p, span, small, label, td, th, a, strong, b, em, li, legend, summary),
+html[data-accent] .auth-card :is(h1, h2, h3, h4, p, span, small, label, a, strong, b, em) {
+  color: var(--text);
+}
+html[data-accent] .content-area :is(h1, h2, h3, h4, .panel-heading h2, .metric-card strong, .table-header h2, .form-panel-heading h2, .journal-totals strong),
+html[data-accent] .auth-card h2 {
+  color: var(--text-strong);
+}
+html[data-accent] .content-area :is(.eyebrow, .muted, .page-description, .form-intro, .action-hint, .filter-hint, .password-hint, .table-header > div > span, .metric-label, .metric-card small, .quick-links small, .check-row small, .empty-state p, .panel-heading p),
+html[data-accent] .auth-card :is(.muted, label small, .auth-switch) {
+  color: var(--text-muted);
+}
+html[data-accent] .content-area :is(.eyebrow, .text-link, .back-link, .status-tag, .metric-icon, .panel-icon, .balance-status, .account-empty-note),
+html[data-accent] .auth-card :is(.eyebrow, .auth-forgot a, .auth-switch a) {
+  color: var(--accent-text);
+}
+html[data-accent] .content-area :is(.alert.error, .alert.error *, .company-error),
+html[data-accent] .auth-card .alert.error,
+html[data-accent] .auth-card .alert.error * {
+  color: var(--error-text);
+}
+html[data-accent] .content-area :is(.alert.success, .alert.success *),
+html[data-accent] .auth-card .alert.success,
+html[data-accent] .auth-card .alert.success * {
+  color: var(--success-text);
+}
+html[data-accent] .content-area .button.primary,
+html[data-accent] .content-area .button.primary *,
+html[data-accent] .auth-card .button.primary,
+html[data-accent] .auth-card .button.primary * {
+  color: #fff;
+}
+html[data-accent] .content-area .button.secondary,
+html[data-accent] .content-area .button.secondary * {
+  color: var(--accent-text);
+}
+html[data-accent] .auth-brand {
+  background-color: var(--accent-dark);
+}
+html[data-accent] .auth-card .eyebrow,
+html[data-accent] .form-panel-heading .eyebrow,
+html[data-accent] .text-link,
+html[data-accent] .back-link,
+html[data-accent] .auth-forgot a,
+html[data-accent] .auth-switch a,
+html[data-accent] .report-total.highlight strong,
+html[data-accent] .metric-icon.green,
+html[data-accent] .panel-icon {
+  color: var(--accent-text);
+}
+html[data-accent] .metric-icon.green,
+html[data-accent] .panel-icon {
+  background-color: var(--accent-soft);
+}
+html[data-accent] .button.primary,
+html[data-accent] .account-page .button.primary {
+  color: #fff;
+  background-color: var(--accent);
+}
+html[data-accent] .button.primary:hover:not(:disabled),
+html[data-accent] .account-page .button.primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+html[data-accent] .form-panel::before {
+  background: var(--accent);
+}
+html[data-accent] .spinner {
+  border-top-color: var(--accent);
+}
+html[data-accent] .field-grid input:focus,
+html[data-accent] .field-grid select:focus,
+html[data-accent] .report-filters input:focus,
+html[data-accent] .auth-card input:focus,
+html[data-accent] .auth-card select:focus,
+html[data-accent] .journal-line select:focus,
+html[data-accent] .journal-line input:focus {
+  border-color: var(--focus-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-color) 20%, transparent);
+}
+html[data-theme="dark"] .auth-brand .brand,
+html[data-theme="dark"] .auth-brand .brand-copy h1 {
+  color: #fff;
+}
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] .form-actions {
+  background-color: var(--surface);
+  border-color: var(--border);
+}
+html[data-accent] .sidebar :is(.nav-heading, .nav-link:not(.active), .company-details, .company-chevron, .secure-note, .secure-note small, .profile-copy, .profile-copy small, .logout-button) {
+  color: var(--sidebar-text);
+}
+html[data-accent] .sidebar :is(.overline, .company-id, .nav-heading, .secure-note small, .profile-copy small, .logout-button) {
+  color: var(--sidebar-muted);
+}
+html[data-accent] .sidebar .nav-link.active {
+  color: var(--nav-active-text);
+  background-color: var(--nav-active-bg);
+  box-shadow:
+    inset 4px 0 color-mix(in srgb, var(--accent) 55%, #fff),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+  font-weight: 750;
+}
+html[data-accent] .topbar :is(.breadcrumb, .breadcrumb strong, .status-pill) {
+  color: var(--text-muted);
+}
+html[data-accent] .topbar .breadcrumb strong {
+  color: var(--text-strong);
+}
+html[data-theme="dark"][data-accent] .content-area :is(.alert.error, .alert.error *),
+html[data-theme="dark"][data-accent] .auth-card .alert.error,
+html[data-theme="dark"][data-accent] .auth-card .alert.error * {
+  color: var(--error-text);
+}
+html[data-theme="dark"][data-accent] .content-area :is(.alert.success, .alert.success *),
+html[data-theme="dark"][data-accent] .auth-card .alert.success,
+html[data-theme="dark"][data-accent] .auth-card .alert.success * {
+  color: var(--success-text);
+}
+html[data-accent] .form-panel {
+  color: var(--text);
+  border-color: var(--border);
+  background-color: var(--surface);
+}
+html[data-accent] .form-panel-heading,
+html[data-accent] .document-lines,
+html[data-accent] .journal-lines {
+  border-color: var(--border);
+}
+html[data-accent] .form-panel-heading h2,
+html[data-accent] .section-caption,
+html[data-accent] .document-lines-heading h3,
+html[data-accent] .journal-lines-heading h3,
+html[data-accent] .document-line-total,
+html[data-accent] .journal-totals strong {
+  color: var(--text-strong);
+}
+html[data-accent] .form-intro,
+html[data-accent] .section-caption small,
+html[data-accent] .document-lines-heading p,
+html[data-accent] .journal-lines-heading p,
+html[data-accent] .journal-line-headings,
+html[data-accent] .document-line legend,
+html[data-accent] .action-hint {
+  color: var(--text-muted);
+}
+html[data-accent] .form-mark {
+  color: var(--accent-text);
+  border-color: var(--border);
+  background: var(--accent-soft);
+}
+html[data-accent] .field-grid .checkbox-label,
+html[data-accent] .form-note,
+html[data-accent] .journal-totals {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface-muted);
+}
+html[data-accent] .document-line,
+html[data-accent] .journal-line {
+  border-color: var(--border);
+  background: var(--surface-raised);
+}
+html[data-accent] .document-line label,
+html[data-accent] .journal-line label,
+html[data-accent] .journal-totals > div {
+  color: var(--text);
+}
+html[data-accent] .form-panel :is(input:not([type="checkbox"]), select),
+html[data-accent] .document-line :is(input, select),
+html[data-accent] .journal-line :is(input, select) {
+  color: var(--text-strong);
+  border-color: var(--border);
+  background: var(--surface);
+}
+html[data-accent] .form-panel :is(input, select):disabled {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+}
+html[data-accent] .checkbox-label input {
+  accent-color: var(--accent);
+}
+html[data-accent] .form-panel .form-actions {
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+}
+html[data-accent] .form-panel .button.secondary,
+html[data-accent] .document-line .button.secondary,
+html[data-accent] .journal-line .remove-line {
+  color: var(--accent-text);
+  border-color: var(--border);
+  background: var(--surface);
+}
+html[data-accent] .journal-line select:focus,
+html[data-accent] .journal-line input:focus,
+html[data-accent] .document-line select:focus,
+html[data-accent] .document-line input:focus {
+  border-color: var(--focus-color);
+  outline-color: color-mix(in srgb, var(--focus-color) 20%, transparent);
+}
+html[data-accent] .journal-totals .balance-status {
+  color: #966018;
+}
+html[data-accent] .journal-totals .balance-status > span {
+  color: #80500f;
+  background: #fff1d9;
+}
+html[data-accent] .journal-totals .balance-status.balanced,
+html[data-accent] .journal-totals .balance-status.balanced > span {
+  color: var(--success-text);
+}
+html[data-accent] .journal-totals .balance-status.balanced > span {
+  background: color-mix(in srgb, #4a9a62 18%, var(--surface));
+}
+html[data-accent] .account-empty-note {
+  color: #805b22;
+  border-color: color-mix(in srgb, #d6a64c 35%, var(--border));
+  background: color-mix(in srgb, #f8d98c 15%, var(--surface));
+}
+html[data-theme="dark"][data-accent] .journal-totals .balance-status {
+  color: #f0c77e;
+}
+html[data-theme="dark"][data-accent] .journal-totals .balance-status > span {
+  color: #f0c77e;
+  background: #49391e;
+}
+html[data-theme="dark"][data-accent] .account-empty-note {
+  color: #f0c77e;
+  border-color: #66502b;
+  background: #30291c;
+}
+html[data-accent] .account-page :is(.panel, .loading-card) {
+  color: var(--text);
+  border-color: var(--border);
+  background-color: var(--surface);
+}
+html[data-accent] .account-page .panel-heading h2 {
+  color: var(--text-strong);
+}
+html[data-accent] .account-page :is(.panel-heading p, .page-description, .password-hint, label small) {
+  color: var(--text-muted);
+}
+html[data-accent] .account-page .panel-icon,
+html[data-accent] .sidebar .company-avatar,
+html[data-accent] .profile-avatar,
+html[data-accent] .avatar-small,
+html[data-accent] .brand-mark {
+  color: var(--accent-text);
+  background-color: var(--accent-soft);
+}
+html[data-accent] .account-page input {
+  color: var(--text-strong);
+  border-color: var(--border);
+  background-color: var(--surface);
+}
+html[data-accent] .account-page input[readonly] {
+  color: var(--text-muted);
+  background-color: var(--surface-muted);
+}
+html[data-accent] .account-page input:focus {
+  border-color: var(--focus-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-color) 20%, transparent);
+}
+html[data-accent] .account-page .form-actions {
+  border-color: var(--border);
+}
+html[data-accent] .account-page .spinner {
+  border-color: var(--border);
+  border-top-color: var(--accent);
+}
+html[data-accent] .dashboard-grid .quick-icon,
+html[data-accent] .empty-state .empty-icon {
+  color: var(--accent-text);
+  background-color: var(--accent-soft);
+}
+html[data-accent] .dashboard-grid .sparkle {
+  color: var(--accent-text);
+}
+html[data-accent] .dashboard-grid .check-mark {
+  color: #fff;
+  background-color: var(--accent);
+}
+html[data-accent] .dashboard-grid .check-open {
+  border-color: var(--border);
+  background-color: var(--surface);
+}
+html[data-accent] .topbar .avatar-small {
+  color: var(--accent-text);
+  background-color: var(--accent-soft);
+}
+html[data-accent] .sidebar .company-select {
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+html[data-accent] .sidebar .company-select:has(select):hover,
+html[data-accent] .sidebar .profile-button:hover,
+html[data-accent] .sidebar .profile-button.profile-active {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+html[data-theme="dark"][data-accent] .account-page .alert.error,
+html[data-theme="dark"][data-accent] .account-page .alert.success {
+  background-color: var(--surface-muted);
+  border-color: var(--border);
+}
+html[data-theme="dark"][data-accent] .account-page .alert.error {
+  color: var(--error-text);
+}
+html[data-theme="dark"][data-accent] .account-page .alert.success {
+  color: var(--success-text);
+}
+html[data-accent] :is(input, select, textarea):not(:where(
+  [type="checkbox"],
+  [type="radio"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="image"],
+  [type="hidden"],
+  [type="range"],
+  [type="color"]
+)) {
+  color: var(--text-strong);
+  border-color: var(--border);
+  background-color: var(--surface);
+  accent-color: var(--accent);
+}
+html[data-accent] :is(input, textarea):not(:where(
+  [type="checkbox"],
+  [type="radio"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="image"],
+  [type="hidden"],
+  [type="range"],
+  [type="color"]
+))::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+html[data-accent] :is(input, select, textarea):not(:where(
+  [type="checkbox"],
+  [type="radio"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="image"],
+  [type="hidden"],
+  [type="range"],
+  [type="color"]
+)):is(:disabled, [readonly]) {
+  color: var(--text-muted);
+  background-color: var(--surface-muted);
+}
+html[data-accent] :is(input, select, textarea):not(:where(
+  [type="checkbox"],
+  [type="radio"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="image"],
+  [type="hidden"],
+  [type="range"],
+  [type="color"]
+)):focus {
+  border-color: var(--focus-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-color) 20%, transparent);
+}
+html[data-accent] select option {
+  color: var(--text-strong);
+  background-color: var(--surface);
+}
+html[data-accent] .sidebar .theme-controls select {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--accent) 45%, #ffffff30);
+  background-color: color-mix(in srgb, var(--accent) 20%, var(--accent-dark));
+}
+html[data-accent] .sidebar select option {
+  color: var(--text-strong);
+  background-color: var(--surface);
+}
+html[data-theme="light"][data-accent] .sidebar select {
+  color-scheme: light;
+}
+html[data-theme="dark"][data-accent] .sidebar select {
+  color-scheme: dark;
+}
+html[data-accent] .sidebar select option {
+  color: var(--text-strong) !important;
+  background-color: var(--surface) !important;
+}
+html[data-accent] .sidebar select option:checked {
+  color: var(--accent-text) !important;
+  background-color: var(--accent-soft) !important;
+}
+html[data-accent] .content-area :is(
+  .panel,
+  .metric-card,
+  .loading-card,
+  .report-total,
+  .form-panel,
+  .table-header,
+  .search-box,
+  .date-chip,
+  .table-badge,
+  .journal-totals,
+  .form-note,
+  .document-line,
+  .journal-line,
+  .icon-button,
+  [role="dialog"],
+  dialog
+) {
+  color: var(--text);
+  border-color: var(--border);
+  background-color: var(--surface);
+}
+html[data-accent] .content-area :is(.metric-card, .panel, .loading-card, .report-total, .form-panel) {
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text-strong) 8%, transparent);
+}
+html[data-accent] .content-area :is(.table-header, .journal-totals, .form-note, .table-badge, .icon-button) {
+  background-color: var(--surface-muted);
+}
+html[data-accent] .content-area :is(th, td, .table-header, .quick-links, .quick-links a, .check-row, .form-actions, .form-panel-heading, .document-lines, .journal-lines) {
+  border-color: var(--border);
+}
+html[data-accent] .content-area th {
+  color: var(--text-muted);
+  background-color: var(--surface-muted);
+}
+html[data-accent] .content-area td {
+  color: var(--text);
+}
+html[data-accent] .content-area tbody tr:hover {
+  background-color: var(--surface-muted);
+}
+html[data-accent] .content-area :is(.metric-icon, .panel-icon, .quick-icon, .empty-icon, .form-mark) {
+  color: var(--accent-text);
+  border-color: var(--border);
+  background-color: var(--accent-soft);
+}
+html[data-accent] .content-area .panel-icon.lock {
+  color: var(--accent-text);
+  background-color: var(--accent-soft);
+}
+html[data-accent] .content-area :is(.button.secondary, .remove-line, .icon-button) {
+  color: var(--accent-text);
+  border-color: var(--border);
+  background-color: var(--surface);
+}
+html[data-accent] .content-area :is(.button.secondary, .remove-line, .icon-button):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  background-color: var(--accent-soft);
+}
+html[data-accent] .content-area .status-tag {
+  color: var(--text-muted);
+  background-color: var(--surface-muted);
+}
+html[data-accent] .content-area .status-tag.posted {
+  color: var(--success-text);
+  background-color: color-mix(in srgb, var(--success-text) 12%, var(--surface));
+}
+html[data-accent] .content-area :is(.alert.error, .alert.success) {
+  border-color: color-mix(in srgb, currentColor 25%, var(--border));
+  background-color: color-mix(in srgb, currentColor 8%, var(--surface));
+}
+html[data-accent] .topbar {
+  color: var(--text);
+  border-color: var(--border);
+  background-color: var(--surface);
+}
+html[data-accent] .mobile-menu {
+  color: var(--text-strong);
+  border-color: var(--border);
+  background-color: var(--surface);
+}
+html[data-accent] ::selection {
+  color: #fff;
+  background-color: var(--accent);
+}
+html[data-accent] body :is(.content-area, .auth-page) :is(input, select, textarea):not(:where(
+  [type="checkbox"],
+  [type="radio"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="image"],
+  [type="hidden"],
+  [type="range"],
+  [type="color"]
+)) {
+  color: var(--text-strong) !important;
+  border-color: var(--border) !important;
+  background-color: var(--surface) !important;
+}
+html[data-accent] body :is(.content-area, .auth-page) :is(input, select, textarea):not(:where(
+  [type="checkbox"],
+  [type="radio"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="image"],
+  [type="hidden"],
+  [type="range"],
+  [type="color"]
+)):is(:disabled, [readonly]) {
+  color: var(--text-muted) !important;
+  background-color: var(--surface-muted) !important;
+}
+html[data-accent] body :is(.content-area, .auth-page) :is(input, select, textarea):not(:where(
+  [type="checkbox"],
+  [type="radio"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="image"],
+  [type="hidden"],
+  [type="range"],
+  [type="color"]
+)):focus {
+  border-color: var(--focus-color) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-color) 20%, transparent) !important;
+}
+html[data-accent] body :is(.content-area, .auth-page) :is(input, textarea):not(:where(
+  [type="checkbox"],
+  [type="radio"],
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="image"],
+  [type="hidden"],
+  [type="range"],
+  [type="color"]
+))::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1;
+}
+html[data-accent] body .content-area .search-box input {
+  color: var(--text-strong) !important;
+  border-color: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+html[data-accent] body .content-area .search-box input::placeholder {
+  color: var(--text-muted) !important;
+}
+html[data-accent] body :is(.content-area, .auth-page) :is(input, select) option {
+  color: var(--text-strong);
+  background-color: var(--surface);
+}
+html[data-accent] body :is(.content-area, .auth-page) :is([type="checkbox"], [type="radio"], [type="range"]) {
+  accent-color: var(--accent);
+}
+html[data-accent] body :is(.content-area, .auth-page) [type="color"] {
+  border-color: var(--border);
+  background-color: var(--surface);
+}
+html[data-accent] body :is(.content-area, .auth-page) :is([type="checkbox"], [type="radio"]):disabled {
+  opacity: .65;
+}
+html[data-accent] body :is(.content-area, .auth-page) input:-webkit-autofill,
+html[data-accent] body :is(.content-area, .auth-page) input:-webkit-autofill:hover,
+html[data-accent] body :is(.content-area, .auth-page) input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-strong);
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset;
+  caret-color: var(--text-strong);
+}
+html[data-accent] body .content-area .form-panel .field-grid .checkbox-label {
+  color: var(--text-strong) !important;
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border)) !important;
+  background-color: color-mix(in srgb, var(--accent) 8%, var(--surface)) !important;
+  transition: background-color .15s, border-color .15s;
+}
+html[data-accent] body .content-area .form-panel .field-grid .checkbox-label:hover {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border)) !important;
+  background-color: color-mix(in srgb, var(--accent) 13%, var(--surface)) !important;
+}
+html[data-accent] body .content-area .form-panel .field-grid .checkbox-label input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+html[data-accent] body .content-area .form-panel .field-grid .checkbox-label input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+}
+
+@media (max-width: 850px) {
+  .auth-page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html .app-shell .main-content {
+    min-width: 0;
+  }
+  html .app-shell .content-area {
+    padding: 25px 22px 48px;
+  }
+  html .app-shell .topbar {
+    min-width: 0;
+    padding-right: 20px;
+  }
+  .topbar .breadcrumb {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 600px) {
+  html .app-shell .content-area {
+    padding: 22px 16px 40px;
+  }
+  html .app-shell .topbar {
+    height: 56px;
+    padding-left: 60px;
+  }
+  .topbar .status-pill {
+    display: none;
+  }
+  .content-area .page-heading {
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .content-area .page-heading > :first-child {
+    min-width: 0;
+  }
+  .content-area .page-heading h1 {
+    overflow-wrap: anywhere;
+    font-size: clamp(20px, 6vw, 23px);
+  }
+  .content-area .page-heading > .button,
+  .content-area .page-heading .heading-actions {
+    width: 100%;
+  }
+  .content-area .heading-actions .button {
+    flex: 1 1 auto;
+  }
+  .content-area .toolbar {
+    width: 100%;
+  }
+  .content-area .toolbar .search-box {
+    width: 100%;
+    min-width: 0;
+  }
+  .content-area .table-panel,
+  .content-area .table-scroll {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .content-area .table-header {
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .content-area .table-header > div {
+    min-width: 0;
+  }
+  .content-area .table-header > div > span {
+    display: inline-block;
+    margin: 4px 0 0;
+  }
+  .content-area .report-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .content-area .report-total {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  html .app-shell .sidebar {
+    width: min(252px, calc(100vw - 48px));
+  }
+  html .app-shell .content-area {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+  .content-area .metric-grid,
+  .content-area .report-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .content-area .welcome-panel,
+  .content-area .setup-panel,
+  .content-area .panel,
+  .content-area .form-panel {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+  .content-area .form-panel .form-actions {
+    margin-right: -14px;
+    margin-left: -14px;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+  .content-area .form-panel form {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+  .content-area .form-panel form .form-actions {
+    margin-right: -14px;
+    margin-left: -14px;
+  }
+}

@@ -1,0 +1,33 @@
+<div class="page-heading dashboard-heading">
+  <div><p class="eyebrow">OVERVIEW</p><h1>Good morning</h1><p class="page-description">A clear view of your company’s financial activity.</p></div>
+  <span class="date-chip">{{ today }}</span>
+</div>
+@if (error()) { <div class="alert error">{{ error() }}</div> }
+@if (loading()) { <div class="loading-card"><span class="spinner"></span> Preparing your overview…</div> }
+@if (!loading()) {
+  <section class="metric-grid">
+    <article class="metric-card"><span class="metric-icon green">◫</span><span class="metric-label">Chart of accounts</span><strong>{{ displayValue(summary()['totalAccounts']) }}</strong><small>Active ledger accounts</small></article>
+    <article class="metric-card"><span class="metric-icon blue">↗</span><span class="metric-label">Net income</span><strong>{{ currency(summary()['netIncome']) }}</strong><small>This financial year</small></article>
+    <article class="metric-card"><span class="metric-icon amber">▤</span><span class="metric-label">Posted debit balance</span><strong>{{ currency(summary()['totalDebit']) }}</strong><small>Posted activity to date</small></article>
+    <article class="metric-card"><span class="metric-icon violet">◉</span><span class="metric-label">Company currency</span><strong>{{ displayValue(summary()['currencyCode']) }}</strong><small>Functional currency</small></article>
+  </section>
+  <div class="dashboard-grid">
+    <section class="panel welcome-panel">
+      <div class="panel-top"><div><p class="eyebrow">YOUR WORKSPACE</p><h2>Everything in its right place.</h2></div><span class="sparkle">✳</span></div>
+      <p>Start with your ledger setup, then keep day-to-day operations and reporting close at hand.</p>
+      <div class="quick-links">
+        <a routerLink="/general-ledger/accounts"><span class="quick-icon">▤</span><span><strong>Review your accounts</strong><small>Explore the chart of accounts</small></span><b>→</b></a>
+        <a routerLink="/parties"><span class="quick-icon">♧</span><span><strong>Add customers and suppliers</strong><small>Build your contacts directory</small></span><b>→</b></a>
+        <a routerLink="/reports/trial-balance"><span class="quick-icon">◫</span><span><strong>Open your reports</strong><small>Review the trial balance</small></span><b>→</b></a>
+      </div>
+    </section>
+    <section class="panel setup-panel">
+      <p class="eyebrow">GETTING STARTED</p><h2>Workspace checklist</h2>
+      <div class="check-row"><span class="check-mark">✓</span><span><strong>Company workspace created</strong><small>Your secure environment is ready</small></span></div>
+      <div class="check-row"><span class="check-mark">✓</span><span><strong>Ledger defaults generated</strong><small>Starter accounts and journals added</small></span></div>
+      <div class="check-row"><span class="check-open"></span><span><strong>Review your fiscal calendar</strong><small>Confirm periods match your year end</small></span></div>
+      <a class="text-link" routerLink="/general-ledger/fiscal-years">Review fiscal years <span>→</span></a>
+    </section>
+  </div>
+  <section class="panel lower-panel"><div><p class="eyebrow">KEEP IN CONTROL</p><h2>Financial essentials, without the clutter.</h2><p>Manage your ledgers, payables, receivables, and stock from one workspace.</p></div><a class="button secondary" routerLink="/reports/income-statement">View income statement <span>→</span></a></section>
+}

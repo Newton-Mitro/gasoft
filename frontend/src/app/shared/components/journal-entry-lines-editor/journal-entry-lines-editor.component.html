@@ -1,0 +1,47 @@
+<section class="journal-lines" aria-label="Journal entry lines">
+  <div class="journal-lines-heading">
+    <div>
+      <h3>Entry lines</h3>
+      <p>Add each account movement. Every line needs a debit or a credit.</p>
+    </div>
+    <button class="button secondary" type="button" [disabled]="lines.length >= 1000" (click)="addLine()">＋ Add line</button>
+  </div>
+
+  <div class="journal-line-headings" aria-hidden="true">
+    <span>Account</span><span>Debit</span><span>Credit</span><span></span>
+  </div>
+  @for (line of lines; track $index; let i = $index) {
+    <div class="journal-line">
+      <span class="journal-line-number">Line {{ i + 1 }}</span>
+      <label>
+        <span class="visually-hidden">Account for line {{ i + 1 }}</span>
+        <select [name]="'journalLineAccount' + i" required [value]="line.accountId ?? ''" (change)="updateLine(i, 'accountId', $any($event.target).value)">
+          <option value="" disabled>{{ accounts.length ? 'Select an account' : 'No posting accounts available' }}</option>
+          @for (account of accounts; track account.value) {
+            <option [value]="account.value">{{ account.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span class="visually-hidden">Debit for line {{ i + 1 }}</span>
+        <input [name]="'journalLineDebit' + i" type="number" min="0" max="99999999999999.999999" step="0.000001" [value]="line.debit ?? ''" placeholder="0.00" (input)="updateLine(i, 'debit', $any($event.target).value)" />
+      </label>
+      <label>
+        <span class="visually-hidden">Credit for line {{ i + 1 }}</span>
+        <input [name]="'journalLineCredit' + i" type="number" min="0" max="99999999999999.999999" step="0.000001" [value]="line.credit ?? ''" placeholder="0.00" (input)="updateLine(i, 'credit', $any($event.target).value)" />
+      </label>
+      <button class="remove-line" type="button" [disabled]="lines.length <= 2" [attr.aria-label]="'Remove line ' + (i + 1)" (click)="removeLine(i)">Remove</button>
+    </div>
+  }
+  @if (!accounts.length) {
+    <p class="account-empty-note">There are no active posting accounts for this company. Add or activate one in Chart of accounts, then return here.</p>
+  }
+
+  <div class="journal-totals">
+    <div><span>Total debits</span><strong>{{ formatAmount(totalDebits) }}</strong></div>
+    <div><span>Total credits</span><strong>{{ formatAmount(totalCredits) }}</strong></div>
+    <p class="balance-status" [class.balanced]="hasBalancedLines" role="status" aria-live="polite">
+      <span aria-hidden="true">{{ hasBalancedLines ? '✓' : '!' }}</span>{{ balanceMessage }}
+    </p>
+  </div>
+</section>

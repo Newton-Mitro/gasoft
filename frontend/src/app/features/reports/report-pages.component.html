@@ -1,0 +1,73 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">FINANCIAL REPORTS</p>
+    <h1>{{ title }}</h1>
+    <p class="page-description">{{ description }}</p>
+  </div>
+</div>
+@if (error) { <div class="alert error">{{ error }}</div> }
+<section class="report-filters panel">
+  @if (reportType === 'balance-sheet') {
+    <div><label>As of date<input type="date" name="asOfDate" [(ngModel)]="asOfDate" (ngModelChange)="onDateChange()" /></label></div>
+    <span class="filter-hint">Balances include posted journal entries through this date. Unclosed earnings are included in equity.</span>
+  } @else {
+    <div><label>From date<input type="date" name="fromDate" [(ngModel)]="fromDate" (ngModelChange)="onDateChange()" /></label></div>
+    <div><label>To date<input type="date" name="toDate" [(ngModel)]="toDate" (ngModelChange)="onDateChange()" /></label></div>
+    <span class="filter-hint">Only posted journal entries are included.</span>
+  }
+</section>
+<section class="report-summary">
+  @for (card of summaryCards; track card.label) {
+    <article class="report-total" [class.highlight]="card.highlight">
+      <span>{{ card.label }}</span>
+      <strong>{{ formatCurrency(card.value) }}</strong>
+    </article>
+  }
+</section>
+@if (loading) { <div class="loading-card"><span class="spinner"></span> Loading {{ title.toLowerCase() }}…</div> }
+@if (!loading) {
+  <section class="table-panel panel">
+    <div class="table-header">
+      <div>
+        <h2>{{ reportType === 'balance-sheet' ? 'Assets, liabilities & equity' : 'Account detail' }}</h2>
+        <span>{{ rows.length }} {{ rows.length === 1 ? 'account' : 'accounts' }}</span>
+      </div>
+      <span class="table-badge">{{ currencyCode }}</span>
+    </div>
+    @if (!rows.length) {
+      <div class="empty-state">
+        <span class="empty-icon">◫</span>
+        <h3>No posted activity for this range</h3>
+        <p>Try another date range or post a journal entry to populate this report.</p>
+      </div>
+    } @else {
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Account code</th><th>Account name</th><th>Account type</th>
+              @if (reportType === 'trial-balance') { <th>Debit</th><th>Credit</th> }
+              @else if (reportType === 'income-statement') { <th>Amount</th> }
+              @else { <th>Balance</th> }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows; track row.accountCode) {
+              <tr>
+                <td>{{ row.accountCode }}</td>
+                <td>{{ row.accountName }}</td>
+                <td>{{ row.accountType }}</td>
+                @if (reportType === 'trial-balance') {
+                  <td>{{ formatCurrency(row.amount) }}</td>
+                  <td>{{ formatCurrency(row.credit ?? 0) }}</td>
+                } @else {
+                  <td>{{ formatCurrency(row.amount) }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

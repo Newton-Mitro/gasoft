@@ -1,0 +1,69 @@
+@if (view !== 'index') {
+  <div class="page-heading">
+    <div>
+      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
+      <p class="eyebrow">{{ view === 'create' ? 'NEW RECORD' : 'EDIT RECORD' }}</p>
+      <h1>{{ view === 'create' ? 'Create journal' : 'Edit journal' }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+  </div>
+  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading journal…</div> }
+  @if (!loading) {
+    <app-record-form
+      [pageKey]="pageKey"
+      [title]="title"
+      [formMode]="formMode"
+      [fields]="formFields"
+      [form]="form"
+      [error]="error"
+      [saving]="saving"
+      (valueChange)="setFormValue($event.key, $event.value)"
+      (submitForm)="submit()"
+      (cancel)="closeForm()"
+    />
+  }
+} @else {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">COMPANY WORKSPACE</p>
+      <h1>{{ title }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> New journal</a>
+  </div>
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading journals…</div> }
+  @if (!loading) {
+    <section class="table-panel panel">
+      <div class="table-header">
+        <div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span></div>
+      </div>
+      @if (!rows.length) {
+        <div class="empty-state">
+          <span class="empty-icon">▤</span>
+          <h3>Nothing here yet</h3>
+          <p>Create a journal to start organizing company activity.</p>
+          <a class="button secondary" [routerLink]="[indexPath, 'create']">Create first journal</a>
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Code</th><th>Name</th><th>Journal type</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (journal of rows; track journal.id) {
+                <tr>
+                  <td>{{ journal.code }}</td>
+                  <td>{{ journal.name }}</td>
+                  <td>{{ journal.journalType }}</td>
+                  <td><span class="status-tag" [class.posted]="journal.isActive">{{ journal.isActive ? 'Active' : 'Inactive' }}</span></td>
+                  <td><a class="button secondary table-action" [routerLink]="[indexPath, journal.id, 'edit']">Edit</a></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+}

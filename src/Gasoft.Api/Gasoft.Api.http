@@ -1,0 +1,355 @@
+@Gasoft.Api_HostAddress = http://localhost:5035
+@accessToken = replace-with-access-token-from-registration
+@companyId = 1
+
+GET {{Gasoft.Api_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{Gasoft.Api_HostAddress}}/api/v1/currencies
+Accept: application/json
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/tenants/register
+Content-Type: application/json
+
+{
+  "tenantName": "Northstar Studio",
+  "slug": "northstar-studio",
+  "companyCode": "NS01",
+  "legalName": "Northstar Studio Ltd",
+  "functionalCurrencyCode": "USD",
+  "ownerDisplayName": "Jordan Davis",
+  "email": "jordan@example.com",
+  "password": "Choose-A-Strong-Password-123!"
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/auth/token
+Content-Type: application/json
+
+{
+  "email": "jordan@example.com",
+  "password": "Choose-A-Strong-Password-123!",
+  "tenantId": 1
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/account-groups
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "code": "CASH",
+  "name": "Cash and cash equivalents",
+  "accountType": "Asset"
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/accounts
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "accountGroupId": 1,
+  "code": "1000",
+  "name": "Operating bank",
+  "parentId": null,
+  "allowPosting": true
+}
+
+###
+
+GET {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/fiscal-years
+Authorization: ******
+Accept: application/json
+
+###
+
+GET {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/accounting-periods
+Authorization: ******
+Accept: application/json
+
+###
+
+GET {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/journals
+Authorization: ******
+Accept: application/json
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/fiscal-years
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "startsOn": "2026-01-01",
+  "endsOn": "2026-12-31"
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/accounting-periods
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "fiscalYearId": 1,
+  "startsOn": "2026-01-01",
+  "endsOn": "2026-12-31"
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/journals
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "code": "GEN",
+  "name": "General journal",
+  "journalType": "General"
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/journal-entries
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "journalId": 1,
+  "accountingPeriodId": 1,
+  "entryDate": "2026-01-15",
+  "description": "Initial capital contribution",
+  "lines": [
+    {
+      "accountId": 1,
+      "transactionCurrencyCode": "USD",
+      "debit": 1000,
+      "credit": 0,
+      "exchangeRate": 1,
+      "description": "Cash received"
+    },
+    {
+      "accountId": 2,
+      "transactionCurrencyCode": "USD",
+      "debit": 0,
+      "credit": 1000,
+      "exchangeRate": 1,
+      "description": "Owner contribution"
+    }
+  ]
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/journal-entries/1/post
+Authorization: Bearer {{accessToken}}
+
+###
+
+GET {{Gasoft.Api_HostAddress}}/api/v1/parties
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/sales-invoices
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "partyId": 1,
+  "invoiceNumber": "INV-0001",
+  "invoiceDate": "2026-01-15",
+  "dueDate": "2026-02-14",
+  "currencyCode": "USD",
+  "exchangeRate": 1,
+  "lines": [
+    {
+      "accountId": 3,
+      "taxCodeId": null,
+      "description": "Consulting services",
+      "quantity": 2,
+      "unitPrice": 500
+    }
+  ]
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/sales-invoices/1/post
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "journalId": 1,
+  "accountingPeriodId": 1,
+  "receivableAccountId": 1,
+  "taxAccounts": []
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/payments
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "partyId": 1,
+  "paymentNumber": "RCPT-0001",
+  "direction": "Receive",
+  "paymentDate": "2026-01-20",
+  "currencyCode": "USD",
+  "exchangeRate": 1,
+  "amount": 500
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/payments/1/allocations
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "amount": 500,
+  "salesInvoiceId": 1,
+  "purchaseBillId": null
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/payments/1/post
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "journalId": 1,
+  "accountingPeriodId": 1,
+  "cashAccountId": 1,
+  "controlAccountId": 1
+}
+
+###
+
+GET {{Gasoft.Api_HostAddress}}/api/v1/units-of-measure
+Accept: application/json
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/item-categories
+Authorization: ******
+Content-Type: application/json
+
+{
+  "code": "GOODS",
+  "name": "Finished goods"
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/items
+Authorization: ******
+Content-Type: application/json
+
+{
+  "categoryId": 1,
+  "sku": "ITEM-001",
+  "name": "Sample item",
+  "baseUnitCode": "EA",
+  "costingMethod": "FIFO"
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/warehouses
+Authorization: ******
+Content-Type: application/json
+
+{
+  "code": "MAIN",
+  "name": "Main warehouse"
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/inventory/receipts
+Authorization: ******
+Content-Type: application/json
+
+{
+  "movementNumber": "RCV-0001",
+  "itemId": 1,
+  "warehouseId": 1,
+  "warehouseLocationId": null,
+  "journalId": 1,
+  "accountingPeriodId": 1,
+  "inventoryAccountId": 1,
+  "offsetAccountId": 2,
+  "movementDate": "2026-01-15",
+  "quantity": 10,
+  "unitCost": 25
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/inventory/issues
+Authorization: ******
+Content-Type: application/json
+
+{
+  "movementNumber": "ISS-0001",
+  "itemId": 1,
+  "warehouseId": 1,
+  "warehouseLocationId": null,
+  "journalId": 1,
+  "accountingPeriodId": 1,
+  "inventoryAccountId": 1,
+  "costOfGoodsSoldAccountId": 3,
+  "movementDate": "2026-01-16",
+  "quantity": 2
+}
+
+###
+
+GET {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/inventory/balances
+Authorization: ******
+Accept: application/json
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/inventory/counts
+Authorization: ******
+Content-Type: application/json
+
+{
+  "warehouseId": 1,
+  "countNumber": "COUNT-0001",
+  "countDate": "2026-01-20",
+  "items": [
+    {
+      "itemId": 1,
+      "countedQuantity": 8,
+      "adjustmentUnitCost": null
+    }
+  ]
+}
+
+###
+
+POST {{Gasoft.Api_HostAddress}}/api/v1/companies/{{companyId}}/inventory/counts/1/post
+Authorization: ******
+Content-Type: application/json
+
+{
+  "journalId": 1,
+  "accountingPeriodId": 1,
+  "inventoryAccountId": 1,
+  "adjustmentAccountId": 3
+}

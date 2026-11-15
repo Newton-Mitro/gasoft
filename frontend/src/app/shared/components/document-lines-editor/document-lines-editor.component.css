@@ -1,0 +1,125 @@
+:host {
+  display: block;
+}
+
+.document-lines {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #edf1ed;
+}
+
+.document-lines-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.document-lines-heading h3 {
+  margin: 0;
+  color: #254639;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.document-lines-heading p {
+  margin: 4px 0 0;
+  color: #89968e;
+  font-size: 10px;
+}
+
+.document-line {
+  display: grid;
+  grid-template-columns: 1.2fr 1.5fr 0.8fr 0.9fr 1fr auto;
+  align-items: end;
+  gap: 10px;
+  min-inline-size: 0;
+  margin: 0 0 10px;
+  padding: 12px;
+  border: 1px solid #e6ede7;
+  border-radius: 8px;
+}
+
+.document-line legend {
+  padding: 0 5px;
+  color: #729081;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.document-line label {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: 6px;
+  color: #56685e;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.document-line input,
+.document-line select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 9px;
+  border: 1px solid #dfe8e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #344c40;
+  font: inherit;
+  font-size: 11px;
+}
+
+.document-line .button {
+  min-height: 29px;
+  padding: 0 10px;
+  font-size: 10px;
+}
+
+.document-line .button.secondary {
+  border: 1px solid #dbe5de;
+  border-radius: 7px;
+  background: #fff;
+  color: #335947;
+  cursor: pointer;
+}
+
+.document-line .button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.document-line .remove-line {
+  margin-bottom: 1px;
+}
+
+.document-line-total {
+  margin: 12px 0 0;
+  color: #365247;
+  font-size: 11px;
+  font-weight: 650;
+  text-align: right;
+}
+
+@media (max-width: 1000px) {
+  .document-line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .document-line .remove-line {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 600px) {
+  .document-lines-heading {
+    align-items: flex-start;
+  }
+
+  .document-line {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

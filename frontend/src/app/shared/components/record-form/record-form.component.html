@@ -1,0 +1,69 @@
+<section class="form-panel panel" [class.transaction-form]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries'">
+  <div class="form-panel-heading">
+    <div>
+      <p class="eyebrow">{{ eyebrow }}</p>
+      <h2>{{ heading }}</h2>
+      <p class="form-intro">Enter the details below. Your changes will be validated before they are saved.</p>
+    </div>
+    <span class="form-mark" aria-hidden="true">{{ formMode === 'edit' ? '✎' : '＋' }}</span>
+  </div>
+  <form (ngSubmit)="submitForm.emit()">
+    <div class="section-caption">
+      <span>Details</span>
+      <small><span aria-hidden="true">*</span> Required fields</small>
+    </div>
+    <div class="field-grid" [class.transaction-fields]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries' || formMode === 'receive' || formMode === 'issue'">
+      @for (field of fields; track field.key) {
+        <label [class.checkbox-label]="field.type === 'checkbox'">
+          @if (field.type === 'checkbox') {
+            <input type="checkbox" [name]="field.key" [ngModel]="$any(form)[field.key]" (ngModelChange)="valueChange.emit({ key: field.key, value: $event })" />
+            <span>{{ field.label }}</span>
+          } @else {
+            <span class="field-label">{{ field.label }} @if (field.required) { <span class="required-marker" aria-label="required">*</span> }</span>
+            @if (field.type === 'select') {
+              <select [name]="field.key" [required]="!!field.required" [ngModel]="$any(form)[field.key]" (ngModelChange)="valueChange.emit({ key: field.key, value: $event })">
+                <option [ngValue]="null" disabled>Select {{ field.label.toLowerCase() }}</option>
+                @for (choice of field.options ?? options[field.optionSource ?? '']; track choice.value) {
+                  <option [ngValue]="choice.value">{{ choice.label }}</option>
+                }
+              </select>
+            } @else {
+              <input [type]="field.type ?? 'text'" [name]="field.key" [required]="!!field.required" [min]="field.key === 'exchangeRate' ? 0.0000000001 : field.type === 'number' ? 0 : null" [step]="field.key === 'exchangeRate' ? '0.0000000001' : field.type === 'number' ? 'any' : null" [ngModel]="$any(form)[field.key]" (ngModelChange)="valueChange.emit({ key: field.key, value: $event })" />
+            }
+          }
+        </label>
+      }
+    </div>
+    @if (pageKey === 'sales-invoices' || pageKey === 'purchase-bills') {
+      <app-document-lines-editor
+        [lines]="documentLines"
+        [accounts]="options['accounts'] ?? []"
+        [taxCodes]="options['taxCodes'] ?? []"
+        [accountLabel]="pageKey === 'sales-invoices' ? 'Revenue account' : 'Expense account'"
+        [currencyCode]="$any(form)['currencyCode'] ?? ''"
+        (linesChange)="documentLinesChange.emit($event)"
+      />
+      <p class="form-note">Tax is calculated for each line using the selected tax code and document date. Posting configuration is selected when you post the draft.</p>
+    }
+    @if (pageKey === 'journal-entries') {
+      <app-journal-entry-lines-editor
+        [lines]="journalEntryLines"
+        [accounts]="options['accounts'] ?? []"
+        [currencyCode]="$any(form)['transactionCurrencyCode'] ?? ''"
+        (linesChange)="journalEntryLinesChange.emit($event)"
+      />
+      <p class="form-note">The entry can be saved as a draft once total debits equal total credits.</p>
+    }
+    @if (error) { <div class="alert error">{{ error }}</div> }
+    <div class="form-actions">
+      <p class="action-hint">{{ actionHint }}</p>
+      <div class="action-buttons">
+        <button class="button secondary" type="button" [disabled]="saving" (click)="cancel.emit()">Cancel</button>
+        <button class="button primary" [disabled]="saving || (pageKey === 'journal-entries' && !journalEntryBalanced)">
+          @if (saving) { <span class="button-spinner" aria-hidden="true"></span> Saving… }
+          @else { {{ submitLabel }} }
+        </button>
+      </div>
+    </div>
+  </form>
+</section>

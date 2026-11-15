@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Gasoft.Api/Gasoft.Api.csproj" />
+    <Project Path="src/Gasoft.Application/Gasoft.Application.csproj" />
+    <Project Path="src/Gasoft.Domain/Gasoft.Domain.csproj" />
+    <Project Path="src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj" />
+  </Folder>
+</Solution>

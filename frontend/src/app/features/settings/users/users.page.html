@@ -1,0 +1,75 @@
+@if (view !== 'index') {
+  <div class="page-heading">
+    <div>
+      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
+      <p class="eyebrow">{{ view === 'create' ? 'NEW TEAM MEMBER' : 'EDIT ACCESS' }}</p>
+      <h1>{{ view === 'create' ? 'Add team member' : 'Edit team member access' }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+  </div>
+  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading team member…</div> }
+  @if (!loading) {
+    <app-record-form
+      [pageKey]="pageKey"
+      [title]="title"
+      [formMode]="view === 'edit' ? 'edit' : 'create'"
+      [fields]="fields"
+      [form]="form"
+      [options]="{}"
+      [error]="error"
+      [saving]="saving"
+      (valueChange)="setFormValue($event.key, $event.value)"
+      (submitForm)="submit()"
+      (cancel)="closeForm()"
+    />
+    @if (view === 'create') {
+      <p class="form-note">Share the temporary password with the new member privately. They can change it after signing in.</p>
+    }
+  }
+} @else {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">TENANT WORKSPACE</p>
+      <h1>{{ title }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> Add team member</a>
+  </div>
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (success) { <div class="alert success">{{ success }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading team members…</div> }
+  @if (!loading) {
+    <section class="table-panel panel">
+      <div class="table-header"><div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'member' : 'members' }}</span></div></div>
+      @if (!rows.length) {
+        <div class="empty-state">
+          <span class="empty-icon">♙</span>
+          <h3>No team members yet</h3>
+          <p>Add people who need access to this tenant.</p>
+          <a class="button secondary" [routerLink]="[indexPath, 'create']">Add first team member</a>
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (user of rows; track user.id) {
+                <tr>
+                  <td>{{ user.displayName }}</td>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.role }}</td>
+                  <td><span class="status-tag" [class.posted]="user.isActive">{{ user.isActive ? 'Active' : 'Inactive' }}</span></td>
+                  <td class="action-cell">
+                    <a class="button secondary table-action" [routerLink]="[indexPath, user.id, 'edit']">Edit access</a>
+                    <button class="button secondary table-action" [disabled]="saving" (click)="toggleActive(user)">{{ user.isActive ? 'Deactivate' : 'Reactivate' }}</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+}

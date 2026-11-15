@@ -1,0 +1,97 @@
+@if (view !== 'index') {
+  <div class="page-heading">
+    <div>
+      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
+      <p class="eyebrow">{{ view === 'create' ? 'NEW PAYMENT' : 'EDIT PAYMENT' }}</p>
+      <h1>{{ view === 'create' ? 'Create payment' : 'Edit payment' }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+  </div>
+  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading payment…</div> }
+  @if (!loading) {
+    <app-record-form
+      [pageKey]="pageKey"
+      [title]="title"
+      [formMode]="formMode"
+      [fields]="formFields"
+      [form]="form"
+      [options]="options"
+      [error]="error"
+      [saving]="saving"
+      (valueChange)="setFormValue($event.key, $event.value)"
+      (submitForm)="submit()"
+      (cancel)="closeForm()"
+    />
+  }
+} @else {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">COMPANY WORKSPACE</p>
+      <h1>{{ title }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> New payment</a>
+  </div>
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (postingPaymentId !== null || allocatingPaymentId !== null) {
+    <section class="table-panel panel">
+      <div class="table-header"><div><h2>{{ postingPaymentId !== null ? 'Post payment' : 'Allocate payment' }}</h2><span>{{ postingPaymentId !== null ? 'Posting creates the cash and control account journal entries.' : 'Apply part or all of this payment to an invoice or bill.' }}</span></div></div>
+      <app-record-form
+        [pageKey]="pageKey"
+        [title]="title"
+        [formMode]="formMode"
+        [fields]="formFields"
+        [form]="form"
+        [options]="options"
+        [error]="error"
+        [saving]="saving"
+        (valueChange)="setFormValue($event.key, $event.value)"
+        (submitForm)="postingPaymentId !== null ? submitPost() : submitAllocation()"
+        (cancel)="postingPaymentId = null; allocatingPaymentId = null"
+      />
+    </section>
+  }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading payments…</div> }
+  @if (!loading) {
+    <section class="table-panel panel">
+      <div class="table-header"><div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span></div></div>
+      @if (!rows.length) {
+        <div class="empty-state">
+          <span class="empty-icon">▤</span>
+          <h3>Nothing here yet</h3>
+          <p>Record an incoming or outgoing payment to get started.</p>
+          <a class="button secondary" [routerLink]="[indexPath, 'create']">Create first payment</a>
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Payment number</th><th>Direction</th><th>Payment date</th><th>Currency</th><th>Amount</th><th>Allocated</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (payment of rows; track payment.id) {
+                <tr>
+                  <td>{{ payment.paymentNumber }}</td>
+                  <td>{{ payment.direction }}</td>
+                  <td>{{ payment.paymentDate }}</td>
+                  <td>{{ payment.currencyCode }}</td>
+                  <td>{{ payment.amount }}</td>
+                  <td>{{ payment.allocatedAmount }}</td>
+                  <td><span class="status-tag" [class.posted]="payment.status === 'Posted'">{{ payment.status }}</span></td>
+                  <td class="action-cell">
+                    @if (payment.status !== 'Posted') {
+                      @if (isEditable(payment)) {
+                        <a class="button secondary table-action" [routerLink]="[indexPath, payment.id, 'edit']">Edit</a>
+                      }
+                      <button class="button secondary table-action" (click)="openAllocationForm(payment)">Allocate</button>
+                      <button class="button secondary table-action" (click)="openPostForm(payment)">Post</button>
+                    } @else { <span class="status-tag posted">Posted</span> }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+}

@@ -1,0 +1,43 @@
+<section class="document-lines" aria-label="Document lines">
+  <div class="document-lines-heading">
+    <div><h3>Document lines</h3><p>Add one or more revenue or expense lines.</p></div>
+    <button class="button secondary table-action" type="button" [disabled]="lines.length >= 1000" (click)="addLine()">＋ Add line</button>
+  </div>
+  @for (line of lines; track $index; let i = $index) {
+    <fieldset class="document-line">
+      <legend>Line {{ i + 1 }}</legend>
+      <label>
+        {{ accountLabel }}
+        <select [name]="'lineAccount' + i" required [value]="line.accountId ?? ''" (change)="updateLine(i, 'accountId', $any($event.target).value)">
+          <option value="" disabled>Select account</option>
+          @for (choice of accounts; track choice.value) {
+            <option [value]="choice.value">{{ choice.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Description
+        <input [name]="'lineDescription' + i" required pattern=".*\S.*" maxlength="500" [value]="line.description" (input)="updateLine(i, 'description', $any($event.target).value)" />
+      </label>
+      <label>
+        Quantity
+        <input [name]="'lineQuantity' + i" type="number" min="0.000001" max="9999999999.999999" step="0.000001" required [value]="line.quantity" (input)="updateLine(i, 'quantity', $any($event.target).value)" />
+      </label>
+      <label>
+        Unit price
+        <input [name]="'lineUnitPrice' + i" type="number" min="0" max="99999999999999.999999" step="0.000001" required [value]="line.unitPrice" (input)="updateLine(i, 'unitPrice', $any($event.target).value)" />
+      </label>
+      <label>
+        Tax code (optional)
+        <select [name]="'lineTaxCode' + i" [value]="line.taxCodeId ?? ''" (change)="updateLine(i, 'taxCodeId', $any($event.target).value)">
+          <option value="">No tax</option>
+          @for (choice of taxCodes; track choice.value) {
+            <option [value]="choice.value">{{ choice.label }}</option>
+          }
+        </select>
+      </label>
+      <button class="button secondary table-action remove-line" type="button" [disabled]="lines.length <= 1" (click)="removeLine(i)">Remove</button>
+    </fieldset>
+  }
+  <p class="document-line-total">Subtotal before tax: {{ formattedSubtotal }}</p>
+</section>

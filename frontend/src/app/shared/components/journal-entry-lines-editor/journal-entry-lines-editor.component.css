@@ -1,0 +1,215 @@
+:host {
+  display: block;
+}
+
+.journal-lines {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #edf1ed;
+}
+
+.journal-lines-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.journal-lines-heading h3 {
+  margin: 0;
+  color: #254639;
+  font-size: 13px;
+}
+
+.journal-lines-heading p {
+  margin: 4px 0 0;
+  color: #77877e;
+  font-size: 11px;
+}
+
+.journal-line-headings,
+.journal-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.journal-line-headings {
+  padding: 0 8px 7px;
+  color: #75867b;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.journal-line {
+  position: relative;
+  margin-bottom: 8px;
+  padding: 9px;
+  border: 1px solid #e6ede7;
+  border-radius: 8px;
+}
+
+.journal-line label {
+  min-width: 0;
+}
+
+.journal-line select,
+.journal-line input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #dfe8e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #344c40;
+  font: inherit;
+  font-size: 12px;
+}
+
+.journal-line select:focus,
+.journal-line input:focus {
+  border-color: #5a9a75;
+  outline: 2px solid #5a9a7518;
+}
+
+.journal-line-number {
+  display: none;
+}
+
+.remove-line {
+  min-height: 32px;
+  padding: 0 9px;
+  border: 1px solid #dbe5de;
+  border-radius: 6px;
+  background: #fff;
+  color: #5e7066;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.remove-line:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.journal-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 20px;
+  margin-top: 14px;
+  padding: 13px;
+  border-radius: 8px;
+  background: #f6f8f6;
+}
+
+.journal-totals > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #56685e;
+  font-size: 11px;
+}
+
+.journal-totals strong {
+  color: #244a39;
+  font-variant-numeric: tabular-nums;
+}
+
+.balance-status {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 7px;
+  margin: 3px 0 0;
+  color: #9a5c14;
+  font-size: 11px;
+}
+
+.balance-status > span {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff1d9;
+  font-weight: 700;
+}
+
+.balance-status.balanced {
+  color: #286744;
+}
+
+.balance-status.balanced > span {
+  background: #e2f2e7;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 700px) {
+  .journal-line-headings {
+    display: none;
+  }
+
+  .journal-line {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .journal-line-number {
+    display: block;
+    grid-column: 1 / -1;
+    color: #729081;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .journal-line label:first-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .journal-line label:nth-of-type(2)::before,
+  .journal-line label:nth-of-type(3)::before {
+    display: block;
+    margin-bottom: 4px;
+    color: #75867b;
+    font-size: 10px;
+    font-weight: 650;
+  }
+
+  .journal-line label:nth-of-type(2)::before {
+    content: 'Debit';
+  }
+
+  .journal-line label:nth-of-type(3)::before {
+    content: 'Credit';
+  }
+
+  .remove-line {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 420px) {
+  .journal-lines-heading {
+    align-items: flex-start;
+  }
+
+  .journal-totals {
+    grid-template-columns: 1fr;
+  }
+}
+.account-empty-note{margin:8px 0 0;padding:10px 12px;border:1px solid #e8dfc8;border-radius:7px;background:#fffbf1;color:#78663f;font-size:10px;line-height:1.5}

@@ -1,0 +1,96 @@
+@if (view !== 'index') {
+  <div class="page-heading">
+    <div>
+      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
+      <p class="eyebrow">{{ view === 'create' ? 'NEW RECORD' : 'EDIT RECORD' }}</p>
+      <h1>{{ view === 'create' ? 'Create inventory count' : 'Edit inventory count' }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+  </div>
+  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading inventory count…</div> }
+  @if (!loading && !error) {
+    <app-record-form
+      [pageKey]="pageKey"
+      [title]="title"
+      [formMode]="formMode"
+      [fields]="fields"
+      [form]="form"
+      [options]="options"
+      [error]="error"
+      [saving]="saving"
+      (valueChange)="setFormValue($event.key, $event.value)"
+      (submitForm)="submit()"
+      (cancel)="closeForm()"
+    />
+  }
+} @else {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">COMPANY WORKSPACE</p>
+      <h1>{{ title }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> New count</a>
+  </div>
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (postingCountId !== null) {
+    <section class="table-panel panel">
+      <div class="table-header"><div><h2>Post inventory count</h2><span>Posting creates the inventory adjustment journal entry.</span></div></div>
+      <app-record-form
+        [pageKey]="pageKey"
+        [title]="title"
+        formMode="countPost"
+        [fields]="postingFields"
+        [form]="form"
+        [options]="options"
+        [error]="error"
+        [saving]="saving"
+        (valueChange)="setFormValue($event.key, $event.value)"
+        (submitForm)="submitPost()"
+        (cancel)="closeForm()"
+      />
+    </section>
+  }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading inventory counts…</div> }
+  @if (!loading) {
+    <section class="table-panel panel">
+      <div class="table-header">
+        <div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span></div>
+      </div>
+      @if (!rows.length) {
+        <div class="empty-state">
+          <span class="empty-icon">▤</span>
+          <h3>Nothing here yet</h3>
+          <p>Create a physical count to compare on-hand stock with actual quantities.</p>
+          <a class="button secondary" [routerLink]="[indexPath, 'create']">Create first count</a>
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Count number</th><th>Count date</th><th>Warehouse</th><th>Status</th><th>Items</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (count of rows; track count.id) {
+                <tr>
+                  <td>{{ count.countNumber }}</td>
+                  <td>{{ count.countDate }}</td>
+                  <td>{{ count.warehouseId }}</td>
+                  <td><span class="status-tag" [class.posted]="count.status === 'Posted'">{{ count.status }}</span></td>
+                  <td>{{ count.items.length }} items</td>
+                  <td class="action-cell">
+                    @if (count.status === 'Draft' && count.items.length === 1) {
+                      <a class="button secondary table-action" [routerLink]="[indexPath, count.id, 'edit']">Edit</a>
+                    }
+                    <button class="button secondary table-action" [disabled]="count.status !== 'Draft'" (click)="openPostForm(count)">
+                      {{ count.status === 'Draft' ? 'Post count' : 'Posted' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+}

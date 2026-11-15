@@ -1,0 +1,31 @@
+:host{display:block;color:#344a3f;font-size:12px}
+.page-heading{margin-bottom:23px}
+.eyebrow{margin:0 0 8px;color:#729081;font-size:10px;font-weight:700;letter-spacing:.13em}
+.page-heading h1{margin:0;color:#15362d;font-size:27px;font-weight:650;letter-spacing:-.7px}
+.page-description{margin:8px 0 0;color:#718078;font-size:13px}
+.account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:17px}
+.panel{padding:21px;background:#fff;border:1px solid #e6ede7;border-radius:10px;box-shadow:0 2px 6px #163c2510}
+.panel-heading{display:flex;align-items:flex-start;gap:12px;margin-bottom:20px}
+.panel-icon{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:9px;background:#e8f4ec;color:#287453;font-size:20px}
+.panel-icon.lock{background:#f1eef8;color:#7257a0}
+.panel-heading h2{margin:1px 0 5px;color:#1b3d31;font-size:15px;font-weight:650}
+.panel-heading p{margin:0;color:#849188;font-size:11px;line-height:1.5}
+.account-panel form{display:grid;gap:14px}
+.account-panel label{display:flex;flex-direction:column;gap:7px;color:#56685e;font-size:10px;font-weight:650}
+.account-panel input{width:100%;height:39px;padding:0 11px;border:1px solid #dfe8e1;border-radius:6px;background:#fff;color:#344c40;font:inherit;font-size:12px;outline:0}
+.account-panel input:focus{border-color:#5a9a75;box-shadow:0 0 0 2px #5a9a7518}
+.account-panel input[readonly]{background:#f7f9f7;color:#78877e}
+.account-panel label small{color:#8a968e;font-size:10px;font-weight:400}
+.password-hint{margin:-4px 0 0;color:#849188;font-size:10px}
+.form-actions{display:flex;justify-content:flex-end;padding-top:15px;border-top:1px solid #edf1ed}
+.button{min-height:39px;padding:0 16px;border:1px solid transparent;border-radius:7px;font:inherit;font-size:12px;font-weight:650;cursor:pointer}
+.button:disabled{opacity:.62;cursor:not-allowed}
+.button.primary{color:#fff;background:#1a5944;box-shadow:0 3px 7px #1a594422}
+.button.primary:hover:not(:disabled){background:#134a38}
+.alert{margin:0 0 16px;padding:11px 14px;border:1px solid;border-radius:7px;font-size:12px;line-height:1.55}
+.alert.error{color:#9e3b35;background:#fff6f5;border-color:#f1d3d0}
+.alert.success{color:#246644;background:#f3fbf5;border-color:#d4ead9}
+.loading-card{padding:36px 20px;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;border:1px solid #e7eee8;border-radius:10px;color:#68776f;font-size:12px}
+.spinner{width:17px;height:17px;border:2px solid #dfeae2;border-top-color:#277051;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:850px){.account-grid{grid-template-columns:1fr}}

@@ -1,0 +1,115 @@
+import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
+
+interface LoginResponse {
+  accessToken: string;
+  tenantId: number;
+  companyId: number;
+}
+
+export interface RegistrationResponse {
+  tenantId: number;
+  companyId: number;
+  accessToken: string;
+}
+
+export interface AccountProfile {
+  displayName: string;
+  email: string;
+}
+
+interface RegistrationRequest {
+  tenantName: string;
+  slug: string;
+  companyCode: string;
+  legalName: string;
+  functionalCurrencyCode: string;
+  ownerDisplayName: string;
+  email: string;
+  password: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private readonly tokenKey = 'gasoft.accessToken';
+  private readonly companyKey = 'gasoft.companyId';
+  private readonly tenantKey = 'gasoft.tenantId';
+  private readonly workspaceSlugKey = 'gasoft.workspaceSlug';
+  readonly accessToken = signal<string | null>(localStorage.getItem(this.tokenKey));
+  readonly companyId = signal<number | null>(this.readId(this.companyKey));
+  readonly tenantId = signal<number | null>(this.readId(this.tenantKey));
+  readonly workspaceSlug = signal(localStorage.getItem(this.workspaceSlugKey) ?? '');
+  readonly profile = signal<AccountProfile | null>(null);
+
+  constructor(private readonly http: HttpClient) {}
+
+  login(email: string, password: string, workspaceSlug: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>('/api/v1/auth/token', { email, password, workspaceSlug }).pipe(
+      tap(result => this.save(result.accessToken, result.tenantId, result.companyId, workspaceSlug)),
+    );
+  }
+
+  register(request: RegistrationRequest): Observable<RegistrationResponse> {
+    return this.http.post<RegistrationResponse>('/api/v1/tenants/register', request).pipe(
+      tap(result => this.save(result.accessToken, result.tenantId, result.companyId, request.slug)),
+    );
+  }
+
+  getProfile(): Observable<AccountProfile> {
+    return this.http.get<AccountProfile>('/api/v1/account/profile').pipe(
+      tap(profile => this.profile.set(profile)),
+    );
+  }
+
+  updateProfile(displayName: string): Observable<AccountProfile> {
+    return this.http.put<AccountProfile>('/api/v1/account/profile', { displayName }).pipe(
+      tap(profile => this.profile.set(profile)),
+    );
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    return this.http.post<void>('/api/v1/account/password', { currentPassword, newPassword });
+  }
+
+  requestPasswordReset(email: string, workspaceSlug: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>('/api/v1/auth/password/forgot', { email, workspaceSlug });
+  }
+
+  resetPassword(email: string, token: string, newPassword: string): Observable<void> {
+    return this.http.post<void>('/api/v1/auth/password/reset', { email, token, newPassword });
+  }
+
+  updateCompanyId(companyId: number): void {
+    localStorage.setItem(this.companyKey, String(companyId));
+    this.companyId.set(companyId);
+  }
+
+  logout(): void {
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.companyKey);
+    localStorage.removeItem(this.tenantKey);
+    localStorage.removeItem(this.workspaceSlugKey);
+    this.accessToken.set(null);
+    this.companyId.set(null);
+    this.tenantId.set(null);
+    this.workspaceSlug.set('');
+    this.profile.set(null);
+  }
+
+  private save(token: string, tenantId: number, companyId: number, workspaceSlug: string): void {
+    localStorage.setItem(this.tokenKey, token);
+    localStorage.setItem(this.tenantKey, String(tenantId));
+    localStorage.setItem(this.companyKey, String(companyId));
+    localStorage.setItem(this.workspaceSlugKey, workspaceSlug);
+    this.accessToken.set(token);
+    this.tenantId.set(tenantId);
+    this.companyId.set(companyId);
+    this.workspaceSlug.set(workspaceSlug);
+  }
+
+  private readId(key: string): number | null {
+    const value = Number(localStorage.getItem(key));
+    return Number.isSafeInteger(value) && value > 0 ? value : null;
+  }
+}

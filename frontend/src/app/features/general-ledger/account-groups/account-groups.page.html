@@ -1,0 +1,75 @@
+@if (view !== 'index') {
+  <div class="page-heading">
+    <div>
+      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
+      <p class="eyebrow">{{ view === 'create' ? 'NEW RECORD' : 'EDIT RECORD' }}</p>
+      <h1>{{ view === 'create' ? 'Create account group' : 'Edit account group' }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+  </div>
+  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading account group…</div> }
+  @if (!loading) {
+    <app-record-form
+      [pageKey]="pageKey"
+      [title]="title"
+      [formMode]="formMode"
+      [fields]="fields"
+      [form]="form"
+      [error]="error"
+      [saving]="saving"
+      (valueChange)="setFormValue($event.key, $event.value)"
+      (submitForm)="submit()"
+      (cancel)="closeForm()"
+    />
+  }
+} @else {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">COMPANY WORKSPACE</p>
+      <h1>{{ title }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> New account group</a>
+  </div>
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  <div class="toolbar">
+    <label class="search-box">
+      <span>⌕</span>
+      <input name="search" placeholder="Search by code, name, or type…" [ngModel]="search" (ngModelChange)="onSearchChange($event)" />
+    </label>
+  </div>
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading account groups…</div> }
+  @if (!loading) {
+    <section class="table-panel panel">
+      <div class="table-header">
+        <div><h2>{{ title }}</h2><span>{{ totalCount }} {{ totalCount === 1 ? 'record' : 'records' }}</span></div>
+      </div>
+      @if (!rows.length) {
+        <div class="empty-state">
+          <span class="empty-icon">▤</span>
+          <h3>{{ search ? 'No matching account groups' : 'Nothing here yet' }}</h3>
+          <p>{{ search ? 'Try another search term.' : 'Create your first group to classify ledger accounts.' }}</p>
+          @if (!search) { <a class="button secondary" [routerLink]="[indexPath, 'create']">Create first group</a> }
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Code</th><th>Name</th><th>Account type</th><th>Normal balance</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (group of rows; track group.id) {
+                <tr>
+                  <td>{{ group.code }}</td>
+                  <td>{{ group.name }}</td>
+                  <td>{{ group.accountType }}</td>
+                  <td>{{ group.normalBalance }}</td>
+                  <td><a class="button secondary table-action" [routerLink]="[indexPath, group.id, 'edit']">Edit</a></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+}

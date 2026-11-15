@@ -1,0 +1,49 @@
+@if (editing) {
+  <div class="page-heading">
+    <div>
+      <a class="back-link" routerLink="/settings/company">← Back to company settings</a>
+      <p class="eyebrow">COMPANY PROFILE</p>
+      <h1>Edit company details</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+  </div>
+  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading company settings…</div> }
+  @if (!loading && company) {
+    <app-record-form
+      [pageKey]="pageKey"
+      [title]="title"
+      formMode="edit"
+      [fields]="fields"
+      [form]="form"
+      [options]="options"
+      [error]="error"
+      [saving]="saving"
+      (valueChange)="setFormValue($event.key, $event.value)"
+      (submitForm)="submit()"
+      (cancel)="closeForm()"
+    />
+  }
+} @else {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">COMPANY PROFILE</p>
+      <h1>{{ title }}</h1>
+      <p class="page-description">{{ description }}</p>
+    </div>
+    @if (company) { <a class="button primary" routerLink="/settings/company/edit">Edit company</a> }
+  </div>
+  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading company settings…</div> }
+  @if (!loading && company) {
+    <section class="table-panel panel">
+      <div class="table-header"><div><h2>Company profile</h2><span>{{ company.code }}</span></div></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Company code</th><th>Legal name</th><th>Functional currency</th></tr></thead>
+          <tbody><tr><td>{{ company.code }}</td><td>{{ company.legalName }}</td><td>{{ company.functionalCurrencyCode }}</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  }
+}
