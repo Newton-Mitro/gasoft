@@ -15,8 +15,12 @@
       <span class="journal-line-number">Line {{ i + 1 }}</span>
       <label>
         <span class="visually-hidden">Account for line {{ i + 1 }}</span>
-        <select [name]="'journalLineAccount' + i" required [value]="line.accountId ?? ''" (change)="updateLine(i, 'accountId', $any($event.target).value)">
-          <option value="" disabled>{{ accounts.length ? 'Select an account' : 'No posting accounts available' }}</option>
+        <select [name]="'journalLineAccount' + i" required [disabled]="accountsLoading || accountsFailed" [value]="line.accountId ?? ''" (change)="updateLine(i, 'accountId', $any($event.target).value)">
+          <option value="" disabled>
+            @if (accountsLoading) { Loading accounts... }
+            @else if (accountsFailed) { Could not load accounts }
+            @else { {{ accounts.length ? 'Select an account' : 'No posting accounts available' }} }
+          </option>
           @for (account of accounts; track account.value) {
             <option [value]="account.value">{{ account.label }}</option>
           }
@@ -33,7 +37,7 @@
       <button class="remove-line" type="button" [disabled]="lines.length <= 2" [attr.aria-label]="'Remove line ' + (i + 1)" (click)="removeLine(i)">Remove</button>
     </div>
   }
-  @if (!accounts.length) {
+  @if (!accounts.length && !accountsLoading && !accountsFailed) {
     <p class="account-empty-note">There are no active posting accounts for this company. Add or activate one in Chart of accounts, then return here.</p>
   }
 

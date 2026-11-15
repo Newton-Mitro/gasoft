@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { Choice, DataRow } from '../models/shared.models';
+import { OptionDataCacheService } from './option-data-cache.service';
 
 interface OptionRequest {
   endpoint: string;
@@ -26,13 +27,18 @@ const OPTION_REQUESTS: Record<string, OptionRequest> = {
 
 @Injectable({ providedIn: 'root' })
 export class OptionDataService {
-  constructor(private readonly api: ApiService) {}
+  constructor(
+    private readonly api: ApiService,
+    private readonly cache: OptionDataCacheService,
+  ) {}
 
   getOptions(source: string): Observable<Choice[]> {
     const request = OPTION_REQUESTS[source];
     if (!request) throw new Error(`Unknown option source: ${source}`);
-    return this.api.get<unknown>(request.endpoint, !request.global).pipe(
-      map(result => this.toOptions(source, result)),
+    return this.cache.get(source, () =>
+      this.api.get<unknown>(request.endpoint, !request.global).pipe(
+        map(result => this.toOptions(source, result)),
+      ),
     );
   }
 

@@ -6,7 +6,7 @@ export interface Choice {
 export interface Field {
   key: string;
   label: string;
-  type?: 'text' | 'password' | 'email' | 'date' | 'number' | 'checkbox' | 'select';
+  type?: 'text' | 'password' | 'email' | 'tel' | 'url' | 'date' | 'number' | 'checkbox' | 'select';
   required?: boolean;
   options?: Choice[];
   optionSource?: 'groups' | 'years' | 'parties' | 'accounts' | 'categories' | 'currencies' | 'journals' | 'periods' | 'warehouses' | 'items' | 'units' | 'jurisdictions' | 'taxCodes';

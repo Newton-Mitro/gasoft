@@ -21,8 +21,12 @@
           } @else {
             <span class="field-label">{{ field.label }} @if (field.required) { <span class="required-marker" aria-label="required">*</span> }</span>
             @if (field.type === 'select') {
-              <select [name]="field.key" [required]="!!field.required" [ngModel]="$any(form)[field.key]" (ngModelChange)="valueChange.emit({ key: field.key, value: $event })">
-                <option [ngValue]="null" disabled>Select {{ field.label.toLowerCase() }}</option>
+              <select [name]="field.key" [required]="!!field.required" [disabled]="isOptionLoading(field.optionSource) || hasOptionFailed(field.optionSource)" [ngModel]="$any(form)[field.key]" (ngModelChange)="valueChange.emit({ key: field.key, value: $event })">
+                <option [ngValue]="null" disabled>
+                  @if (isOptionLoading(field.optionSource)) { Loading {{ field.label.toLowerCase() }}... }
+                  @else if (hasOptionFailed(field.optionSource)) { Could not load {{ field.label.toLowerCase() }} }
+                  @else { Select {{ field.label.toLowerCase() }} }
+                </option>
                 @for (choice of field.options ?? options[field.optionSource ?? '']; track choice.value) {
                   <option [ngValue]="choice.value">{{ choice.label }}</option>
                 }
@@ -49,6 +53,8 @@
       <app-journal-entry-lines-editor
         [lines]="journalEntryLines"
         [accounts]="options['accounts'] ?? []"
+        [accountsLoading]="isOptionLoading('accounts')"
+        [accountsFailed]="hasOptionFailed('accounts')"
         [currencyCode]="$any(form)['transactionCurrencyCode'] ?? ''"
         (linesChange)="journalEntryLinesChange.emit($event)"
       />
@@ -59,7 +65,7 @@
       <p class="action-hint">{{ actionHint }}</p>
       <div class="action-buttons">
         <button class="button secondary" type="button" [disabled]="saving" (click)="cancel.emit()">Cancel</button>
-        <button class="button primary" [disabled]="saving || (pageKey === 'journal-entries' && !journalEntryBalanced)">
+        <button class="button primary" [disabled]="saving || (pageKey === 'journal-entries' && (optionsLoading.length > 0 || optionsFailed.length > 0 || !journalEntryBalanced))">
           @if (saving) { <span class="button-spinner" aria-hidden="true"></span> Saving… }
           @else { {{ submitLabel }} }
         </button>

@@ -24,9 +24,13 @@
     <div class="company-switcher">
       @if (currentCompany; as company) {
         <div class="company-select">
-          <span class="company-avatar" aria-hidden="true">{{
-            company.legalName.charAt(0).toUpperCase()
-          }}</span>
+          <span class="company-avatar" aria-hidden="true">
+            @if (auth.companyLogoUrl() ?? company.logoUrl; as logoUrl) {
+              <app-authenticated-image [src]="logoUrl" [fallback]="company.legalName.charAt(0).toUpperCase()" [alt]="company.legalName + ' logo'" />
+            } @else {
+              {{ company.legalName.charAt(0).toUpperCase() }}
+            }
+          </span>
           <span class="company-copy">
             <span class="company-name">{{ company.legalName }}</span>
             <span class="company-details"
@@ -112,7 +116,13 @@
         routerLinkActive="profile-active"
         (click)="mobileNavOpen = false"
       >
-        <span class="profile-avatar">{{ profileInitial }}</span>
+        <span class="profile-avatar">
+          @if (auth.profile()?.profileImageUrl; as profileImageUrl) {
+            <app-authenticated-image [src]="profileImageUrl" [fallback]="profileInitial" [alt]="auth.profile()?.displayName + ' profile image'" />
+          } @else {
+            {{ profileInitial }}
+          }
+        </span>
         <span class="profile-copy"
           >{{ auth.profile()?.displayName || 'Your profile'
           }}<small>{{ auth.profile()?.email || 'Manage account' }}</small></span
@@ -132,7 +142,13 @@
       >
       <div class="topbar-right">
         <span class="status-pill"><span></span> All systems ready</span
-        ><span class="avatar-small">{{ profileInitial }}</span>
+        ><span class="avatar-small">
+          @if (auth.profile()?.profileImageUrl; as profileImageUrl) {
+            <app-authenticated-image [src]="profileImageUrl" [fallback]="profileInitial" [alt]="auth.profile()?.displayName + ' profile image'" />
+          } @else {
+            {{ profileInitial }}
+          }
+        </span>
       </div>
     </header>
     <div class="content-area"><router-outlet /></div>

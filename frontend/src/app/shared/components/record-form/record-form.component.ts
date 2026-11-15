@@ -18,6 +18,8 @@ export class RecordFormComponent {
   @Input() fields: Field[] = [];
   @Input() form: Record<string, unknown> = {};
   @Input() options: Record<string, Choice[]> = {};
+  @Input() optionsLoading: string[] = [];
+  @Input() optionsFailed: string[] = [];
   @Input() documentLines: DocumentLineForm[] = [];
   @Input() journalEntryLines: JournalEntryLineForm[] = [];
   @Input() error = '';
@@ -87,5 +89,13 @@ export class RecordFormComponent {
     if (this.formMode === 'post' || this.formMode === 'countPost') return 'Posting will create a ledger entry.';
     if (this.formMode === 'allocate') return 'Review the allocation details before saving.';
     return 'You can review this record after saving.';
+  }
+
+  isOptionLoading(source: string | undefined): boolean {
+    return !!source && this.optionsLoading.includes(source);
+  }
+
+  hasOptionFailed(source: string | undefined): boolean {
+    return !!source && this.optionsFailed.includes(source);
   }
 }

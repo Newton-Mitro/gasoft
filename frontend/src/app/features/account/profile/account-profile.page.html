@@ -18,6 +18,27 @@
           <span class="panel-icon">◎</span>
           <div><h2>Personal details</h2><p>Update how your name appears in the workspace.</p></div>
         </div>
+        <div class="profile-image-editor">
+          <div class="profile-image-preview">
+            @if (profileImageUrl) {
+              <app-authenticated-image [src]="profileImageUrl" [fallback]="profile()?.displayName?.charAt(0)?.toUpperCase() || 'U'" alt="Profile image" />
+            } @else {
+              <span aria-hidden="true">{{ profile()?.displayName?.charAt(0)?.toUpperCase() || 'U' }}</span>
+            }
+          </div>
+          <div>
+            <label class="button secondary image-picker">
+              Choose profile image
+              <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onImageSelected($event)" />
+            </label>
+            <p class="image-hint">JPEG, PNG, or WebP; up to 5 MB.</p>
+            @if (selectedImage) {
+              <button class="button primary" type="button" [disabled]="imageUploading()" (click)="uploadProfileImage()">
+                {{ imageUploading() ? 'Uploading…' : 'Upload image' }}
+              </button>
+            }
+          </div>
+        </div>
         <form (ngSubmit)="updateProfile()">
           <label>Display name
             <input name="displayName" [(ngModel)]="displayName" maxlength="200" autocomplete="name" required />

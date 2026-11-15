@@ -80,6 +80,7 @@ public sealed class AppDbContext(
         builder.Entity<ApplicationUser>(entity =>
         {
             entity.Property(x => x.DisplayName).HasMaxLength(200);
+            entity.Property(x => x.ProfileImageUrl).HasMaxLength(500);
             entity.HasIndex(x => x.NormalizedEmail).IsUnique();
         });
 
@@ -91,6 +92,15 @@ public sealed class AppDbContext(
             entity.Property(x => x.Code).HasMaxLength(30).IsRequired();
             entity.Property(x => x.LegalName).HasMaxLength(250).IsRequired();
             entity.Property(x => x.FunctionalCurrencyCode).HasMaxLength(3).IsFixedLength().IsRequired();
+            entity.Property(x => x.Phone).HasMaxLength(40);
+            entity.Property(x => x.Email).HasMaxLength(320);
+            entity.Property(x => x.Website).HasMaxLength(2000);
+            entity.Property(x => x.Address).HasMaxLength(250);
+            entity.Property(x => x.CityRegion).HasMaxLength(150);
+            entity.Property(x => x.PostalCode).HasMaxLength(30);
+            entity.Property(x => x.Country).HasMaxLength(100);
+            entity.Property(x => x.TaxId).HasMaxLength(100);
+            entity.Property(x => x.LogoUrl).HasMaxLength(500);
             entity.HasOne<Tenant>().WithMany().HasForeignKey(x => x.TenantId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<Currency>().WithMany().HasForeignKey(x => x.FunctionalCurrencyCode).OnDelete(DeleteBehavior.Restrict);
             entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);

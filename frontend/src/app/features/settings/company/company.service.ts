@@ -14,6 +14,12 @@ export class CompanyService {
   update(id: number, payload: UpdateCompanyPayload): Observable<Company> {
     return this.api.put<unknown>(`/api/v1/companies/${id}`, payload, false).pipe(map(toCompany));
   }
+
+  uploadLogo(id: number, image: File): Observable<Company> {
+    const formData = new FormData();
+    formData.append('image', image);
+    return this.api.post<unknown>(`/api/v1/companies/${id}/logo`, formData, false).pipe(map(toCompany));
+  }
 }
 
 function toCompany(value: unknown): Company {
@@ -27,5 +33,18 @@ function isCompany(value: unknown): value is Company {
   return typeof row['id'] === 'number' && Number.isSafeInteger(row['id']) &&
     typeof row['code'] === 'string' &&
     typeof row['legalName'] === 'string' &&
-    typeof row['functionalCurrencyCode'] === 'string';
+    typeof row['functionalCurrencyCode'] === 'string' &&
+    isNullableString(row['phone']) &&
+    isNullableString(row['email']) &&
+    isNullableString(row['website']) &&
+    isNullableString(row['address']) &&
+    isNullableString(row['cityRegion']) &&
+    isNullableString(row['postalCode']) &&
+    isNullableString(row['country']) &&
+    isNullableString(row['taxId']) &&
+    isNullableString(row['logoUrl']);
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === 'string';
 }

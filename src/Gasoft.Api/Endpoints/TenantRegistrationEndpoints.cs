@@ -29,7 +29,16 @@ public static class TenantRegistrationEndpoints
                     company.Id,
                     company.Code,
                     company.LegalName,
-                    company.FunctionalCurrencyCode))
+                    company.FunctionalCurrencyCode,
+                    company.Phone,
+                    company.Email,
+                    company.Website,
+                    company.Address,
+                    company.CityRegion,
+                    company.PostalCode,
+                    company.Country,
+                    company.TaxId,
+                    company.LogoUrl))
                 .SingleOrDefaultAsync(cancellationToken);
 
             return company is null ? Results.NotFound() : Results.Ok(company);
@@ -68,5 +77,18 @@ public static class TenantRegistrationEndpoints
 
     public sealed record TenantRegistrationResponse(long TenantId, long CompanyId, string AccessToken);
     public sealed record CurrencyResponse(string Code, string Name, byte DecimalPlaces);
-    public sealed record CompanyResponse(long Id, string Code, string LegalName, string FunctionalCurrencyCode);
+    public sealed record CompanyResponse(
+        long Id,
+        string Code,
+        string LegalName,
+        string FunctionalCurrencyCode,
+        string? Phone,
+        string? Email,
+        string? Website,
+        string? Address,
+        string? CityRegion,
+        string? PostalCode,
+        string? Country,
+        string? TaxId,
+        string? LogoUrl);
 }

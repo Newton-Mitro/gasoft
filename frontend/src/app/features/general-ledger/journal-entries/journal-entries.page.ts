@@ -42,6 +42,8 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
   rows: JournalEntry[] = [];
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
+  optionsLoading: string[] = [];
+  optionsFailed: string[] = [];
   lines: JournalEntryLineForm[] = [];
   loading = false;
   saving = false;
@@ -51,6 +53,7 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
   formReady = false;
   private currentRecordId: number | null = null;
   private routeSubscription?: Subscription;
+  private optionSubscriptions = new Subscription();
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -63,6 +66,7 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.routeSubscription = combineLatest([this.route.data, this.route.paramMap]).subscribe(([data, params]) => {
+      this.cancelOptionLoads();
       const view = data['view'];
       this.view = view === 'create' || view === 'edit' ? view : 'index';
       this.currentRecordId = toRecordId(params);
@@ -85,6 +89,7 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routeSubscription?.unsubscribe();
+    this.cancelOptionLoads();
   }
 
   get journalEntryBalanced(): boolean {
@@ -93,6 +98,10 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
 
   get formModeValue(): RecordFormMode {
     return this.view === 'edit' ? 'edit' : 'create';
+  }
+
+  retryOptions(): void {
+    this.loadOptions();
   }
 
   setFormValue(key: string, value: unknown): void {
@@ -246,19 +255,36 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
   }
 
   private loadOptions(): void {
+    this.cancelOptionLoads();
+    this.error = '';
     this.options = {};
+    this.optionsLoading = [...JOURNAL_ENTRY_OPTIONS];
+    this.optionsFailed = [];
     for (const source of JOURNAL_ENTRY_OPTIONS) {
-      this.optionData.getOptions(source).subscribe({
+      const request = this.optionData.getOptions(source).subscribe({
         next: options => {
           this.options[source] = options;
+          this.finishOptionLoad(source);
           this.changeDetector.markForCheck();
         },
         error: error => {
+          this.finishOptionLoad(source);
+          this.optionsFailed = [...this.optionsFailed, source];
           this.error = errorMessage(error, `Could not load ${source} options.`);
           this.changeDetector.markForCheck();
         },
       });
+      this.optionSubscriptions.add(request);
     }
+  }
+
+  private finishOptionLoad(source: string): void {
+    this.optionsLoading = this.optionsLoading.filter(option => option !== source);
+  }
+
+  private cancelOptionLoads(): void {
+    this.optionSubscriptions.unsubscribe();
+    this.optionSubscriptions = new Subscription();
   }
 }
 

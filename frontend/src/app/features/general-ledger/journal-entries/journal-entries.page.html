@@ -7,7 +7,10 @@
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
-  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
+  @if (error && !loading && !formReady) { <div class="alert error">{{ error }}</div> }
+  @if (optionsFailed.length) {
+    <button class="button secondary" type="button" (click)="retryOptions()">Retry loading options</button>
+  }
   @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading journal entry…</div> }
   @if (!loading && formReady) {
     <app-record-form
@@ -17,6 +20,8 @@
       [fields]="fields"
       [form]="form"
       [options]="options"
+      [optionsLoading]="optionsLoading"
+      [optionsFailed]="optionsFailed"
       [journalEntryLines]="lines"
       [error]="error"
       [saving]="saving"

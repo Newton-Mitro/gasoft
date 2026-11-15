@@ -5,12 +5,14 @@ import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { errorMessage } from '../../shared/utils/page-utils';
 import { ThemeService } from '../../shared/theme/theme.service';
+import { AuthenticatedImageComponent } from '../../shared/components/authenticated-image/authenticated-image.component';
 
 interface CompanyOption {
   id: number;
   code: string;
   legalName: string;
   functionalCurrencyCode: string;
+  logoUrl: string | null;
 }
 
 interface NavLink {
@@ -26,7 +28,7 @@ interface NavSection {
 
 @Component({
   selector: 'app-shell',
-  imports: [FormsModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [FormsModule, RouterLink, RouterLinkActive, RouterOutlet, AuthenticatedImageComponent],
   styleUrl: './shell.css',
   templateUrl: './shell.html',
 })

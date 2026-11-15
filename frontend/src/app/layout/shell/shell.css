@@ -33,3 +33,5 @@
 .profile-more{font-size:18px}
 .logout-button{width:100%;display:flex;justify-content:space-between;padding:8px 10px 0;border:0;background:transparent;color:#9eb3ac;font:inherit;font-size:10px;cursor:pointer}
 .logout-button:hover{color:#fff}
+.company-avatar,.profile-avatar,.avatar-small{overflow:hidden}
+.avatar-small{flex:0 0 27px}

@@ -1,13 +1,14 @@
 import { of } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { OptionDataService } from './option-data.service';
+import { OptionDataCacheService } from './option-data-cache.service';
 
 describe('OptionDataService', () => {
   function createService(response: unknown): OptionDataService {
     const api = {
       get: () => of(response),
     } as unknown as ApiService;
-    return new OptionDataService(api);
+    return new OptionDataService(api, new OptionDataCacheService());
   }
 
   it('formats accounting periods as readable date ranges', () => {
@@ -42,6 +43,22 @@ describe('OptionDataService', () => {
     service.getOptions('accounts').subscribe(result => options = result);
 
     expect(options).toEqual([{ label: '1000 · Cash', value: 3 }]);
+  });
+
+  it('reuses loaded option data until the cache is cleared', () => {
+    let requestCount = 0;
+    const api = {
+      get: () => {
+        requestCount += 1;
+        return of([{ code: 'USD', name: 'US Dollar' }]);
+      },
+    } as unknown as ApiService;
+    const service = new OptionDataService(api, new OptionDataCacheService());
+
+    service.getOptions('currencies').subscribe();
+    service.getOptions('currencies').subscribe();
+
+    expect(requestCount).toBe(1);
   });
 
 });

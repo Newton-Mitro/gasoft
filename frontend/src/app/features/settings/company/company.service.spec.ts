@@ -8,6 +8,15 @@ describe('CompanyService', () => {
     code: 'ACME',
     legalName: 'Acme Limited',
     functionalCurrencyCode: 'USD',
+    phone: null,
+    email: null,
+    website: null,
+    address: null,
+    cityRegion: null,
+    postalCode: null,
+    country: null,
+    taxId: null,
+    logoUrl: null,
   };
 
   it('uses the selected company endpoint without company URL scoping', () => {
@@ -21,16 +30,33 @@ describe('CompanyService', () => {
         calls.push(['PUT', endpoint, body, companyScoped]);
         return of(company);
       },
+      post: (endpoint: string, body: unknown, companyScoped: boolean) => {
+        calls.push(['POST', endpoint, body instanceof FormData, companyScoped]);
+        return of(company);
+      },
     } as unknown as ApiService;
     const service = new CompanyService(api);
-    const payload = { legalName: 'Acme Limited', functionalCurrencyCode: 'USD' };
+    const payload = {
+      legalName: 'Acme Limited',
+      functionalCurrencyCode: 'USD',
+      phone: '',
+      email: '',
+      website: '',
+      address: '',
+      cityRegion: '',
+      postalCode: '',
+      country: '',
+      taxId: '',
+    };
 
     service.getById(3).subscribe();
     service.update(3, payload).subscribe();
+    service.uploadLogo(3, new File(['image'], 'logo.png', { type: 'image/png' })).subscribe();
 
     expect(calls).toEqual([
       ['GET', '/api/v1/companies/3', false],
       ['PUT', '/api/v1/companies/3', payload, false],
+      ['POST', '/api/v1/companies/3/logo', true, false],
     ]);
   });
 

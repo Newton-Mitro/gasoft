@@ -7,6 +7,31 @@
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
+  @if (!loading && company) {
+    <section class="panel company-branding">
+      <div class="company-logo-preview">
+        @if (displayLogoUrl) {
+          <app-authenticated-image [src]="displayLogoUrl" [fallback]="company.legalName.charAt(0).toUpperCase()" alt="Company logo preview" />
+        } @else {
+          <span aria-hidden="true">{{ company.legalName.charAt(0).toUpperCase() }}</span>
+        }
+      </div>
+      <div class="company-logo-copy">
+        <h2>Organization logo</h2>
+        <p>Upload a JPEG, PNG, or WebP image up to 5 MB.</p>
+        <label class="button secondary logo-picker">
+          Choose image
+          <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onLogoSelected($event)" />
+        </label>
+        @if (selectedLogo) {
+          <button class="button primary" type="button" [disabled]="logoUploading" (click)="uploadLogo()">
+            {{ logoUploading ? 'Uploading…' : 'Upload logo' }}
+          </button>
+        }
+        @if (logoError) { <p class="alert error" role="alert">{{ logoError }}</p> }
+      </div>
+    </section>
+  }
   @if (error && !loading) { <div class="alert error">{{ error }}</div> }
   @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading company settings…</div> }
   @if (!loading && company) {
@@ -33,17 +58,49 @@
     </div>
     @if (company) { <a class="button primary" routerLink="/settings/company/edit">Edit company</a> }
   </div>
+  @if (!loading && company) {
+    <section class="panel company-branding">
+      <div class="company-logo-preview">
+        @if (displayLogoUrl) {
+          <app-authenticated-image [src]="displayLogoUrl" [fallback]="company.legalName.charAt(0).toUpperCase()" alt="Company logo preview" />
+        } @else {
+          <span aria-hidden="true">{{ company.legalName.charAt(0).toUpperCase() }}</span>
+        }
+      </div>
+      <div class="company-logo-copy">
+        <h2>Organization logo</h2>
+        <p>Upload a JPEG, PNG, or WebP image up to 5 MB.</p>
+        <label class="button secondary logo-picker">
+          Choose image
+          <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onLogoSelected($event)" />
+        </label>
+        @if (selectedLogo) {
+          <button class="button primary" type="button" [disabled]="logoUploading" (click)="uploadLogo()">
+            {{ logoUploading ? 'Uploading…' : 'Upload logo' }}
+          </button>
+        }
+        @if (logoError) { <p class="alert error" role="alert">{{ logoError }}</p> }
+      </div>
+    </section>
+  }
   @if (error) { <div class="alert error">{{ error }}</div> }
   @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading company settings…</div> }
   @if (!loading && company) {
-    <section class="table-panel panel">
-      <div class="table-header"><div><h2>Company profile</h2><span>{{ company.code }}</span></div></div>
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th>Company code</th><th>Legal name</th><th>Functional currency</th></tr></thead>
-          <tbody><tr><td>{{ company.code }}</td><td>{{ company.legalName }}</td><td>{{ company.functionalCurrencyCode }}</td></tr></tbody>
-        </table>
-      </div>
+    <section class="panel company-details">
+      <div class="table-header"><div><h2>Organization details</h2><span>{{ company.code }}</span></div></div>
+      <dl>
+        <div><dt>Legal name</dt><dd>{{ company.legalName }}</dd></div>
+        <div><dt>Company code</dt><dd>{{ company.code }}</dd></div>
+        <div><dt>Functional currency</dt><dd>{{ company.functionalCurrencyCode }}</dd></div>
+        <div><dt>Phone</dt><dd>{{ company.phone || '—' }}</dd></div>
+        <div><dt>Contact email</dt><dd>{{ company.email || '—' }}</dd></div>
+        <div><dt>Website</dt><dd>{{ company.website || '—' }}</dd></div>
+        <div><dt>Street address</dt><dd>{{ company.address || '—' }}</dd></div>
+        <div><dt>City and region/state</dt><dd>{{ company.cityRegion || '—' }}</dd></div>
+        <div><dt>Postal/ZIP code</dt><dd>{{ company.postalCode || '—' }}</dd></div>
+        <div><dt>Country</dt><dd>{{ company.country || '—' }}</dd></div>
+        <div><dt>Tax/VAT registration number</dt><dd>{{ company.taxId || '—' }}</dd></div>
+      </dl>
     </section>
   }
 }

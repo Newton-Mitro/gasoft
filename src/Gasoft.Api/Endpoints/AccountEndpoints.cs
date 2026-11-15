@@ -19,7 +19,7 @@ public static class AccountEndpoints
             var user = await userManager.GetUserAsync(principal);
             return user is null
                 ? Results.Unauthorized()
-                : Results.Ok(new ProfileResponse(user.DisplayName ?? string.Empty, user.Email ?? string.Empty));
+                : Results.Ok(new ProfileResponse(user.DisplayName ?? string.Empty, user.Email ?? string.Empty, user.ProfileImageUrl));
         })
         .WithName("GetAccountProfile");
 
@@ -46,9 +46,60 @@ public static class AccountEndpoints
                     ["displayName"] = result.Errors.Select(error => error.Description).ToArray()
                 });
 
-            return Results.Ok(new ProfileResponse(user.DisplayName, user.Email ?? string.Empty));
+            return Results.Ok(new ProfileResponse(user.DisplayName, user.Email ?? string.Empty, user.ProfileImageUrl));
         })
         .WithName("UpdateAccountProfile");
+
+        account.MapGet("/profile/image/{userId:long}/{fileName}", async (
+            long userId,
+            string fileName,
+            ClaimsPrincipal principal,
+            UserManager<ApplicationUser> userManager,
+            IWebHostEnvironment environment) =>
+        {
+            var user = await userManager.GetUserAsync(principal);
+            if (user is null || user.Id != userId ||
+                user.ProfileImageUrl != ImageUpload.ProfileImageUrl(userId, fileName))
+                return Results.NotFound();
+
+            var image = ImageUpload.OpenRead(environment, "users", userId.ToString(), fileName);
+            return image.Stream is null || image.ContentType is null
+                ? Results.NotFound()
+                : Results.File(image.Stream, image.ContentType);
+        })
+        .WithName("GetAccountProfileImage");
+
+        account.MapPost("/profile/image", async (
+            IFormFile image,
+            ClaimsPrincipal principal,
+            UserManager<ApplicationUser> userManager,
+            IWebHostEnvironment environment,
+            CancellationToken cancellationToken) =>
+        {
+            var user = await userManager.GetUserAsync(principal);
+            if (user is null) return Results.Unauthorized();
+
+            var savedImage = await ImageUpload.SaveAsync(image, environment, "users", user.Id.ToString(), cancellationToken);
+            if (savedImage.Error is not null)
+                return Results.ValidationProblem(new Dictionary<string, string[]> { ["image"] = [savedImage.Error] });
+
+            var previousImageUrl = user.ProfileImageUrl;
+            user.ProfileImageUrl = savedImage.Url;
+            var result = await userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                ImageUpload.Delete(environment, savedImage.Url!);
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["image"] = result.Errors.Select(error => error.Description).ToArray()
+                });
+            }
+
+            ImageUpload.Delete(environment, previousImageUrl);
+            return Results.Ok(new ProfileResponse(user.DisplayName ?? string.Empty, user.Email ?? string.Empty, user.ProfileImageUrl));
+        })
+        .DisableAntiforgery()
+        .WithName("UploadAccountProfileImage");
 
         account.MapPost("/password", async (
             ChangePasswordRequest request,
@@ -84,7 +135,7 @@ public static class AccountEndpoints
         return app;
     }
 
-    public sealed record ProfileResponse(string DisplayName, string Email);
+    public sealed record ProfileResponse(string DisplayName, string Email, string? ProfileImageUrl);
     public sealed record UpdateProfileRequest(string? DisplayName);
     public sealed record ChangePasswordRequest(string? CurrentPassword, string? NewPassword);
 }

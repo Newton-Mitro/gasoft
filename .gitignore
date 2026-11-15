@@ -4,6 +4,7 @@
 **/dist/
 **/.angular/
 **/coverage/
+src/Gasoft.Api/App_Data/uploads/
 .vs/
 .idea/
 *.user

@@ -14,6 +14,8 @@ import { Choice, JournalEntryLineForm } from '../../models/shared.models';
 export class JournalEntryLinesEditorComponent {
   @Input() lines: JournalEntryLineForm[] = [];
   @Input() accounts: Choice[] = [];
+  @Input() accountsLoading = false;
+  @Input() accountsFailed = false;
   @Input() currencyCode = '';
   @Output() readonly linesChange = new EventEmitter<JournalEntryLineForm[]>();
 

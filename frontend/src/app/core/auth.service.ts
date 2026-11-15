@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { OptionDataCacheService } from '../shared/data/option-data-cache.service';
 
 interface LoginResponse {
   accessToken: string;
@@ -17,6 +18,7 @@ export interface RegistrationResponse {
 export interface AccountProfile {
   displayName: string;
   email: string;
+  profileImageUrl: string | null;
 }
 
 interface RegistrationRequest {
@@ -41,8 +43,12 @@ export class AuthService {
   readonly tenantId = signal<number | null>(this.readId(this.tenantKey));
   readonly workspaceSlug = signal(localStorage.getItem(this.workspaceSlugKey) ?? '');
   readonly profile = signal<AccountProfile | null>(null);
+  readonly companyLogoUrl = signal<string | null>(null);
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly optionCache: OptionDataCacheService,
+  ) {}
 
   login(email: string, password: string, workspaceSlug: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>('/api/v1/auth/token', { email, password, workspaceSlug }).pipe(
@@ -68,6 +74,14 @@ export class AuthService {
     );
   }
 
+  uploadProfileImage(image: File): Observable<AccountProfile> {
+    const formData = new FormData();
+    formData.append('image', image);
+    return this.http.post<AccountProfile>('/api/v1/account/profile/image', formData).pipe(
+      tap(profile => this.profile.set(profile)),
+    );
+  }
+
   changePassword(currentPassword: string, newPassword: string): Observable<void> {
     return this.http.post<void>('/api/v1/account/password', { currentPassword, newPassword });
   }
@@ -81,11 +95,18 @@ export class AuthService {
   }
 
   updateCompanyId(companyId: number): void {
+    this.optionCache.clear();
     localStorage.setItem(this.companyKey, String(companyId));
     this.companyId.set(companyId);
+    this.companyLogoUrl.set(null);
+  }
+
+  updateCompanyLogoUrl(logoUrl: string | null): void {
+    this.companyLogoUrl.set(logoUrl);
   }
 
   logout(): void {
+    this.optionCache.clear();
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.companyKey);
     localStorage.removeItem(this.tenantKey);
@@ -95,9 +116,11 @@ export class AuthService {
     this.tenantId.set(null);
     this.workspaceSlug.set('');
     this.profile.set(null);
+    this.companyLogoUrl.set(null);
   }
 
   private save(token: string, tenantId: number, companyId: number, workspaceSlug: string): void {
+    this.optionCache.clear();
     localStorage.setItem(this.tokenKey, token);
     localStorage.setItem(this.tenantKey, String(tenantId));
     localStorage.setItem(this.companyKey, String(companyId));
