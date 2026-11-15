@@ -76,6 +76,7 @@ export class Shell {
       label: 'ADMINISTRATION',
       links: [
         { label: 'Company settings', path: '/settings/company', icon: '⚙' },
+        { label: 'Tax jurisdictions', path: '/settings/tax-jurisdictions', icon: '%' },
         { label: 'Tax registrations', path: '/settings/tax-registrations', icon: '%' },
         { label: 'Team members', path: '/users', icon: '♙' },
       ],

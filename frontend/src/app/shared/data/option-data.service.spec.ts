@@ -61,4 +61,27 @@ describe('OptionDataService', () => {
     expect(requestCount).toBe(1);
   });
 
+  it('shares the tax reference request between jurisdiction and tax-code options', () => {
+    let requestCount = 0;
+    const api = {
+      get: () => {
+        requestCount += 1;
+        return of({
+          jurisdictions: [{ id: 4, code: 'US-CA', countryCode: 'US' }],
+          codes: [{ id: 8, code: 'VAT', taxType: 'Sales' }],
+        });
+      },
+    } as unknown as ApiService;
+    const service = new OptionDataService(api, new OptionDataCacheService());
+    let jurisdictions: { label: string; value: string | number }[] = [];
+    let taxCodes: { label: string; value: string | number }[] = [];
+
+    service.getOptions('jurisdictions').subscribe(result => jurisdictions = result);
+    service.getOptions('taxCodes').subscribe(result => taxCodes = result);
+
+    expect(requestCount).toBe(1);
+    expect(jurisdictions).toEqual([{ label: 'US-CA · US', value: 4 }]);
+    expect(taxCodes).toEqual([{ label: 'VAT · Sales', value: 8 }]);
+  });
+
 });

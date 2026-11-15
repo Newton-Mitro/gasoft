@@ -22,6 +22,7 @@ describe('OptionDataCacheService', () => {
 
   it('retries failed requests instead of keeping an error cached', () => {
     const cache = new OptionDataCacheService();
+    const state = cache.state('accounts');
     let requestCount = 0;
     const fail = () => {
       requestCount += 1;
@@ -29,6 +30,7 @@ describe('OptionDataCacheService', () => {
     };
 
     cache.get('accounts', fail).subscribe({ error: () => undefined });
+    expect(state()).toBe('failed');
     cache.get('accounts', fail).subscribe({ error: () => undefined });
 
     expect(requestCount).toBe(2);
@@ -36,6 +38,7 @@ describe('OptionDataCacheService', () => {
 
   it('reloads data after invalidation', () => {
     const cache = new OptionDataCacheService();
+    const state = cache.state('journals');
     let requestCount = 0;
     const load = () => {
       requestCount += 1;
@@ -43,9 +46,23 @@ describe('OptionDataCacheService', () => {
     };
 
     cache.get('journals', load).subscribe();
+    expect(state()).toBe('loaded');
     cache.clear();
+    expect(state()).toBe('idle');
     cache.get('journals', load).subscribe();
 
     expect(requestCount).toBe(2);
+  });
+
+  it('marks requests as loading and successful requests as loaded', () => {
+    const cache = new OptionDataCacheService();
+    const state = cache.state('currencies');
+    const response = new Subject<Choice[]>();
+
+    cache.get('currencies', () => response).subscribe();
+    expect(state()).toBe('loading');
+    response.next([]);
+    response.complete();
+    expect(state()).toBe('loaded');
   });
 });

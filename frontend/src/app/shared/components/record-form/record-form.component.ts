@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { isBalancedJournalEntry } from '../../../features/general-ledger/journal-entries/journal-entry-lines';
 import { Choice, DocumentLineForm, Field, JournalEntryLineForm, RecordFormMode } from '../../models/shared.models';
+import { OptionDataService } from '../../data/option-data.service';
 import { DocumentLinesEditorComponent } from '../document-lines-editor/document-lines-editor.component';
 import { JournalEntryLinesEditorComponent } from '../journal-entry-lines-editor/journal-entry-lines-editor.component';
 
@@ -12,6 +13,8 @@ import { JournalEntryLinesEditorComponent } from '../journal-entry-lines-editor/
   templateUrl: './record-form.component.html',
 })
 export class RecordFormComponent {
+  constructor(private readonly optionData: OptionDataService) {}
+
   @Input() pageKey = '';
   @Input() title = '';
   @Input() formMode: RecordFormMode = 'create';
@@ -52,6 +55,7 @@ export class RecordFormComponent {
       warehouses: 'warehouse',
       'inventory-counts': 'inventory count',
       'tax-registrations': 'tax registration',
+      'tax-jurisdictions': 'tax jurisdiction',
     };
     if (this.formMode === 'post') return 'Posting details';
     if (this.formMode === 'allocate') return 'Allocate payment';
@@ -82,6 +86,7 @@ export class RecordFormComponent {
     if (this.pageKey === 'purchase-bills') return 'Create bill';
     if (this.pageKey === 'journal-entries') return 'Save draft';
     if (this.pageKey === 'inventory-counts') return 'Create count';
+    if (this.pageKey === 'tax-jurisdictions') return 'Add jurisdiction';
     return 'Create record';
   }
 
@@ -92,10 +97,24 @@ export class RecordFormComponent {
   }
 
   isOptionLoading(source: string | undefined): boolean {
-    return !!source && this.optionsLoading.includes(source);
+    return !!source && (
+      this.optionsLoading.includes(source) || this.optionData.status(source)() === 'loading'
+    );
   }
 
   hasOptionFailed(source: string | undefined): boolean {
-    return !!source && this.optionsFailed.includes(source);
+    return !!source && (
+      this.optionsFailed.includes(source) || this.optionData.status(source)() === 'failed'
+    );
+  }
+
+  hasPendingOptions(): boolean {
+    return this.optionsLoading.length > 0 ||
+      this.fields.some(field => this.isOptionLoading(field.optionSource));
+  }
+
+  hasFailedOptions(): boolean {
+    return this.optionsFailed.length > 0 ||
+      this.fields.some(field => this.hasOptionFailed(field.optionSource));
   }
 }

@@ -10,6 +10,10 @@ export class DocumentLinesEditorComponent {
   @Input() lines: DocumentLineForm[] = [];
   @Input() accounts: Choice[] = [];
   @Input() taxCodes: Choice[] = [];
+  @Input() accountsLoading = false;
+  @Input() accountsFailed = false;
+  @Input() taxCodesLoading = false;
+  @Input() taxCodesFailed = false;
   @Input() accountLabel = 'Account';
   @Input() currencyCode = '';
   @Output() readonly linesChange = new EventEmitter<DocumentLineForm[]>();

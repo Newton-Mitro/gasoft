@@ -40,18 +40,24 @@ interface Currency {
             <label>Legal name<input name="legalName" [(ngModel)]="legalName" required /></label>
           </div>
           <label>Functional currency
-            <select name="currency" [(ngModel)]="currencyCode" required>
+            <select name="currency" [(ngModel)]="currencyCode" [disabled]="currencyLoading() || currencyLoadFailed()" required>
+              @if (currencyLoading()) { <option value="" disabled>Loading currencies…</option> }
+              @else if (currencyLoadFailed()) { <option value="" disabled>Could not load currencies</option> }
+              @else { <option value="" disabled>Select a currency</option> }
               @for (currency of currencies(); track currency.code) {
                 <option [value]="currency.code">{{ currency.code }} · {{ currency.name }}</option>
               }
             </select>
+            @if (currencyLoadFailed()) {
+              <button class="button secondary" type="button" (click)="loadCurrencies()">Retry loading currencies</button>
+            }
           </label>
           <div class="form-row">
             <label>Your name<input name="ownerDisplayName" [(ngModel)]="ownerDisplayName" required /></label>
             <label>Email address<input name="email" type="email" [(ngModel)]="email" autocomplete="email" required /></label>
           </div>
           <label>Password<input name="password" type="password" [(ngModel)]="password" minlength="12" autocomplete="new-password" required /></label>
-          <button class="button primary full" [disabled]="busy() || !currencies().length">{{ busy() ? 'Creating workspace…' : 'Create workspace' }}</button>
+          <button class="button primary full" [disabled]="busy() || currencyLoading() || currencyLoadFailed() || !currencies().length">{{ busy() ? 'Creating workspace…' : 'Create workspace' }}</button>
           <p class="auth-switch">Already have an account? <a routerLink="/login">Sign in</a></p>
         </form>
       </section>
@@ -60,6 +66,8 @@ interface Currency {
 })
 export class RegisterPage implements OnInit {
   readonly currencies = signal<Currency[]>([]);
+  readonly currencyLoading = signal(true);
+  readonly currencyLoadFailed = signal(false);
   readonly busy = signal(false);
   readonly error = signal('');
   readonly showSignIn = signal(false);
@@ -79,12 +87,23 @@ export class RegisterPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadCurrencies();
+  }
+
+  loadCurrencies(): void {
+    this.currencyLoading.set(true);
+    this.currencyLoadFailed.set(false);
     this.http.get<Currency[]>('/api/v1/currencies').subscribe({
       next: currencies => {
         this.currencies.set(currencies);
         this.currencyCode = currencies[0]?.code ?? '';
+        this.currencyLoading.set(false);
       },
-      error: error => this.error.set(errorMessage(error, 'Could not load supported currencies.')),
+      error: error => {
+        this.error.set(errorMessage(error, 'Could not load supported currencies.'));
+        this.currencyLoading.set(false);
+        this.currencyLoadFailed.set(true);
+      },
     });
   }
 

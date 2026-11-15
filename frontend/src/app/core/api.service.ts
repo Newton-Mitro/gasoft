@@ -24,4 +24,8 @@ export class ApiService {
   put<T>(path: string, body: unknown, companyScoped = true) {
     return this.http.put<T>(companyScoped ? this.companyUrl(path) : path, body);
   }
+
+  delete<T>(path: string, companyScoped = true) {
+    return this.http.delete<T>(companyScoped ? this.companyUrl(path) : path);
+  }
 }

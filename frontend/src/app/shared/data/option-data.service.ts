@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Signal } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { Choice, DataRow } from '../models/shared.models';
-import { OptionDataCacheService } from './option-data-cache.service';
+import { OptionDataCacheService, OptionLoadState } from './option-data-cache.service';
 
 interface OptionRequest {
   endpoint: string;
@@ -35,15 +35,13 @@ export class OptionDataService {
   getOptions(source: string): Observable<Choice[]> {
     const request = OPTION_REQUESTS[source];
     if (!request) throw new Error(`Unknown option source: ${source}`);
-    return this.cache.get(source, () =>
-      this.api.get<unknown>(request.endpoint, !request.global).pipe(
-        map(result => this.toOptions(source, result)),
-      ),
-    );
+    return this.getRawOptions(request).pipe(map(result => this.toOptions(source, result)));
   }
 
   getTaxReferenceRows(): Observable<DataRow[]> {
-    return this.api.get<DataRow>('/api/v1/tax-reference', false).pipe(
+    return this.cache.get(this.cacheKey('/api/v1/tax-reference'), () =>
+      this.api.get<DataRow>('/api/v1/tax-reference', false),
+    ).pipe(
       map(reference => {
         const codes = Array.isArray(reference['codes']) ? reference['codes'].filter(isDataRow) : [];
         return codes.flatMap(code => {
@@ -67,6 +65,22 @@ export class OptionDataService {
         });
       }),
     );
+  }
+
+  status(source: string): Signal<OptionLoadState> {
+    const request = OPTION_REQUESTS[source];
+    if (!request) throw new Error(`Unknown option source: ${source}`);
+    return this.cache.state(this.cacheKey(request.endpoint, request.global));
+  }
+
+  private getRawOptions(request: OptionRequest): Observable<unknown> {
+    return this.cache.get(this.cacheKey(request.endpoint, request.global), () =>
+      this.api.get<unknown>(request.endpoint, !request.global),
+    );
+  }
+
+  private cacheKey(endpoint: string, global = true): string {
+    return `${global ? 'global' : 'company'}:${endpoint}`;
   }
 
   toRows(result: unknown): DataRow[] {
