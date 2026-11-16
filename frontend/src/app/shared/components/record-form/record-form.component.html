@@ -1,16 +1,21 @@
 <section class="form-panel panel" [class.transaction-form]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries'">
   <div class="form-panel-heading">
-    <div>
+    <div class="form-heading-copy">
       <p class="eyebrow">{{ eyebrow }}</p>
       <h2>{{ heading }}</h2>
-      <p class="form-intro">Enter the details below. Your changes will be validated before they are saved.</p>
     </div>
-    <span class="form-mark" aria-hidden="true">{{ formMode === 'edit' ? '✎' : '＋' }}</span>
+    <div class="form-heading-side">
+      <span class="form-mode-tag">{{ modeLabel }}</span>
+      <span class="form-mark" aria-hidden="true">{{ formMode === 'edit' ? '✎' : '＋' }}</span>
+    </div>
   </div>
   <form (ngSubmit)="submitForm.emit()">
     <div class="section-caption">
-      <span>Details</span>
-      <small><span aria-hidden="true">*</span> Required fields</small>
+      <div>
+        <strong>Details</strong>
+        <small>Enter the information below. Required fields are marked with an asterisk.</small>
+      </div>
+      <small class="required-note"><span aria-hidden="true">*</span> Required</small>
     </div>
     <div class="field-grid" [class.transaction-fields]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries' || formMode === 'receive' || formMode === 'issue'">
       @for (field of fields; track field.key) {

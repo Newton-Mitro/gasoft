@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 export const SETTINGS_ROUTES: Routes = [
-  { path: 'settings/tax-jurisdictions/create', loadComponent: () => import('./tax-jurisdictions/tax-jurisdictions.page').then(module => module.TaxJurisdictionsPageComponent), data: { page: 'tax-jurisdictions', view: 'create' } },
-  { path: 'settings/tax-jurisdictions/:recordId/edit', loadComponent: () => import('./tax-jurisdictions/tax-jurisdictions.page').then(module => module.TaxJurisdictionsPageComponent), data: { page: 'tax-jurisdictions', view: 'edit' } },
+  { path: 'settings/tax-jurisdictions/create', redirectTo: '/settings/tax-jurisdictions', pathMatch: 'full' },
+  { path: 'settings/tax-jurisdictions/:recordId/edit', redirectTo: '/settings/tax-jurisdictions' },
   { path: 'settings/tax-jurisdictions', loadComponent: () => import('./tax-jurisdictions/tax-jurisdictions.page').then(module => module.TaxJurisdictionsPageComponent), data: { page: 'tax-jurisdictions' } },
   { path: 'settings/tax-registrations/create', loadComponent: () => import('./tax-registrations/tax-registrations.page').then(module => module.TaxRegistrationsPageComponent), data: { page: 'tax-registrations', view: 'create' } },
   { path: 'settings/tax-registrations/:recordId/edit', loadComponent: () => import('./tax-registrations/tax-registrations.page').then(module => module.TaxRegistrationsPageComponent), data: { page: 'tax-registrations', view: 'edit' } },

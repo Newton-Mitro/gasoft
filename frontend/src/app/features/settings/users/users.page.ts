@@ -1,10 +1,12 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { Choice, Field } from '../../../shared/models/shared.models';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
 import {
+  AddExistingTenantUserPayload,
   CreateTenantUserPayload,
   TenantUser,
   UpdateTenantUserPayload,
@@ -19,33 +21,29 @@ const ROLE_OPTIONS: Choice[] = [
 
 @Component({
   selector: 'app-users-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [FormsModule, RouterLink, RecordFormComponent],
   templateUrl: './users.page.html',
-  styleUrl: '../../../shared/styles/feature-page.css',
+  styleUrls: ['../../../shared/styles/feature-page.css', './users.page.css'],
 })
 export class UsersPageComponent implements OnInit, OnDestroy {
   readonly pageKey = 'users';
   readonly title = 'Team members';
-  readonly description = 'Manage tenant membership and access roles. Initial passwords must be shared privately.';
+  readonly description = 'Manage tenant membership and access roles. Add new accounts or invite an existing Gasoft user.';
   readonly indexPath = '/users';
-  readonly createFields: Field[] = [
-    { key: 'displayName', label: 'Full name', required: true },
-    { key: 'email', label: 'Email address', type: 'email', required: true },
-    { key: 'role', label: 'Role', type: 'select', required: true, options: ROLE_OPTIONS },
-    { key: 'temporaryPassword', label: 'Temporary password', type: 'password', required: true },
-  ];
+  readonly roleOptions = ROLE_OPTIONS;
   readonly editFields: Field[] = [
     { key: 'role', label: 'Role', type: 'select', required: true, options: ROLE_OPTIONS },
     { key: 'isActive', label: 'Active membership', type: 'checkbox' },
   ];
   rows: TenantUser[] = [];
-  fields: Field[] = this.createFields;
+  fields: Field[] = [];
   form: Record<string, unknown> = {};
   loading = false;
   saving = false;
   error = '';
   success = '';
   view: 'index' | 'create' | 'edit' = 'index';
+  accountMode: 'new' | 'existing' = 'new';
   private currentRecordId: number | null = null;
   private routeSubscription?: Subscription;
 
@@ -64,7 +62,7 @@ export class UsersPageComponent implements OnInit, OnDestroy {
       this.error = '';
       this.success = '';
       if (this.view === 'create') {
-        this.fields = this.createFields;
+        this.accountMode = 'new';
         this.form = {};
         this.loading = false;
       } else if (this.view === 'edit') {
@@ -90,6 +88,11 @@ export class UsersPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.accountMode === 'existing') {
+      this.submitExistingUser();
+      return;
+    }
+
     const email = String(this.form['email'] ?? '').trim();
     const displayName = String(this.form['displayName'] ?? '').trim();
     const temporaryPassword = String(this.form['temporaryPassword'] ?? '');
@@ -102,6 +105,12 @@ export class UsersPageComponent implements OnInit, OnDestroy {
     }
     const payload: CreateTenantUserPayload = { email, displayName, temporaryPassword, role };
     this.save(this.users.create(payload), 'Could not add this team member.');
+  }
+
+  setAccountMode(mode: 'new' | 'existing'): void {
+    this.accountMode = mode;
+    this.form = {};
+    this.error = '';
   }
 
   closeForm(): void {
@@ -143,6 +152,18 @@ export class UsersPageComponent implements OnInit, OnDestroy {
       isActive: Boolean(this.form['isActive']),
     };
     this.save(this.users.update(this.currentRecordId, payload), 'Could not update team member access.');
+  }
+
+  private submitExistingUser(): void {
+    const email = String(this.form['email'] ?? '').trim();
+    const role = String(this.form['role'] ?? '');
+    if (!email || email.length > 256 || !ROLE_OPTIONS.some(option => option.value === role)) {
+      this.error = 'Enter a valid email address and permitted role.';
+      return;
+    }
+
+    const payload: AddExistingTenantUserPayload = { email, role };
+    this.save(this.users.addExisting(payload), 'Could not add this existing account.');
   }
 
   private save(request: ReturnType<TenantUserService['create']>, failureMessage: string): void {

@@ -3,8 +3,3 @@ export interface TaxJurisdiction {
   code: string;
   countryCode: string;
 }
-
-export interface TaxJurisdictionPayload {
-  code: string;
-  countryCode: string;
-}

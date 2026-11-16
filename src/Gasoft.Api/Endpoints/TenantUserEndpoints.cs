@@ -146,6 +146,70 @@ public static class TenantUserEndpoints
         })
         .WithName("CreateTenantUser");
 
+        users.MapPost("/existing", async (
+            AddExistingTenantUserRequest request,
+            HttpContext context,
+            AppDbContext db,
+            UserManager<ApplicationUser> userManager,
+            CancellationToken cancellationToken) =>
+        {
+            var manager = await GetManagerAsync(context, db, cancellationToken);
+            if (manager is null) return ForbiddenManager();
+
+            var email = request.Email?.Trim() ?? string.Empty;
+            var role = NormalizeRole(request.Role);
+            var errors = new Dictionary<string, string[]>();
+            if (email.Length > 256 || !new EmailAddressAttribute().IsValid(email))
+                errors["email"] = ["Enter a valid email address (maximum 256 characters)."];
+            if (role is null || (role == "Owner" && manager.Role != "Owner"))
+                errors["role"] = ["Choose a role you are permitted to assign."];
+            if (errors.Count != 0) return Results.ValidationProblem(errors);
+
+            var user = await userManager.FindByEmailAsync(email);
+            if (user is null)
+                return Results.NotFound(new { error = "No existing account was found with that email address." });
+
+            if (await db.TenantUsers.AnyAsync(
+                    membership => membership.TenantId == manager.TenantId && membership.UserId == user.Id,
+                    cancellationToken))
+            {
+                return Results.Conflict(new
+                {
+                    error = "This account is already a member of the workspace. Reactivate it from the team member list if needed."
+                });
+            }
+
+            var membership = new TenantUser
+            {
+                TenantId = manager.TenantId,
+                UserId = user.Id,
+                Role = role!,
+                IsActive = true
+            };
+            db.TenantUsers.Add(membership);
+
+            try
+            {
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException exception) when (IsTenantMembershipConflict(exception))
+            {
+                return Results.Conflict(new
+                {
+                    error = "This account is already a member of the workspace. Reactivate it from the team member list if needed."
+                });
+            }
+
+            var response = new TenantUserResponse(
+                user.Id,
+                user.Email ?? email,
+                user.DisplayName ?? string.Empty,
+                membership.Role,
+                membership.IsActive);
+            return Results.Created($"/api/v1/tenant/users/{user.Id}", response);
+        })
+        .WithName("AddExistingTenantUser");
+
         users.MapPut("/{userId:long}", async (
             long userId,
             UpdateTenantUserRequest request,
@@ -245,8 +309,16 @@ public static class TenantUserEndpoints
     private static bool IsUniqueConstraintViolation(DbUpdateException exception) =>
         exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
 
+    private static bool IsTenantMembershipConflict(DbUpdateException exception) =>
+        exception.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            ConstraintName: "PK_TenantUsers"
+        };
+
     private sealed record ManagerContext(long TenantId, string Role);
     public sealed record CreateTenantUserRequest(string? Email, string? DisplayName, string? TemporaryPassword, string? Role);
+    public sealed record AddExistingTenantUserRequest(string? Email, string? Role);
     public sealed record UpdateTenantUserRequest(string? Role, bool IsActive);
     public sealed record TenantUserResponse(long Id, string Email, string DisplayName, string Role, bool IsActive);
 }

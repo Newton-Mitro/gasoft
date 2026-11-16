@@ -35,16 +35,19 @@ describe('TenantUserService', () => {
       role: user.role,
     };
     const accessPayload = { role: user.role, isActive: false };
+    const existingPayload = { email: user.email, role: user.role };
 
     service.getAll().subscribe();
     service.getById(user.id).subscribe();
     service.create(createPayload).subscribe();
+    service.addExisting(existingPayload).subscribe();
     service.update(user.id, accessPayload).subscribe();
 
     expect(calls).toEqual([
       ['GET', '/api/v1/tenant/users', false],
       ['GET', '/api/v1/tenant/users/12', false],
       ['POST', '/api/v1/tenant/users', createPayload, false],
+      ['POST', '/api/v1/tenant/users/existing', existingPayload, false],
       ['PUT', '/api/v1/tenant/users/12', accessPayload, false],
     ]);
   });

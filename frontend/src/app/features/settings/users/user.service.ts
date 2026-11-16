@@ -1,7 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
-import { CreateTenantUserPayload, TenantUser, UpdateTenantUserPayload } from './user.model';
+import {
+  AddExistingTenantUserPayload,
+  CreateTenantUserPayload,
+  TenantUser,
+  UpdateTenantUserPayload,
+} from './user.model';
 
 const ENDPOINT = '/api/v1/tenant/users';
 
@@ -19,6 +24,10 @@ export class TenantUserService {
 
   create(payload: CreateTenantUserPayload): Observable<TenantUser> {
     return this.api.post<unknown>(ENDPOINT, payload, false).pipe(map(toTenantUser));
+  }
+
+  addExisting(payload: AddExistingTenantUserPayload): Observable<TenantUser> {
+    return this.api.post<unknown>(`${ENDPOINT}/existing`, payload, false).pipe(map(toTenantUser));
   }
 
   update(id: number, payload: UpdateTenantUserPayload): Observable<TenantUser> {

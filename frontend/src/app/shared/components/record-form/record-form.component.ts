@@ -55,7 +55,7 @@ export class RecordFormComponent {
       warehouses: 'warehouse',
       'inventory-counts': 'inventory count',
       'tax-registrations': 'tax registration',
-      'tax-jurisdictions': 'tax jurisdiction',
+
       companies: 'organization',
     };
     if (this.formMode === 'post') return 'Posting details';
@@ -76,6 +76,16 @@ export class RecordFormComponent {
     return 'NEW ENTRY';
   }
 
+  get modeLabel(): string {
+    if (this.formMode === 'edit') return 'EDITING';
+    if (this.formMode === 'post' || this.formMode === 'countPost') return 'POSTING';
+    if (this.formMode === 'allocate') return 'ALLOCATING';
+    if (this.formMode === 'receive') return 'RECEIVING';
+    if (this.formMode === 'issue') return 'ISSUING';
+    if (this.formMode === 'location') return 'NEW LOCATION';
+    return 'NEW';
+  }
+
   get submitLabel(): string {
     if (this.formMode === 'post' || this.formMode === 'countPost') return 'Post to ledger';
     if (this.formMode === 'allocate') return 'Save allocation';
@@ -87,7 +97,6 @@ export class RecordFormComponent {
     if (this.pageKey === 'purchase-bills') return 'Create bill';
     if (this.pageKey === 'journal-entries') return 'Save draft';
     if (this.pageKey === 'inventory-counts') return 'Create count';
-    if (this.pageKey === 'tax-jurisdictions') return 'Add jurisdiction';
     if (this.pageKey === 'companies') return 'Create organization';
     return 'Create record';
   }

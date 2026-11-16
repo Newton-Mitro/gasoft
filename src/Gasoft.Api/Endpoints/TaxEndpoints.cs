@@ -9,7 +9,7 @@ public static class TaxEndpoints
     public static IEndpointRouteBuilder MapTaxEndpoints(this IEndpointRouteBuilder app)
     {
         var jurisdictions = app.MapGroup("/api/v1/tax-jurisdictions")
-            .RequireAuthorization(policy => policy.RequireRole("Owner"));
+            .RequireAuthorization();
 
         jurisdictions.MapGet("", async (
             AppDbContext db,
@@ -23,91 +23,6 @@ public static class TaxEndpoints
             return Results.Ok(rows);
         })
         .WithName("GetTaxJurisdictions");
-
-        jurisdictions.MapGet("/{jurisdictionId:long}", async (
-            long jurisdictionId,
-            AppDbContext db,
-            CancellationToken cancellationToken) =>
-        {
-            var row = await db.TaxJurisdictions.AsNoTracking()
-                .Where(item => item.Id == jurisdictionId)
-                .Select(item => new TaxJurisdictionResponse(item.Id, item.Code, item.CountryCode))
-                .SingleOrDefaultAsync(cancellationToken);
-            return row is null ? Results.NotFound() : Results.Ok(row);
-        })
-        .WithName("GetTaxJurisdiction");
-
-        jurisdictions.MapPost("", async (
-            TaxJurisdictionRequest request,
-            AppDbContext db,
-            CancellationToken cancellationToken) =>
-        {
-            var code = request.Code?.Trim().ToUpperInvariant() ?? string.Empty;
-            var countryCode = request.CountryCode?.Trim().ToUpperInvariant() ?? string.Empty;
-            var errors = ValidateTaxJurisdiction(code, countryCode);
-            if (errors.Count != 0) return Results.ValidationProblem(errors);
-            if (await db.TaxJurisdictions.AnyAsync(item => item.Code == code, cancellationToken))
-                return Results.Conflict(new { error = "A tax jurisdiction with this code already exists." });
-
-            var jurisdiction = new TaxJurisdiction { Code = code, CountryCode = countryCode };
-            db.TaxJurisdictions.Add(jurisdiction);
-            await db.SaveChangesAsync(cancellationToken);
-            return Results.Created(
-                $"/api/v1/tax-jurisdictions/{jurisdiction.Id}",
-                new TaxJurisdictionResponse(jurisdiction.Id, jurisdiction.Code, jurisdiction.CountryCode));
-        })
-        .WithName("CreateTaxJurisdiction");
-
-        jurisdictions.MapPut("/{jurisdictionId:long}", async (
-            long jurisdictionId,
-            TaxJurisdictionRequest request,
-            AppDbContext db,
-            CancellationToken cancellationToken) =>
-        {
-            var jurisdiction = await db.TaxJurisdictions.SingleOrDefaultAsync(
-                item => item.Id == jurisdictionId, cancellationToken);
-            if (jurisdiction is null) return Results.NotFound();
-
-            var code = request.Code?.Trim().ToUpperInvariant() ?? string.Empty;
-            var countryCode = request.CountryCode?.Trim().ToUpperInvariant() ?? string.Empty;
-            var errors = ValidateTaxJurisdiction(code, countryCode);
-            if (errors.Count != 0) return Results.ValidationProblem(errors);
-            if (await db.TaxJurisdictions.AnyAsync(
-                    item => item.Id != jurisdictionId && item.Code == code, cancellationToken))
-                return Results.Conflict(new { error = "A tax jurisdiction with this code already exists." });
-
-            jurisdiction.Code = code;
-            jurisdiction.CountryCode = countryCode;
-            await db.SaveChangesAsync(cancellationToken);
-            return Results.Ok(new TaxJurisdictionResponse(
-                jurisdiction.Id, jurisdiction.Code, jurisdiction.CountryCode));
-        })
-        .WithName("UpdateTaxJurisdiction");
-
-        jurisdictions.MapDelete("/{jurisdictionId:long}", async (
-            long jurisdictionId,
-            AppDbContext db,
-            CancellationToken cancellationToken) =>
-        {
-            var jurisdiction = await db.TaxJurisdictions.SingleOrDefaultAsync(
-                item => item.Id == jurisdictionId, cancellationToken);
-            if (jurisdiction is null) return Results.NotFound();
-
-            var hasTaxCodes = await db.TaxCodes.AnyAsync(
-                item => item.JurisdictionId == jurisdictionId, cancellationToken);
-            var hasRegistrations = await db.TenantTaxRegistrations.IgnoreQueryFilters().AnyAsync(
-                item => item.JurisdictionId == jurisdictionId, cancellationToken);
-            if (hasTaxCodes || hasRegistrations)
-                return Results.Conflict(new
-                {
-                    error = "This jurisdiction is in use by tax codes or company registrations and cannot be deleted."
-                });
-
-            db.TaxJurisdictions.Remove(jurisdiction);
-            await db.SaveChangesAsync(cancellationToken);
-            return Results.NoContent();
-        })
-        .WithName("DeleteTaxJurisdiction");
 
         app.MapGet("/api/v1/tax-reference", async (
             AppDbContext db,
@@ -303,16 +218,5 @@ public static class TaxEndpoints
     }
 
     public sealed record CreateTaxRegistrationRequest(long JurisdictionId, string? RegistrationNumber);
-    public sealed record TaxJurisdictionRequest(string? Code, string? CountryCode);
     public sealed record TaxJurisdictionResponse(long Id, string Code, string CountryCode);
-
-    private static Dictionary<string, string[]> ValidateTaxJurisdiction(string code, string countryCode)
-    {
-        var errors = new Dictionary<string, string[]>();
-        if (code.Length is 0 or > 40)
-            errors["code"] = ["Jurisdiction code is required and must be at most 40 characters."];
-        if (countryCode.Length != 2 || !countryCode.All(char.IsAsciiLetter))
-            errors["countryCode"] = ["Enter a two-letter country code."];
-        return errors;
-    }
 }

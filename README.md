@@ -41,7 +41,7 @@ In the connection-string command above, replace the password placeholder with th
 
 ### 3. Apply migrations to a fresh database
 
-Install the EF Core command-line tool if needed, then create the database schema and seed migration-managed reference data (currencies and units of measure):
+Install the EF Core command-line tool if needed, then create the database schema and seed migration-managed reference data (currencies, units of measure, and ISO country tax jurisdictions):
 
 ```sh
 dotnet tool install --global dotnet-ef --version 10.0.14
@@ -74,9 +74,11 @@ The Chart of Accounts is available at `/general-ledger/accounts`, with separate 
 
 Account Groups have their own index (`/general-ledger/account-groups`), create (`/general-ledger/account-groups/new`), and edit (`/general-ledger/account-groups/{groupId}/edit`) pages. The index uses `GET /api/v1/companies/{companyId}/account-groups/page` for server-side pagination with optional `search`; page sizes are limited to 100. Group details and edits use `GET` and `PUT /api/v1/companies/{companyId}/account-groups/{groupId}`. Normal balance is derived from account type, and account type cannot be changed once accounts use that group.
 
-Tenant user management is available at `/users` and manages access across the tenant’s companies. Active Owners and Admins can list members and create users with an initial password; share that password privately. Owners can also assign or remove the Owner role. User access and role changes take effect on subsequent API requests. The API uses `GET` and `POST /api/v1/tenant/users` to list and create memberships and `PUT /api/v1/tenant/users/{userId}` to change a role or deactivate/reactivate a member. At least one active Owner must remain.
+Tenant user management is available at `/users` and manages access across the tenant’s companies. Active Owners and Admins can list members, create new accounts with an initial password (share it privately), or add an existing Gasoft account by email without changing its password. Owners can also assign or remove the Owner role. User access and role changes take effect on subsequent API requests. The API uses `GET` and `POST /api/v1/tenant/users` to list and create memberships, `POST /api/v1/tenant/users/existing` to add an existing account, and `PUT /api/v1/tenant/users/{userId}` to change a role or deactivate/reactivate a member. At least one active Owner must remain.
 
 Fiscal years and accounting periods have independent pages at `/general-ledger/fiscal-years` and `/general-ledger/periods`. Inventory items, categories, and warehouses are managed separately at `/inventory/items`, `/inventory/categories`, and `/inventory/warehouses`.
+
+Supported tax jurisdictions are seeded as read-only ISO 3166-1 country reference data and are available to all workspace members. Configure company registrations and tax codes/rates separately; jurisdiction presets do not imply tax rules or rates.
 
 ### 5. Register a workspace and seed company defaults
 
@@ -104,4 +106,4 @@ curl -X POST http://localhost:5035/api/v1/companies/1/setup/defaults \
   -H 'Authorization: Bearer <accessToken>'
 ```
 
-Replace `1` with the `companyId` from registration and `<accessToken>` with its returned token. The seed endpoint returns counts of the records it added. The default fiscal year is based on the current UTC calendar year; review and adjust it for your accounting calendar. Tax jurisdictions/rates and exchange rates are not fabricated by the seeder and must be provisioned from authoritative sources before use.
+Replace `1` with the `companyId` from registration and `<accessToken>` with its returned token. The seed endpoint returns counts of the records it added. The default fiscal year is based on the current UTC calendar year; review and adjust it for your accounting calendar. Tax rates and exchange rates are not fabricated by the seeder and must be provisioned from authoritative sources before use.

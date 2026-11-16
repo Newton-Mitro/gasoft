@@ -1,0 +1,336 @@
+:host {
+  display: block;
+}
+
+.member-create {
+  width: min(100%, 780px);
+  margin: 0 auto;
+  padding: clamp(8px, 2vw, 22px) 0 36px;
+}
+
+.member-create-heading {
+  position: relative;
+  padding: 0 0 22px 62px;
+}
+
+.member-create-heading .back-link {
+  display: inline-block;
+  margin: 0 0 24px -62px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  transition: color .15s ease;
+}
+
+.member-create-heading .back-link:hover {
+  color: var(--accent-text);
+}
+
+.member-create-icon {
+  position: absolute;
+  top: 46px;
+  left: 0;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 23px;
+}
+
+.member-create-heading .eyebrow,
+.member-form-heading .eyebrow {
+  margin: 0 0 7px;
+  color: var(--accent-text);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .14em;
+}
+
+.member-create-heading h1 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: clamp(25px, 4vw, 31px);
+  font-weight: 680;
+  letter-spacing: -.8px;
+}
+
+.member-create-heading .page-description {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.account-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.mode-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 86px;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 40px 15px 15px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+
+.mode-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 42%, var(--surface));
+  transform: translateY(-1px);
+}
+
+.mode-card.selected {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.mode-card:focus-visible {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 3px;
+}
+
+.mode-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 20px;
+}
+
+.mode-icon.existing {
+  font-size: 18px;
+}
+
+.mode-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.mode-copy strong {
+  color: var(--text-strong);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mode-copy small {
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.mode-indicator {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+
+.mode-card.selected .mode-indicator {
+  border: 5px solid var(--accent);
+  background: var(--surface);
+}
+
+.member-form {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-strong) 6%, transparent);
+}
+
+.member-form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.member-form-heading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 16px;
+  font-weight: 680;
+  letter-spacing: -.25px;
+}
+
+.required-note {
+  color: var(--text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.required-note span,
+.required-marker {
+  color: var(--error-text);
+}
+
+.member-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+  padding: 23px 24px;
+}
+
+.member-fields label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.member-fields input,
+.member-fields select {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: 0;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 12px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.member-fields input::placeholder {
+  color: var(--text-muted);
+  opacity: .8;
+}
+
+.member-fields input:focus,
+.member-fields select:focus {
+  border-color: var(--focus-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-color) 17%, transparent);
+}
+
+.member-fields label > small {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.existing-account-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 24px 20px;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent-soft) 48%, var(--surface));
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.existing-account-note span {
+  color: var(--accent-text);
+  font-size: 14px;
+}
+
+.member-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 15px 24px;
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-muted) 65%, var(--surface));
+}
+
+.member-form-actions .button {
+  min-height: 39px;
+  padding: 0 16px;
+}
+
+.alert.error {
+  margin-bottom: 14px;
+}
+
+@media (max-width: 600px) {
+  .member-create {
+    padding-top: 0;
+  }
+
+  .member-create-heading {
+    padding-left: 52px;
+  }
+
+  .member-create-heading .back-link {
+    margin-left: -52px;
+  }
+
+  .member-create-icon {
+    top: 46px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .account-mode {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .mode-card {
+    min-height: 72px;
+  }
+
+  .member-form-heading,
+  .member-fields {
+    padding-right: 17px;
+    padding-left: 17px;
+  }
+
+  .member-fields {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .existing-account-note {
+    margin-right: 17px;
+    margin-left: 17px;
+  }
+
+  .member-form-actions {
+    padding-right: 17px;
+    padding-left: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-card {
+    transition: none;
+  }
+}

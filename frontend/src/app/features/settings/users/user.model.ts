@@ -13,6 +13,11 @@ export interface CreateTenantUserPayload {
   role: string;
 }
 
+export interface AddExistingTenantUserPayload {
+  email: string;
+  role: string;
+}
+
 export interface UpdateTenantUserPayload {
   role: string;
   isActive: boolean;
