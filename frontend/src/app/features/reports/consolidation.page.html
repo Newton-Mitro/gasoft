@@ -1,0 +1,239 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">FINANCIAL REPORTS</p>
+    <h1>Consolidated trial balance</h1>
+    <p class="page-description">Combine posted balances from multiple organizations in a shared reporting currency.</p>
+  </div>
+  @if (!editing) {
+    <button class="button primary" type="button" (click)="beginCreate()">＋ New consolidation group</button>
+  }
+</div>
+
+@if (error) { <div class="alert error" role="alert">{{ error }}</div> }
+@if (loading) {
+  <div class="loading-card"><span class="spinner"></span> Loading consolidation workspace…</div>
+}
+
+@if (!loading && editing) {
+  <section class="group-form panel">
+    <div class="form-heading">
+      <div>
+        <h2>{{ selectedGroupId ? 'Edit consolidation group' : 'Create consolidation group' }}</h2>
+        <p>Organizations may use different functional currencies. Translation rates are recorded with each run; rates for balance-sheet accounts and income-statement activity are entered separately.</p>
+      </div>
+    </div>
+    <div class="form-grid">
+      <label>
+        <span>Group code</span>
+        <input name="code" maxlength="30" required [(ngModel)]="code" placeholder="GROUP-1" />
+      </label>
+      <label>
+        <span>Group name</span>
+        <input name="name" maxlength="160" required [(ngModel)]="name" placeholder="North America" />
+      </label>
+      <label>
+        <span>Reporting currency</span>
+        <select name="currency" required [(ngModel)]="reportingCurrencyCode">
+          <option value="" disabled>Select currency</option>
+          @for (currency of currencies; track currency.code) {
+            <option [value]="currency.code">{{ currency.code }} · {{ currency.name }}</option>
+          }
+        </select>
+      </label>
+    </div>
+    <fieldset class="company-picker">
+      <legend>Organizations <small>Select at least two companies in this workspace</small></legend>
+      @if (!companies.length) {
+        <p class="empty-note">Create a second organization in Company Settings before setting up consolidation.</p>
+      } @else {
+        @if (companies.length < 2) {
+          <p class="empty-note">Create another organization in Company Settings to enable consolidated reporting.</p>
+        }
+        <div class="company-options">
+          @for (company of companies; track company.id) {
+            <label class="company-option">
+              <input
+                type="checkbox"
+                [checked]="selectedCompanyIds.includes(company.id)"
+                (change)="toggleCompany(company.id, $event)"
+              />
+              <span><strong>{{ company.legalName }}</strong><small>{{ company.code }} · {{ company.functionalCurrencyCode }}</small></span>
+            </label>
+          }
+        </div>
+      }
+    </fieldset>
+    <div class="form-actions">
+      @if (groups.length) {
+        <button class="button secondary" type="button" (click)="cancelEdit()">Cancel</button>
+      }
+      <button class="button primary" type="button" [disabled]="saving || companies.length < 2" (click)="saveGroup()">
+        {{ saving ? 'Saving…' : selectedGroupId ? 'Save group' : 'Create group' }}
+      </button>
+    </div>
+  </section>
+}
+
+@if (!loading && !editing && selectedGroup; as group) {
+  <section class="consolidation-workspace panel">
+    <div class="group-toolbar">
+      <label>
+        <span>Consolidation group</span>
+        <select [ngModel]="selectedGroupId" (ngModelChange)="selectGroup($event)">
+          @for (item of groups; track item.id) {
+            <option [ngValue]="item.id">{{ item.name }} · {{ item.code }}</option>
+          }
+        </select>
+      </label>
+      <button class="button secondary" type="button" [disabled]="runs.length > 0" (click)="editGroup()">Edit group</button>
+    </div>
+    <div class="group-summary">
+      <div><span>Reporting currency</span><strong>{{ group.reportingCurrencyCode }}</strong></div>
+      <div><span>Organizations</span><strong>{{ group.companies.length }}</strong></div>
+      <div class="company-chip-list">
+        @for (company of group.companies; track company.id) {
+          <span class="company-chip">{{ company.code }} · {{ company.legalName }}</span>
+        }
+      </div>
+    </div>
+    <div class="run-toolbar">
+      <div>
+        <h2>Consolidation runs</h2>
+        <p>Translates balance-sheet balances at closing rates and revenue/expense activity at average rates. Rates are saved with the run.</p>
+      </div>
+      <div class="run-controls">
+        <label><span>Period start</span><input name="periodStart" type="date" [(ngModel)]="periodStart" /></label>
+        <label><span>Period end</span><input name="periodEnd" type="date" [(ngModel)]="periodEnd" /></label>
+        <button class="button primary" type="button" [disabled]="saving || group.companies.length < 2" (click)="createRun()">
+          {{ saving ? 'Running…' : 'Run consolidation' }}
+        </button>
+      </div>
+    </div>
+    <div class="translation-rates">
+      <h3>Translation rates</h3>
+      <p>Enter reporting-currency units per one unit of the organization’s functional currency. Use rates appropriate to the reporting period.</p>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Organization</th><th>Functional currency</th><th>Closing rate · balance sheet</th><th>Average rate · revenue & expenses</th></tr></thead>
+        <tbody>@for (company of group.companies; track company.id) {
+          <tr><td>{{ company.legalName }}</td><td>{{ company.functionalCurrencyCode }} → {{ group.reportingCurrencyCode }}</td>
+            <td><input type="number" min="0.0000000001" step="0.0000000001" [name]="'closing-' + company.id"
+              [(ngModel)]="translationRateInputs[company.id].closingRate"
+              [disabled]="company.functionalCurrencyCode === group.reportingCurrencyCode" /></td>
+            <td><input type="number" min="0.0000000001" step="0.0000000001" [name]="'average-' + company.id"
+              [(ngModel)]="translationRateInputs[company.id].averageRate"
+              [disabled]="company.functionalCurrencyCode === group.reportingCurrencyCode" /></td>
+          </tr>
+        }</tbody>
+      </table></div>
+    </div>
+    @if (runs.length) {
+      <div class="run-select">
+        <label>
+          <span>View saved run</span>
+          <select [ngModel]="selectedRunId" (ngModelChange)="selectRun($event)">
+            <option [ngValue]="null" disabled>Select a period</option>
+            @for (run of runs; track run.id) {
+              <option [ngValue]="run.id">{{ run.periodEnd }} · {{ run.status }}</option>
+            }
+          </select>
+        </label>
+      </div>
+    } @else {
+      <div class="empty-state">
+        <span class="empty-icon">▦</span>
+        <h3>No consolidation runs yet</h3>
+        <p>Choose a period end to snapshot posted balances from the selected organizations.</p>
+      </div>
+    }
+
+    @if (currentRun; as run) {
+      <div class="run-summary">
+        <div><span>Period</span><strong>{{ run.periodStart }} – {{ run.periodEnd }}</strong></div>
+        <div><span>Period end</span><strong>{{ run.periodEnd }}</strong></div>
+        <div><span>Reporting currency</span><strong>{{ run.reportingCurrencyCode }}</strong></div>
+        <div><span>Accounts</span><strong>{{ run.accounts.length }}</strong></div>
+        <div><span>Total debits</span><strong>{{ formatCurrency(run.accounts.reduce((sum, account) => sum + account.debit, 0)) }}</strong></div>
+        <div><span>Total credits</span><strong>{{ formatCurrency(run.accounts.reduce((sum, account) => sum + account.credit, 0)) }}</strong></div>
+      </div>
+      <section class="run-adjustments">
+        <div class="adjustment-heading">
+          <div><h3>Translation rates used</h3><p>Closing rates apply to assets, liabilities, and equity; average rates apply to period revenue and expenses.</p></div>
+        </div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Organization</th><th>Currency</th><th>Closing rate</th><th>Average rate</th></tr></thead>
+          <tbody>@for (rate of run.translationRates; track rate.companyId) {
+            <tr><td>{{ getCompanyName(rate.companyId) }}</td>
+              <td>{{ rate.sourceCurrencyCode }} → {{ rate.targetCurrencyCode }}</td>
+              <td class="amount">{{ rate.closingRate }}</td><td class="amount">{{ rate.averageRate }}</td></tr>
+          }</tbody>
+        </table></div>
+      </section>
+      @if (run.translationAdjustments.length) {
+        <section class="run-adjustments">
+          <h3>Foreign-currency translation adjustments</h3>
+          <p>Translation balancing amounts are presented in the synthetic CTA account; review the required equity treatment with your accounting policy.</p>
+          <div class="table-scroll"><table><thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
+            <tbody>@for (line of run.translationAdjustments; track $index) {
+              <tr><td>{{ line.accountCode }} · {{ line.accountName }}</td>
+                <td class="amount">{{ formatCurrency(line.debit) }}</td><td class="amount">{{ formatCurrency(line.credit) }}</td></tr>
+            }</tbody>
+          </table></div>
+        </section>
+      }
+      <section class="run-adjustments">
+        <div class="adjustment-heading">
+          <div><h3>Intercompany eliminations</h3><p>Enter balanced debit/credit lines to eliminate intercompany balances or activity. These are stored separately from translated source-company balances.</p></div>
+          @if (run.status === 'Draft') { <button class="button secondary" type="button" (click)="addEliminationLine()">Add line</button> }
+        </div>
+        @if (eliminationLines.length) {
+          <div class="table-scroll"><table>
+            <thead><tr><th>Account code</th><th>Account name</th><th>Description</th><th>Debit</th><th>Credit</th><th></th></tr></thead>
+            <tbody>@for (line of eliminationLines; track $index) {
+              <tr><td><input [name]="'elim-code-' + $index" [(ngModel)]="line.accountCode" [readonly]="run.status !== 'Draft'" /></td>
+                <td><input [name]="'elim-name-' + $index" [(ngModel)]="line.accountName" [readonly]="run.status !== 'Draft'" /></td>
+                <td><input [name]="'elim-description-' + $index" [(ngModel)]="line.description" [readonly]="run.status !== 'Draft'" /></td>
+                <td><input type="number" min="0" step="0.01" [name]="'elim-debit-' + $index" [(ngModel)]="line.debit" [readonly]="run.status !== 'Draft'" /></td>
+                <td><input type="number" min="0" step="0.01" [name]="'elim-credit-' + $index" [(ngModel)]="line.credit" [readonly]="run.status !== 'Draft'" /></td>
+                <td>@if (run.status === 'Draft') { <button class="button secondary table-action" type="button" (click)="removeEliminationLine($index)">Remove</button> }</td>
+              </tr>
+            }</tbody>
+          </table></div>
+        } @else { <p class="empty-note">No elimination entries have been recorded for this run.</p> }
+        @if (run.status === 'Draft') {
+          <div class="adjustment-actions">
+            <button class="button secondary" type="button" [disabled]="saving" (click)="saveEliminations()">Save eliminations</button>
+            <button class="button primary" type="button" [disabled]="saving" (click)="finalizeRun()">Finalize run</button>
+          </div>
+        }
+      </section>
+      @if (!run.accounts.length) {
+        <div class="empty-state compact"><h3>No posted account balances</h3><p>This run contains no posted activity through the selected date.</p></div>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Account code</th><th>Account name</th><th>Debit</th><th>Credit</th></tr></thead>
+            <tbody>
+              @for (account of run.accounts; track account.accountCode + account.accountName) {
+                <tr>
+                  <td>{{ account.accountCode }}</td>
+                  <td>{{ account.accountName }}</td>
+                  <td class="amount">{{ formatCurrency(account.debit) }}</td>
+                  <td class="amount">{{ formatCurrency(account.credit) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  </section>
+}
+
+@if (!loading && !groups.length && !editing) {
+  <section class="empty-state panel">
+    <span class="empty-icon">▦</span>
+    <h3>Set up a consolidation group</h3>
+    <p>Group at least two organizations to prepare a consolidated trial balance in a shared reporting currency.</p>
+    <button class="button primary" type="button" (click)="beginCreate()">Create consolidation group</button>
+  </section>
+}

@@ -1,5 +1,5 @@
 export interface SalesInvoiceLine {
-  id?: number;
+  id: number;
   accountId: number;
   taxCodeId: number | null;
   description: string;

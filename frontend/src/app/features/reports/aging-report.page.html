@@ -1,0 +1,92 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">FINANCIAL REPORTS</p>
+    <h1>{{ title }}</h1>
+    <p class="page-description">
+      Review outstanding {{ kind === 'receivables' ? 'customer invoices' : 'supplier bills' }} by due date.
+      Amounts remain grouped by document currency.
+    </p>
+  </div>
+</div>
+
+@if (error) { <div class="alert error" role="alert">{{ error }}</div> }
+
+<section class="aging-filter panel">
+  <label>
+    <span>Age outstanding balances as of</span>
+    <input type="date" name="asOfDate" [(ngModel)]="asOfDate" (ngModelChange)="onDateChange()" />
+  </label>
+  <p>Only posted documents and payments dated on or before this day are included.</p>
+</section>
+
+@if (loading) {
+  <div class="loading-card"><span class="spinner"></span> Loading {{ title.toLowerCase() }}…</div>
+} @else if (report) {
+  @if (report.totalsByCurrency.length) {
+    <section class="aging-summary" aria-label="Outstanding totals by currency">
+      @for (totals of report.totalsByCurrency; track totals.currencyCode) {
+        <article class="currency-card panel">
+          <div class="currency-heading">
+            <h2>{{ totals.currencyCode }}</h2>
+            <strong>{{ formatAmount(totals.total, totals.currencyCode) }}</strong>
+          </div>
+          <dl>
+            <div><dt>Current</dt><dd>{{ formatAmount(totals.current, totals.currencyCode) }}</dd></div>
+            <div><dt>1–30 days</dt><dd>{{ formatAmount(totals.days1To30, totals.currencyCode) }}</dd></div>
+            <div><dt>31–60 days</dt><dd>{{ formatAmount(totals.days31To60, totals.currencyCode) }}</dd></div>
+            <div><dt>61–90 days</dt><dd>{{ formatAmount(totals.days61To90, totals.currencyCode) }}</dd></div>
+            <div><dt>Over 90 days</dt><dd>{{ formatAmount(totals.over90Days, totals.currencyCode) }}</dd></div>
+          </dl>
+        </article>
+      }
+    </section>
+  }
+
+  <section class="table-panel panel">
+    <div class="table-header">
+      <div>
+        <h2>Open {{ kind === 'receivables' ? 'invoices' : 'bills' }}</h2>
+        <span>{{ report.documents.length }} outstanding {{ report.documents.length === 1 ? 'document' : 'documents' }} · As of {{ report.asOfDate }}</span>
+      </div>
+      <span class="table-badge">{{ report.companyFunctionalCurrencyCode }} functional currency</span>
+    </div>
+    @if (!report.documents.length) {
+      <div class="empty-state">
+        <span class="empty-icon">◷</span>
+        <h3>No outstanding documents</h3>
+        <p>There are no posted {{ kind === 'receivables' ? 'invoices' : 'bills' }} with an open balance as of this date.</p>
+      </div>
+    } @else {
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ kind === 'receivables' ? 'Customer' : 'Supplier' }}</th>
+              <th>{{ documentLabel }} number</th>
+              <th>Document date</th>
+              <th>Due date</th>
+              <th>Currency</th>
+              <th>Original amount</th>
+              <th>Outstanding</th>
+              <th>Aging</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (document of report.documents; track document.documentId) {
+              <tr>
+                <td><strong>{{ document.partyName }}</strong><small>{{ document.partyNumber }}</small></td>
+                <td>{{ document.documentNumber }}</td>
+                <td>{{ document.documentDate }}</td>
+                <td>{{ document.dueDate }}</td>
+                <td>{{ document.currencyCode }}</td>
+                <td class="amount">{{ formatAmount(document.originalAmount, document.currencyCode) }}</td>
+                <td class="amount outstanding">{{ formatAmount(document.outstandingAmount, document.currencyCode) }}</td>
+                <td><span class="aging-tag" [class.overdue]="document.daysPastDue > 0">{{ document.agingBucket }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

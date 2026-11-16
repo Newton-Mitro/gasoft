@@ -22,6 +22,8 @@ describe('feature routes', () => {
     expect(routedPages.has('trial-balance')).toBe(true);
     expect(routedPages.has('income-statement')).toBe(true);
     expect(routedPages.has('balance-sheet')).toBe(true);
+    expect(routedPages.has('budget-vs-actual')).toBe(true);
+    expect(routedPages.has('fixed-assets')).toBe(true);
   });
 
   it('routes resource pages through distinct feature components', () => {
@@ -75,5 +77,7 @@ describe('feature routes', () => {
     expect(componentByPage.get('inventory-movements')).toBeDefined();
     expect(componentByPage.get('trial-balance')).not.toBe(componentByPage.get('income-statement'));
     expect(componentByPage.get('income-statement')).not.toBe(componentByPage.get('balance-sheet'));
+    expect(componentByPage.get('budget-vs-actual')).toBeDefined();
+    expect(componentByPage.get('fixed-assets')).toBeDefined();
   });
 });

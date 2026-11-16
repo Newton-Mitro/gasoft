@@ -1,0 +1,41 @@
+:host { display: block; }
+.budget-toolbar { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 14px; padding: 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.budget-toolbar label { display: grid; min-width: 180px; gap: 6px; color: var(--text-muted); font-size: 11px; font-weight: 600; }
+.budget-toolbar input, .budget-toolbar select, .plan-table input { min-height: 36px; padding: 0 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--text-strong); font: inherit; }
+.create-budget { display: flex; align-items: flex-end; gap: 8px; margin-left: auto; }
+.create-budget label { min-width: 190px; }
+.primary-button, .danger-button { min-height: 36px; padding: 0 13px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-strong); font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
+.primary-button { border-color: var(--accent); background: var(--accent); color: var(--accent-contrast, #fff); }
+.danger-button { color: var(--error-text); }
+.primary-button:disabled, .danger-button:disabled { opacity: .55; cursor: not-allowed; }
+.budget-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.budget-summary .report-total { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.report-total span { color: var(--text-muted); font-size: 10px; }
+.report-total strong { color: var(--text-strong); font-size: 14px; font-variant-numeric: tabular-nums; }
+.report-total.highlight { border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
+.budget-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.budget-actions > .danger-button { margin-left: auto; }
+.view-switch { display: inline-flex; gap: 3px; padding: 4px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
+.view-switch button { padding: 8px 12px; border: 0; border-radius: 6px; color: var(--text-muted); background: transparent; font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
+.view-switch button.active { color: var(--text-strong); background: var(--surface-muted); }
+.view-switch button:disabled { opacity: .5; cursor: not-allowed; }
+.table-panel { overflow: hidden; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.table-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; }
+.table-header h2 { margin: 0 0 4px; color: var(--text-strong); font-size: 13px; }
+.table-header span { color: var(--text-muted); font-size: 10px; }
+.table-header .table-badge { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; color: var(--text-strong); }
+.table-scroll { overflow: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 10px 12px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 10px; white-space: nowrap; }
+th { background: var(--surface-muted); color: var(--text-strong); font-weight: 650; }
+td strong { color: var(--text-strong); }
+.amount { text-align: right; font-variant-numeric: tabular-nums; }
+.plan-table input { width: 115px; text-align: right; }
+.negative { color: var(--error-text); }
+.period-filter { align-items: center; }
+.period-filter label { min-width: 220px; }
+.filter-hint { color: var(--text-muted); font-size: 10px; }
+.empty-state { padding: 28px 18px; color: var(--text-muted); text-align: center; }
+.empty-state h2 { margin: 0 0 6px; color: var(--text-strong); font-size: 14px; }
+.empty-state p { margin: 0; font-size: 11px; }
+@media (max-width: 800px) { .budget-toolbar { align-items: stretch; flex-direction: column; } .create-budget { align-items: stretch; flex-direction: column; margin-left: 0; } .create-budget label, .budget-toolbar label { min-width: 0; } .budget-actions { align-items: stretch; flex-wrap: wrap; } .budget-actions > .danger-button { margin-left: 0; } .period-filter { align-items: stretch; } }

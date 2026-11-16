@@ -1,0 +1,123 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">SALES</p>
+    <h1>Sales quotes</h1>
+    <p class="page-description">Prepare customer estimates, track acceptance, and convert approved quotes to invoices.</p>
+  </div>
+  @if (!editing) {
+    <button class="button primary" type="button" (click)="beginCreate()">＋ New quote</button>
+  }
+</div>
+@if (error) { <div class="alert error" role="alert">{{ error }}</div> }
+@if (success) { <div class="alert success" role="status">{{ success }}</div> }
+@if (loading) { <div class="loading-card"><span class="spinner"></span> Loading sales quotes…</div> }
+
+@if (!loading && editing) {
+  <section class="quote-form panel">
+    <div class="section-heading">
+      <div><h2>{{ quoteId ? 'Edit draft quote' : 'Create quote' }}</h2><p>Tax is estimated from rates effective on the quote date.</p></div>
+    </div>
+    <div class="header-fields">
+      <label><span>Customer</span>
+        <select name="customer" [(ngModel)]="customerId">
+          <option [ngValue]="null" disabled>Select customer</option>
+          @for (customer of customers; track customer.id) {
+            <option [ngValue]="customer.id">{{ customer.partyNo }} · {{ customer.displayName }}</option>
+          }
+        </select>
+      </label>
+      <label><span>Quote number</span><input name="quoteNumber" maxlength="40" [(ngModel)]="quoteNumber" /></label>
+      <label><span>Quote date</span><input name="quoteDate" type="date" [(ngModel)]="quoteDate" /></label>
+      <label><span>Valid until</span><input name="validUntil" type="date" [(ngModel)]="validUntil" /></label>
+      <label><span>Currency</span>
+        <select name="currency" [(ngModel)]="currencyCode">
+          <option value="" disabled>Select currency</option>
+          @for (currency of currencies; track currency.value) { <option [value]="currency.value">{{ currency.label }}</option> }
+        </select>
+      </label>
+      <label><span>Exchange rate</span><input name="exchangeRate" type="number" min="0.0000000001" step="0.0000000001" [(ngModel)]="exchangeRate" /></label>
+    </div>
+    <div class="lines-heading"><div><h3>Quote lines</h3><span>{{ lines.length }} {{ lines.length === 1 ? 'line' : 'lines' }}</span></div>
+      <button class="button secondary" type="button" (click)="addLine()">＋ Add line</button>
+    </div>
+    <div class="editable-lines">
+      @for (line of lines; track $index; let index = $index) {
+        <div class="editable-line">
+          <label><span>Revenue account</span>
+            <select [(ngModel)]="line.accountId" [name]="'account-' + index">
+              <option [ngValue]="null" disabled>Select account</option>
+              @for (account of accounts; track account.value) { <option [ngValue]="account.value">{{ account.label }}</option> }
+            </select>
+          </label>
+          <label class="line-description"><span>Description</span><input [(ngModel)]="line.description" [name]="'description-' + index" maxlength="500" /></label>
+          <label><span>Tax code</span>
+            <select [(ngModel)]="line.taxCodeId" [name]="'tax-' + index">
+              <option [ngValue]="null">No tax</option>
+              @for (taxCode of taxCodes; track taxCode.value) { <option [ngValue]="taxCode.value">{{ taxCode.label }}</option> }
+            </select>
+          </label>
+          <label><span>Quantity</span><input type="number" min="0.000001" step="0.000001" [(ngModel)]="line.quantity" [name]="'quantity-' + index" /></label>
+          <label><span>Unit price</span><input type="number" min="0" step="0.000001" [(ngModel)]="line.unitPrice" [name]="'price-' + index" /></label>
+          <button class="remove-line" type="button" aria-label="Remove line" [disabled]="lines.length < 2" (click)="removeLine(index)">×</button>
+        </div>
+      }
+    </div>
+    <div class="form-actions">
+      <button class="button primary" type="button" [disabled]="saving" (click)="save()">{{ saving ? 'Saving…' : 'Save draft quote' }}</button>
+      <button class="button secondary" type="button" [disabled]="saving" (click)="cancelForm()">Cancel</button>
+    </div>
+  </section>
+}
+
+@if (!loading && convertingQuote) {
+  <section class="convert-form panel">
+    <div class="section-heading"><div><h2>Convert {{ convertingQuote.quoteNumber }} to invoice</h2><p>Line items and tax codes will be copied; tax is recalculated at the invoice date.</p></div></div>
+    <div class="header-fields">
+      <label><span>Invoice number</span><input name="invoiceNumber" maxlength="40" [(ngModel)]="invoiceNumber" /></label>
+      <label><span>Invoice date</span><input name="invoiceDate" type="date" [(ngModel)]="invoiceDate" /></label>
+      <label><span>Due date</span><input name="dueDate" type="date" [(ngModel)]="dueDate" /></label>
+    </div>
+    <div class="form-actions">
+      <button class="button primary" type="button" [disabled]="saving" (click)="convert()">{{ saving ? 'Converting…' : 'Create invoice' }}</button>
+      <button class="button secondary" type="button" [disabled]="saving" (click)="cancelForm()">Cancel</button>
+    </div>
+  </section>
+}
+
+@if (!loading && !editing) {
+  <section class="table-panel panel">
+    <div class="table-header"><div><h2>Quotes</h2><span>{{ quotes.length }} {{ quotes.length === 1 ? 'record' : 'records' }}</span></div></div>
+    @if (!quotes.length) {
+      <div class="empty-state"><span class="empty-icon">▤</span><h3>No quotes yet</h3><p>Create a quote draft to start tracking a sale.</p>
+        <button class="button secondary" type="button" (click)="beginCreate()">Create first quote</button></div>
+    } @else {
+      <div class="table-scroll"><table>
+        <thead><tr><th>Quote</th><th>Quote date</th><th>Valid until</th><th>Currency</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>@for (quote of quotes; track quote.id) {
+          <tr>
+            <td>{{ quote.quoteNumber }}</td><td>{{ quote.quoteDate }}</td><td>{{ quote.validUntil }}</td>
+            <td>{{ quote.currencyCode }}</td><td>{{ quote.grandTotal }}</td>
+            <td><span class="status-tag" [class.posted]="quote.status === 'Converted'">{{ quote.status }}</span>
+              @if (quote.sentAt) { <small class="sent-details">Emailed {{ quote.sentAt }} to {{ quote.sentTo }}</small> }
+            </td>
+            <td class="action-cell">
+              @if (quote.status === 'Draft') {
+                <button class="button secondary table-action" type="button" (click)="beginEdit(quote)">Edit</button>
+                <button class="button secondary table-action" type="button" [title]="getCustomerEmail(quote.customerId) ? '' : 'Add a valid email address to the customer first.'" [disabled]="saving || sendingQuoteId === quote.id || !getCustomerEmail(quote.customerId)" (click)="sendQuote(quote)">
+                  {{ sendingQuoteId === quote.id ? 'Sending…' : 'Email quote' }}
+                </button>
+                <button class="button secondary table-action" type="button" (click)="act(quote, 'cancel')">Cancel</button>
+              } @else if (quote.status === 'Sent') {
+                <button class="button secondary table-action" type="button" (click)="act(quote, 'accept')">Accept</button>
+                <button class="button secondary table-action" type="button" (click)="act(quote, 'decline')">Decline</button>
+              } @else if (quote.status === 'Accepted') {
+                <button class="button secondary table-action" type="button" (click)="beginConvert(quote)">Convert</button>
+                <button class="button secondary table-action" type="button" (click)="act(quote, 'cancel')">Cancel</button>
+              }
+            </td>
+          </tr>
+        }</tbody>
+      </table></div>
+    }
+  </section>
+}

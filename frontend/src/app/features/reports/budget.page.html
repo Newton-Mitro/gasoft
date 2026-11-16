@@ -1,0 +1,114 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">FINANCIAL PLANNING</p>
+    <h1>Budgets</h1>
+    <p class="page-description">Plan revenue and expenses by accounting period, then compare your budget with posted results.</p>
+  </div>
+</div>
+@if (error) { <div class="alert error">{{ error }}</div> }
+@if (success) { <div class="alert success">{{ success }}</div> }
+
+<section class="budget-toolbar panel">
+  <label>Fiscal year
+    <select name="fiscalYear" [(ngModel)]="selectedFiscalYearId" (ngModelChange)="onFiscalYearChange()">
+      @for (year of fiscalYears; track year.id) {
+        <option [ngValue]="year.id">{{ year.startsOn }} – {{ year.endsOn }}</option>
+      }
+    </select>
+  </label>
+  <label>Budget version
+    <select name="budget" [(ngModel)]="selectedBudgetId" (ngModelChange)="onBudgetChange()">
+      @for (budget of budgets; track budget.id) {
+        <option [ngValue]="budget.id">{{ budget.name }}</option>
+      }
+    </select>
+  </label>
+  <div class="create-budget">
+    <label>New budget name<input name="newBudgetName" [(ngModel)]="newBudgetName" maxlength="120" placeholder="e.g. FY2027 Base plan" /></label>
+    <button class="primary-button" type="button" [disabled]="saving || selectedFiscalYearId === null" (click)="createBudget()">Create budget</button>
+  </div>
+</section>
+
+@if (loading) {
+  <div class="loading-card"><span class="spinner"></span> Loading budget data…</div>
+} @else if (fiscalYears.length === 0) {
+  <section class="empty-state panel"><h2>No fiscal years found</h2><p>Create a fiscal year and its accounting periods before preparing a budget.</p></section>
+} @else if (periods.length === 0) {
+  <section class="empty-state panel"><h2>No accounting periods found</h2><p>Add accounting periods to this fiscal year before entering budget amounts.</p></section>
+} @else {
+  @if (report) {
+    <section class="budget-summary">
+      <article class="report-total"><span>Revenue budget</span><strong>{{ formatCurrency(report.summary.revenueBudget) }}</strong></article>
+      <article class="report-total"><span>Revenue actual</span><strong>{{ formatCurrency(report.summary.revenueActual) }}</strong></article>
+      <article class="report-total"><span>Expense budget</span><strong>{{ formatCurrency(report.summary.expenseBudget) }}</strong></article>
+      <article class="report-total"><span>Expense actual</span><strong>{{ formatCurrency(report.summary.expenseActual) }}</strong></article>
+      <article class="report-total highlight"><span>Net income budget</span><strong>{{ formatCurrency(report.summary.netIncomeBudget) }}</strong></article>
+      <article class="report-total highlight"><span>Net income actual</span><strong>{{ formatCurrency(report.summary.netIncomeActual) }}</strong></article>
+    </section>
+  }
+
+  <section class="budget-actions">
+    <div class="view-switch" role="group" aria-label="Budget view">
+      <button type="button" [class.active]="view === 'plan'" (click)="view = 'plan'">Plan budget</button>
+      <button type="button" [class.active]="view === 'actual'" [disabled]="!report" (click)="view = 'actual'">Budget vs actual</button>
+    </div>
+    @if (selectedBudgetId !== null) {
+      @if (view === 'plan') {
+        <button class="primary-button" type="button" [disabled]="saving" (click)="saveBudget()">{{ saving ? 'Saving…' : 'Save amounts' }}</button>
+      }
+      <button class="danger-button" type="button" [disabled]="saving" (click)="deleteBudget()">Delete budget</button>
+    }
+  </section>
+
+  @if (view === 'plan') {
+    @if (selectedBudgetId === null) {
+      <section class="empty-state panel"><h2>Create a budget version</h2><p>Enter a name above to start planning for this fiscal year.</p></section>
+    } @else {
+      <section class="table-panel panel">
+        <div class="table-header"><div><h2>{{ report?.budget?.name ?? 'Budget plan' }}</h2><span>Enter non-negative amounts in functional currency for each period.</span></div><span class="table-badge">{{ report?.currencyCode ?? '—' }}</span></div>
+        <div class="table-scroll"><table class="plan-table">
+          <thead><tr><th>Account</th><th>Type</th>@for (period of periods; track period.id) { <th class="amount">{{ period.startsOn }} – {{ period.endsOn }}</th> }</tr></thead>
+          <tbody>
+            @for (account of accounts; track account.accountId) {
+              <tr><td><strong>{{ account.code }} · {{ account.name }}</strong></td><td>{{ account.accountType }}</td>
+                @for (period of periods; track period.id) {
+                  <td><input type="number" min="0" step="0.01" [name]="'amount-' + account.accountId + '-' + period.id" [(ngModel)]="account.amounts[period.id]" /></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table></div>
+        @if (accounts.length === 0) { <div class="empty-state"><p>No active posting revenue or expense accounts are available.</p></div> }
+      </section>
+    }
+  } @else if (report) {
+    <section class="budget-toolbar panel period-filter">
+      <label>Accounting period
+        <select name="reportPeriod" [ngModel]="selectedPeriodId" (ngModelChange)="onPeriodChange($event)">
+          @for (period of periods; track period.id) { <option [ngValue]="period.id">{{ formatPeriod(period) }}</option> }
+        </select>
+      </label>
+      <span class="filter-hint">Variance is shown as favorable when positive; revenue over budget and expenses under budget are favorable.</span>
+    </section>
+    <section class="table-panel panel">
+      <div class="table-header"><div><h2>Budget vs actual</h2><span>{{ selectedPeriod ? formatPeriod(selectedPeriod) : 'Select a period' }}</span></div><span class="table-badge">{{ report.currencyCode }}</span></div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Account</th><th>Type</th><th class="amount">Period budget</th><th class="amount">Period actual</th><th class="amount">Favorable variance</th><th class="amount">Year budget</th><th class="amount">Year actual</th><th class="amount">Year favorable variance</th></tr></thead>
+        <tbody>
+          @for (account of report.accounts; track account.accountId) {
+            @let value = periodValue(account);
+            <tr><td><strong>{{ account.accountCode }} · {{ account.accountName }}</strong></td><td>{{ account.accountType }}</td>
+              <td class="amount">{{ formatCurrency(value?.budget ?? 0) }}</td>
+              <td class="amount">{{ formatCurrency(value?.actual ?? 0) }}</td>
+              <td class="amount" [class.negative]="(value?.favorableVariance ?? 0) < 0">{{ formatCurrency(value?.favorableVariance ?? 0) }}</td>
+              <td class="amount">{{ formatCurrency(account.budget) }}</td>
+              <td class="amount">{{ formatCurrency(account.actual) }}</td>
+              <td class="amount" [class.negative]="account.favorableVariance < 0">{{ formatCurrency(account.favorableVariance) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table></div>
+      @if (report.accounts.length === 0) { <div class="empty-state"><p>No active posting revenue or expense accounts are available.</p></div> }
+    </section>
+  }
+}

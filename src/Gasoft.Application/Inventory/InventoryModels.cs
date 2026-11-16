@@ -28,7 +28,8 @@ public sealed record ReceiveStockRequest(
     long OffsetAccountId,
     DateOnly MovementDate,
     decimal Quantity,
-    decimal UnitCost);
+    decimal UnitCost,
+    long? PurchaseOrderLineId = null);
 public sealed record IssueStockRequest(
     string MovementNumber,
     long ItemId,

@@ -1,0 +1,160 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">FINANCIAL REPORTS</p>
+    <h1>Statement of cash flows</h1>
+    <p class="page-description">Review operating, investing, and financing cash flows using direct or indirect presentation.</p>
+  </div>
+</div>
+@if (error) { <div class="alert error" role="alert">{{ error }}</div> }
+
+<section class="cash-flow-filter panel">
+  <label><span>From</span><input type="date" name="fromDate" [(ngModel)]="fromDate" (ngModelChange)="onDateChange()" /></label>
+  <label><span>To</span><input type="date" name="toDate" [(ngModel)]="toDate" (ngModelChange)="onDateChange()" /></label>
+  <p>Posted journal activity in company functional currency.</p>
+</section>
+
+@if (loading) {
+  <div class="loading-card"><span class="spinner"></span> Preparing cash flow statement…</div>
+} @else if (report) {
+  <div class="statement-toolbar">
+    <div class="method-switch" role="group" aria-label="Cash flow method">
+      <button type="button" [class.active]="method === 'direct'" (click)="method = 'direct'">Direct method</button>
+      <button type="button" [class.active]="method === 'indirect'" (click)="method = 'indirect'">Indirect method</button>
+    </div>
+    <span class="table-badge">{{ report.currencyCode }} functional currency</span>
+  </div>
+  @if (method === 'direct') {
+    <section class="statement-sections">
+      @for (section of [report.direct.operating, report.direct.investing, report.direct.financing]; track section.category) {
+        <article class="statement-section panel">
+          <div class="section-heading">
+            <h2>{{ section.category }} activities</h2>
+            <strong>{{ formatAmount(section.net) }}</strong>
+          </div>
+          @if (!section.accounts.length) { <p class="empty-note">No {{ section.category.toLowerCase() }} cash activity classified for this period.</p> }
+          @else {
+            <div class="table-scroll"><table>
+              <thead><tr><th>Cash flow category / account</th><th>Receipts</th><th>Payments</th><th>Net</th></tr></thead>
+              <tbody>@for (account of section.accounts; track account.accountCode + account.accountName) {
+                <tr>
+                  <td><strong>{{ account.accountName }}</strong><small>{{ account.accountCode }}</small></td>
+                  <td class="amount">{{ formatAmount(account.inflows) }}</td>
+                  <td class="amount">{{ formatAmount(account.outflows) }}</td>
+                  <td class="amount">{{ formatAmount(account.net) }}</td>
+                </tr>
+              }</tbody>
+              <tfoot><tr><th>Net {{ section.category.toLowerCase() }} cash flow</th><td></td><td></td><td class="amount">{{ formatAmount(section.net) }}</td></tr></tfoot>
+            </table></div>
+          }
+        </article>
+      }
+      @if (report.direct.unclassified.inflows !== 0 || report.direct.unclassified.outflows !== 0) {
+        <article class="statement-section panel warning-section">
+          <div class="section-heading"><h2>Unclassified cash movements</h2><strong>{{ formatAmount(report.direct.unclassified.net) }}</strong></div>
+          <p>Classify the related ledger accounts below so the statement is complete.</p>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Counterpart account</th><th>Receipts</th><th>Payments</th><th>Net</th></tr></thead>
+            <tbody>@for (account of report.direct.unclassified.accounts; track account.accountCode + account.accountName) {
+              <tr><td><strong>{{ account.accountName }}</strong><small>{{ account.accountCode }}</small></td>
+                <td class="amount">{{ formatAmount(account.inflows) }}</td>
+                <td class="amount">{{ formatAmount(account.outflows) }}</td>
+                <td class="amount">{{ formatAmount(account.net) }}</td></tr>
+            }</tbody>
+          </table></div>
+        </article>
+      }
+      <article class="statement-total panel">
+        <span>Net increase / (decrease) in cash</span><strong>{{ formatAmount(report.direct.netCashIncrease) }}</strong>
+      </article>
+    </section>
+  } @else {
+    <section class="statement-sections">
+      <article class="statement-section panel">
+        <div class="section-heading"><h2>Cash flows from operating activities</h2><strong>{{ formatAmount(report.indirect.operatingCashFlow) }}</strong></div>
+        <div class="table-scroll"><table>
+          <tbody>
+            <tr><td>Net income</td><td class="amount">{{ formatAmount(report.indirect.netIncome) }}</td></tr>
+            <tr><td>Non-cash adjustments</td><td class="amount">{{ formatAmount(report.indirect.nonCashAdjustments) }}</td></tr>
+            <tr><td>Changes in operating assets and liabilities</td><td class="amount">{{ formatAmount(report.indirect.workingCapitalAdjustments) }}</td></tr>
+          </tbody>
+          <tfoot><tr><th>Net cash from operating activities</th><td class="amount">{{ formatAmount(report.indirect.operatingCashFlow) }}</td></tr></tfoot>
+        </table></div>
+      </article>
+      <article class="statement-section panel">
+        <div class="section-heading"><h2>Cash flows from investing activities</h2><strong>{{ formatAmount(report.indirect.investingCashFlow) }}</strong></div>
+        <p>Investing cash flows use the classifications assigned to the accounts on cash transactions.</p>
+      </article>
+      <article class="statement-section panel">
+        <div class="section-heading"><h2>Cash flows from financing activities</h2><strong>{{ formatAmount(report.indirect.financingCashFlow) }}</strong></div>
+        <p>Financing cash flows use the classifications assigned to the accounts on cash transactions.</p>
+      </article>
+      @if (report.indirect.unclassifiedInflows !== 0 || report.indirect.unclassifiedOutflows !== 0) {
+        <article class="statement-section panel warning-section">
+          <div class="section-heading"><h2>Unclassified cash movements</h2><strong>{{ formatAmount(report.indirect.unclassifiedCashFlow) }}</strong></div>
+          <p>Unclassified receipts: {{ formatAmount(report.indirect.unclassifiedInflows) }} · Payments: {{ formatAmount(report.indirect.unclassifiedOutflows) }}. Classify related accounts below.</p>
+        </article>
+      }
+      <article class="statement-total panel">
+        <span>Net change from indirect calculation</span><strong>{{ formatAmount(report.indirect.netCashIncrease) }}</strong>
+      </article>
+      <article class="reconciliation panel">
+        <div><span>Actual change in cash</span><strong>{{ formatAmount(report.indirect.actualCashMovement) }}</strong></div>
+        <div><span>Opening cash</span><strong>{{ formatAmount(report.openingBalance) }}</strong></div>
+        <div><span>Closing cash</span><strong>{{ formatAmount(report.closingBalance) }}</strong></div>
+        <div class="reconciliation-difference" [class.unbalanced]="report.indirect.reconciliationDifference !== 0">
+          <span>Reconciliation difference</span><strong>{{ formatAmount(report.indirect.reconciliationDifference) }}</strong>
+        </div>
+      </article>
+    </section>
+  }
+
+  <section class="table-panel panel">
+    <div class="table-header">
+      <div><h2>Cash and cash equivalents</h2><span>{{ report.from }} to {{ report.to }}</span></div>
+    </div>
+    @if (!report.cashAccounts.length) {
+      <div class="empty-state"><h3>No registered bank accounts</h3><p>Add bank accounts to include cash balances in the statement.</p></div>
+    } @else {
+      <div class="table-scroll"><table>
+        <thead><tr><th>Bank account</th><th>Ledger account</th><th>Opening</th><th>Change</th><th>Closing</th></tr></thead>
+        <tbody>@for (account of report.cashAccounts; track account.accountId) {
+          <tr><td><strong>{{ account.bankName }}</strong><small>{{ account.accountName }}</small></td>
+            <td>{{ account.accountCode }}</td><td class="amount">{{ formatAmount(account.openingBalance) }}</td>
+            <td class="amount">{{ formatAmount(account.cashChange) }}</td><td class="amount">{{ formatAmount(account.closingBalance) }}</td></tr>
+        }</tbody>
+        <tfoot><tr><th colspan="2">Total cash</th><td class="amount">{{ formatAmount(report.openingBalance) }}</td>
+          <td class="amount">{{ formatAmount(report.actualCashMovement) }}</td><td class="amount">{{ formatAmount(report.closingBalance) }}</td></tr></tfoot>
+      </table></div>
+    }
+  </section>
+
+  <details class="classification-panel panel">
+    <summary>Classify accounts for cash flow ({{ classifications.length }})</summary>
+    <p>Map accounts used in cash transactions. For indirect presentation, also classify non-cash adjustments and operating working-capital accounts. Categories depend on your accounting policies.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Account</th><th>Type</th><th>Classification</th></tr></thead>
+      <tbody>@for (account of classifications; track account.accountId) {
+        <tr>
+          <td><strong>{{ account.code }} · {{ account.name }}</strong></td><td>{{ account.accountType }}</td>
+          <td>
+            @if (account.isCashAccount) { <span class="cash-label">Cash account</span> }
+            @else {
+              <select [name]="'category-' + account.accountId"
+                [disabled]="classificationsLoading"
+                [ngModel]="account.cashFlowCategory ?? ''"
+                (ngModelChange)="updateClassification(account, $event)">
+                <option value="">Unclassified</option>
+                <option value="Operating">Operating cash flow</option>
+                <option value="Investing">Investing</option>
+                <option value="Financing">Financing</option>
+                <option value="NonCashAdjustment">Non-cash adjustment</option>
+                <option value="WorkingCapitalAsset">Operating asset change</option>
+                <option value="WorkingCapitalLiability">Operating liability change</option>
+              </select>
+            }
+          </td>
+        </tr>
+      }</tbody>
+    </table></div>
+  </details>
+}

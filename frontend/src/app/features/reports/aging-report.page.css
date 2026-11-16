@@ -1,0 +1,192 @@
+:host {
+  display: block;
+}
+
+.aging-filter {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.aging-filter label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.aging-filter input {
+  min-height: 37px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+}
+
+.aging-filter p {
+  margin: 0 0 2px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.aging-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.currency-card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.currency-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--border);
+}
+
+.currency-heading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 12px;
+}
+
+.currency-heading strong {
+  color: var(--text-strong);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.currency-card dl {
+  display: grid;
+  gap: 9px;
+  margin: 12px 0 0;
+}
+
+.currency-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.currency-card dd {
+  margin: 0;
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.table-panel {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+th {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font-weight: 650;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+td strong {
+  display: block;
+  color: var(--text-strong);
+  font-weight: 650;
+}
+
+td small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.outstanding {
+  color: var(--text-strong);
+  font-weight: 650;
+}
+
+.aging-tag {
+  display: inline-flex;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-strong);
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.aging-tag.overdue {
+  border-color: color-mix(in srgb, var(--error-text) 30%, var(--border));
+  color: var(--error-text);
+}
+
+.empty-state {
+  padding: 36px 20px;
+  text-align: center;
+}
+
+.empty-state h3 {
+  margin: 10px 0 4px;
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .aging-filter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

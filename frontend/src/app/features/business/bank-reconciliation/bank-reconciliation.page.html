@@ -1,0 +1,219 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">CASH MANAGEMENT</p>
+    <h1>Bank reconciliation</h1>
+    <p class="page-description">Import a statement, allocate ledger entries across transactions, and post adjustments for bank fees or other differences.</p>
+  </div>
+</div>
+
+@if (error) { <div class="alert error" role="alert">{{ error }}</div> }
+@if (importMessage) { <div class="alert success" role="status">{{ importMessage }}</div> }
+
+@if (loading && !accounts.length) {
+  <div class="loading-card"><span class="spinner"></span> Loading bank accounts…</div>
+}
+
+@if (!loading && (!accounts.length || showAccountForm)) {
+  <section class="setup-card panel">
+    <div class="section-heading">
+      <span class="section-icon" aria-hidden="true">⌁</span>
+      <div>
+        <h2>{{ accounts.length ? 'Add a bank account' : 'Connect a bank account' }}</h2>
+        <p>Link a postable asset account from your chart of accounts. Only the last four account digits are stored.</p>
+      </div>
+    </div>
+    @if (company) {
+      <form class="account-form" (ngSubmit)="createAccount()">
+        <label>
+          <span>Account name</span>
+          <input name="name" type="text" maxlength="120" required [(ngModel)]="name" placeholder="Operating account" />
+        </label>
+        <label>
+          <span>Bank name</span>
+          <input name="bankName" type="text" maxlength="120" required [(ngModel)]="bankName" placeholder="Example Bank" />
+        </label>
+        <label>
+          <span>Last four digits</span>
+          <input name="lastFour" type="text" minlength="4" maxlength="4" required [(ngModel)]="accountNumberLastFour" placeholder="1234" />
+        </label>
+        <label>
+          <span>Ledger asset account</span>
+          <select name="chartAccount" required [(ngModel)]="chartOfAccountId">
+            <option [ngValue]="null" disabled>Select asset account</option>
+            @for (account of chartAccounts; track account.value) {
+              <option [ngValue]="account.value">{{ account.label }}</option>
+            }
+          </select>
+        </label>
+        <div class="form-footer">
+          <span>Functional currency: <strong>{{ company.functionalCurrencyCode }}</strong></span>
+          <div class="form-actions">
+            @if (accounts.length) {
+              <button class="button secondary" type="button" (click)="showAccountForm = false">Cancel</button>
+            }
+            <button class="button primary" type="submit" [disabled]="saving || !chartAccounts.length">
+              {{ saving ? 'Saving…' : 'Add bank account' }}
+            </button>
+          </div>
+        </div>
+        @if (!chartAccounts.length) {
+          <p class="form-hint">No eligible asset accounts found. Create an active, postable asset account in your chart of accounts first.</p>
+        }
+      </form>
+    }
+  </section>
+}
+
+@if (accounts.length) {
+  <section class="workspace-card panel">
+    <div class="workspace-header">
+      <label class="account-select">
+        <span>Bank account</span>
+        <select [ngModel]="selectedAccountId" (ngModelChange)="selectAccount($event)">
+          @for (account of accounts; track account.id) {
+            <option [ngValue]="account.id">{{ account.name }} · {{ account.bankName }} ·••{{ account.accountNumberLastFour }}</option>
+          }
+        </select>
+      </label>
+      @if (selectedAccount; as account) {
+        <div class="account-meta">
+          <span>{{ account.chartOfAccountCode }} · {{ account.chartOfAccountName }}</span>
+          <span>{{ account.currencyCode }}</span>
+        </div>
+      }
+      <button class="button secondary add-account-button" type="button" (click)="openAccountForm()">＋ Add bank account</button>
+    </div>
+
+    <div class="import-panel">
+      <div>
+        <h2>Import statement</h2>
+        <p>CSV columns: <code>date, description, amount</code>, with optional <code>reference</code>. Use ISO dates; positive amounts are deposits, negative amounts are withdrawals.</p>
+      </div>
+      <div class="import-controls">
+        <label class="file-picker">
+          <span>{{ selectedFile?.name || 'Choose CSV file' }}</span>
+          <input type="file" accept=".csv,text/csv" (change)="onStatementSelected($event)" />
+        </label>
+        <button class="button primary" type="button" [disabled]="!selectedFile || importing" (click)="importStatement()">
+          {{ importing ? 'Importing…' : 'Import statement' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-item"><span>Statement transactions</span><strong>{{ transactions.length }}</strong></div>
+      <div class="summary-item"><span>Matched</span><strong>{{ matchedCount }}</strong></div>
+      <div class="summary-item"><span>Partially matched</span><strong>{{ partialCount }}</strong></div>
+      <div class="summary-item"><span>Unmatched</span><strong>{{ unmatchedCount }}</strong></div>
+    </div>
+
+    @if (matchError) { <div class="alert error" role="alert">{{ matchError }}</div> }
+    @if (loading) {
+      <div class="loading-card"><span class="spinner"></span> Loading transactions…</div>
+    } @else if (!transactions.length) {
+      <div class="empty-state">
+        <span class="empty-icon">⇄</span>
+        <h3>No statement transactions yet</h3>
+        <p>Upload a CSV statement to start reconciling this account.</p>
+      </div>
+    } @else {
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Description</th><th>Reference</th><th class="amount-cell">Amount</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            @for (transaction of transactions; track transaction.id) {
+              <tr>
+                <td>{{ transaction.transactionDate }}</td>
+                <td class="description-cell">{{ transaction.description }}</td>
+                <td>{{ transaction.reference || '—' }}</td>
+                <td class="amount-cell" [class.deposit]="transaction.amount > 0" [class.withdrawal]="transaction.amount < 0">
+                  {{ formatAmount(transaction.amount) }}
+                </td>
+                <td>
+                  @if (transaction.remainingAmount === 0) {
+                    <span class="status-tag matched">Matched</span>
+                  } @else if (transaction.matchedAmount !== 0) {
+                    <span class="status-tag partial">Partial · {{ formatAmount(transaction.remainingAmount) }} remaining</span>
+                  } @else {
+                    <span class="status-tag unmatched">Unmatched</span>
+                  }
+                </td>
+                <td class="action-cell">
+                  @if (transaction.remainingAmount !== 0) {
+                    <button class="button secondary table-action" type="button" [disabled]="saving" (click)="showMatches(transaction)">
+                      {{ matchTransactionId === transaction.id ? 'Refresh matches' : 'Find match' }}
+                    </button>
+                    <button class="button secondary table-action" type="button" [disabled]="saving" (click)="openAdjustment(transaction)">Record fee / adjustment</button>
+                  } @else {
+                    <button class="button secondary table-action" type="button" [disabled]="saving" (click)="showMatches(transaction)">View matches</button>
+                  }
+                </td>
+              </tr>
+              @if (matchTransactionId === transaction.id) {
+                <tr class="candidate-row">
+                  <td colspan="6">
+                    <div class="candidate-panel">
+                      <div class="candidate-heading">
+                        <div>
+                          <h3>Match allocations</h3>
+                          <p>Allocate part or all of each posted ledger line. Amounts must use the statement transaction’s direction.</p>
+                        </div>
+                        <button class="button secondary table-action" type="button" (click)="matchTransactionId = null">Close</button>
+                      </div>
+                      @if (transaction.matches.length) {
+                        <div class="existing-matches">
+                          <h4>Current allocations</h4>
+                          @for (match of transaction.matches; track match.id) {
+                            <div class="candidate-item">
+                              <div><strong>{{ match.entryDate }} · {{ formatAmount(match.amount) }}</strong><span>{{ match.description }}</span></div>
+                              <span>Ledger line {{ match.journalLineId }}</span>
+                              <button class="button secondary table-action" type="button" [disabled]="saving" (click)="unmatchTransaction(transaction, match.id)">Remove allocation</button>
+                            </div>
+                          }
+                        </div>
+                      }
+                      @if (!candidates.length) {
+                        <p class="no-candidates">No unmatched posted ledger balances are available in this transaction’s direction.</p>
+                      } @else {
+                        <div class="candidate-list">
+                          @for (candidate of candidates; track candidate.journalLineId) {
+                            <div class="candidate-item">
+                              <div><strong>{{ candidate.entryDate }} · available {{ formatAmount(candidate.amount) }}</strong><span>{{ candidate.description }}</span></div>
+                              <label class="allocation-input"><span>Allocate</span><input type="number" min="0.01" [max]="absoluteAmount(candidate.amount)" step="0.01"
+                                [name]="'allocation-' + candidate.journalLineId" [(ngModel)]="allocationAmounts[candidate.journalLineId]" /></label>
+                              <button class="button primary table-action" type="button" [disabled]="saving" (click)="matchTransaction(transaction, candidate)">Allocate</button>
+                            </div>
+                          }
+                        </div>
+                      }
+                      @if (adjustmentTransactionId === transaction.id) {
+                        <div class="adjustment-form">
+                          <h4>Post a bank fee or reconciliation adjustment</h4>
+                          <p>The remaining signed statement amount will be posted to the bank account and the opposite amount to the selected offset account. This posts a journal entry in an open period and matches it automatically.</p>
+                          <label><span>Offset account</span><select name="offsetAccount" [(ngModel)]="adjustmentAccountId">
+                            <option [ngValue]="null" disabled>Select account</option>
+                            @for (account of adjustmentAccounts; track account.value) {
+                              <option [ngValue]="account.value">{{ account.label }}</option>
+                            }
+                          </select></label>
+                          <label><span>Posting date</span><input name="adjustmentDate" type="date" [(ngModel)]="adjustmentEntryDate" /></label>
+                          <label class="adjustment-description"><span>Description</span><input name="adjustmentDescription" maxlength="500" [(ngModel)]="adjustmentDescription" /></label>
+                          <div class="adjustment-actions">
+                            <button class="button secondary" type="button" (click)="adjustmentTransactionId = null">Cancel</button>
+                            <button class="button primary" type="button" [disabled]="saving || !adjustmentAccountId" (click)="recordAdjustment(transaction)">Post and match {{ formatAmount(transaction.remainingAmount) }}</button>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

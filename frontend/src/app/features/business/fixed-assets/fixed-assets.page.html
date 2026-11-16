@@ -1,0 +1,157 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">FIXED ASSETS</p>
+    <h1>Fixed assets</h1>
+    <p class="page-description">Record acquisitions, post straight-line depreciation, and account for asset disposals.</p>
+  </div>
+  @if (!creating && !depreciatingAsset && !disposingAsset) {
+    <button class="button primary" type="button" (click)="beginCreate()" [disabled]="!openPeriods.length || !journals.length">＋ Acquire asset</button>
+  }
+</div>
+@if (error) { <div class="alert error" role="alert">{{ error }}</div> }
+@if (success) { <div class="alert success" role="status">{{ success }}</div> }
+@if (loading) { <div class="loading-card"><span class="spinner"></span> Loading fixed assets…</div> }
+
+@if (!loading && creating) {
+  <section class="asset-form panel">
+    <div class="section-heading"><div><h2>Acquire fixed asset</h2><p>Acquisition posts a balanced journal entry in the company’s functional currency.</p></div></div>
+    <div class="asset-fields">
+      <label><span>Asset number</span><input name="assetNumber" maxlength="40" [(ngModel)]="assetNumber" /></label>
+      <label><span>Asset name</span><input name="name" maxlength="160" [(ngModel)]="name" /></label>
+      <label><span>Acquisition date</span><input name="acquisitionDate" type="date" [(ngModel)]="acquisitionDate" /></label>
+      <label><span>In-service date</span><input name="inServiceDate" type="date" [(ngModel)]="inServiceDate" /></label>
+      <label><span>Acquisition cost ({{ currencyCode }})</span><input name="acquisitionCost" type="number" min="0.01" step="0.01" [(ngModel)]="acquisitionCost" /></label>
+      <label><span>Residual value ({{ currencyCode }})</span><input name="residualValue" type="number" min="0" step="0.01" [(ngModel)]="residualValue" /></label>
+      <label><span>Useful life (months)</span><input name="usefulLifeMonths" type="number" min="1" max="1200" step="1" [(ngModel)]="usefulLifeMonths" /></label>
+      <label><span>Acquisition period</span><select name="acquisitionPeriod" [(ngModel)]="acquisitionPeriodId">
+        <option [ngValue]="null" disabled>Select period</option>
+        @for (period of openPeriods; track period.id) { <option [ngValue]="period.id">{{ period.startsOn }} – {{ period.endsOn }}</option> }
+      </select></label>
+      <label><span>Journal</span><select name="acquisitionJournal" [(ngModel)]="acquisitionJournalId">
+        <option [ngValue]="null" disabled>Select journal</option>
+        @for (journal of journals; track journal.id) { <option [ngValue]="journal.id">{{ journal.code }} · {{ journal.name }}</option> }
+      </select></label>
+      <label><span>Fixed asset account</span><select name="assetAccount" [(ngModel)]="assetAccountId">
+        <option [ngValue]="null" disabled>Select account</option>
+        @for (account of assetAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
+      </select></label>
+      <label><span>Accumulated depreciation account</span><select name="accumulatedAccount" [(ngModel)]="accumulatedDepreciationAccountId">
+        <option [ngValue]="null" disabled>Select account</option>
+        @for (account of assetAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
+      </select></label>
+      <label><span>Depreciation expense account</span><select name="depreciationExpenseAccount" [(ngModel)]="depreciationExpenseAccountId">
+        <option [ngValue]="null" disabled>Select account</option>
+        @for (account of expenseAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
+      </select></label>
+      <label><span>Acquisition credit account</span><select name="creditAccount" [(ngModel)]="acquisitionCreditAccountId">
+        <option [ngValue]="null" disabled>Select cash, bank, or payable account</option>
+        @for (account of fundingAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }} ({{ account.accountType }})</option> }
+      </select></label>
+      <label class="description-field"><span>Description</span><input name="description" maxlength="500" [(ngModel)]="description" /></label>
+    </div>
+    <div class="form-actions">
+      <button class="button primary" type="button" [disabled]="saving" (click)="create()">{{ saving ? 'Posting…' : 'Post acquisition' }}</button>
+      <button class="button secondary" type="button" [disabled]="saving" (click)="cancel()">Cancel</button>
+    </div>
+  </section>
+}
+
+@if (!loading && depreciatingAsset) {
+  <section class="asset-form panel">
+    <div class="section-heading"><div><h2>Depreciate {{ depreciatingAsset.assetNumber }} · {{ depreciatingAsset.name }}</h2>
+      <p>Straight-line depreciation is calculated by service days, capped at residual value, and posted for each due open accounting period through the selection.</p></div></div>
+    <div class="asset-fields">
+      <label><span>Depreciate through period</span><select name="depreciationThroughPeriod" [(ngModel)]="depreciationThroughPeriodId">
+        <option [ngValue]="null" disabled>Select period</option>
+        @for (period of openPeriods; track period.id) {
+          @if (period.endsOn >= depreciatingAsset.inServiceDate) { <option [ngValue]="period.id">{{ period.startsOn }} – {{ period.endsOn }}</option> }
+        }
+      </select></label>
+      <label><span>Journal</span><select name="depreciationJournal" [(ngModel)]="depreciationJournalId">
+        <option [ngValue]="null" disabled>Select journal</option>
+        @for (journal of journals; track journal.id) { <option [ngValue]="journal.id">{{ journal.code }} · {{ journal.name }}</option> }
+      </select></label>
+    </div>
+    <div class="form-actions">
+      <button class="button primary" type="button" [disabled]="saving" (click)="postDepreciation()">{{ saving ? 'Posting…' : 'Post depreciation' }}</button>
+      <button class="button secondary" type="button" [disabled]="saving" (click)="cancel()">Cancel</button>
+    </div>
+  </section>
+}
+
+@if (!loading && disposingAsset) {
+  <section class="asset-form panel">
+    <div class="section-heading"><div><h2>Dispose {{ disposingAsset.assetNumber }} · {{ disposingAsset.name }}</h2>
+      <p>Depreciation through the disposal period must be posted first. Disposals are recorded at accounting-period end.</p></div></div>
+    <div class="asset-fields">
+      <label><span>Disposal period</span><select name="disposalPeriod" [ngModel]="disposalPeriodId" (ngModelChange)="onDisposalPeriodChange($event)">
+        <option [ngValue]="null" disabled>Select open period</option>
+        @for (period of openPeriods; track period.id) {
+          @if (period.endsOn >= disposingAsset.inServiceDate) { <option [ngValue]="period.id">{{ period.startsOn }} – {{ period.endsOn }}</option> }
+        }
+      </select></label>
+      <label><span>Disposal date</span><input name="disposalDate" type="date" [value]="disposalDate" readonly /></label>
+      <label><span>Proceeds ({{ currencyCode }})</span><input name="disposalProceeds" type="number" min="0" step="0.01" [(ngModel)]="disposalProceeds" /></label>
+      <label><span>Journal</span><select name="disposalJournal" [(ngModel)]="disposalJournalId">
+        <option [ngValue]="null" disabled>Select journal</option>
+        @for (journal of journals; track journal.id) { <option [ngValue]="journal.id">{{ journal.code }} · {{ journal.name }}</option> }
+      </select></label>
+      <label><span>Proceeds account</span><select name="disposalCashAccount" [(ngModel)]="disposalCashAccountId">
+        <option [ngValue]="null" disabled>Select asset account</option>
+        @for (account of assetAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
+      </select></label>
+      <label><span>Gain account</span><select name="disposalGainAccount" [(ngModel)]="disposalGainAccountId">
+        <option [ngValue]="null" disabled>Select revenue account</option>
+        @for (account of revenueAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
+      </select></label>
+      <label><span>Loss account</span><select name="disposalLossAccount" [(ngModel)]="disposalLossAccountId">
+        <option [ngValue]="null" disabled>Select expense account</option>
+        @for (account of expenseAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
+      </select></label>
+    </div>
+    <div class="form-actions">
+      <button class="button primary" type="button" [disabled]="saving" (click)="dispose()">{{ saving ? 'Posting…' : 'Post disposal' }}</button>
+      <button class="button secondary" type="button" [disabled]="saving" (click)="cancel()">Cancel</button>
+    </div>
+  </section>
+}
+
+@if (!loading && !creating && !depreciatingAsset && !disposingAsset) {
+  <section class="table-panel panel">
+    <div class="table-header"><div><h2>Asset register</h2><span>{{ assets.length }} {{ assets.length === 1 ? 'asset' : 'assets' }}</span></div><span class="table-badge">{{ currencyCode }}</span></div>
+    @if (!assets.length) {
+      <div class="empty-state"><span class="empty-icon">◇</span><h3>No fixed assets yet</h3>
+        <p>Record an acquisition to create the asset register and post the initial journal entry.</p>
+        @if (openPeriods.length && journals.length) { <button class="button secondary" type="button" (click)="beginCreate()">Acquire first asset</button> }
+      </div>
+    } @else {
+      <div class="table-scroll"><table>
+        <thead><tr><th>Asset</th><th>Dates</th><th>Cost</th><th>Accum. depreciation</th><th>Net book value</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>@for (asset of assets; track asset.id) {
+          <tr>
+            <td><strong>{{ asset.assetNumber }} · {{ asset.name }}</strong><small>{{ asset.assetAccountName }}</small></td>
+            <td>{{ asset.acquisitionDate }}<small>In service {{ asset.inServiceDate }}</small></td>
+            <td class="amount">{{ formatCurrency(asset.acquisitionCost) }}</td>
+            <td class="amount">{{ formatCurrency(asset.accumulatedDepreciation) }}</td>
+            <td class="amount">{{ formatCurrency(asset.netBookValue) }}</td>
+            <td><span class="status-tag" [class.posted]="asset.status === 'Active'">{{ asset.status }}</span></td>
+            <td class="actions">
+              @if (asset.status === 'Active') {
+                <button class="button secondary table-action" type="button" (click)="beginDepreciation(asset)" [disabled]="!openPeriods.length">Depreciate</button>
+                <button class="button secondary table-action" type="button" (click)="beginDisposal(asset)" [disabled]="!openPeriods.length">Dispose</button>
+              }
+            </td>
+          </tr>
+          <tr class="history-row"><td colspan="7">
+            <details><summary>Depreciation history · useful life {{ asset.usefulLifeMonths }} months · residual {{ formatCurrency(asset.residualValue) }}</summary>
+              <span>{{ assetDepreciation(asset.id).length }} posted periods</span>
+              @for (entry of assetDepreciation(asset.id); track entry.journalEntryId) {
+                <span>{{ entry.depreciationDate }} · {{ formatCurrency(entry.amount) }} · journal entry {{ entry.journalEntryId }}</span>
+              }
+            </details>
+          </td></tr>
+        }</tbody>
+      </table></div>
+    }
+  </section>
+}

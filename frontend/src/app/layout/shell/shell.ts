@@ -52,9 +52,13 @@ export class Shell {
     {
       label: 'OPERATIONS',
       links: [
+        { label: 'Bank reconciliation', path: '/banking/reconciliation', icon: '⇄' },
         { label: 'Customers & suppliers', path: '/parties', icon: '♧' },
+        { label: 'Sales quotes', path: '/sales-quotes', icon: '▧' },
+        { label: 'Credit notes', path: '/sales-credit-notes', icon: '↙' },
         { label: 'Sales invoices', path: '/sales-invoices', icon: '↗' },
         { label: 'Purchase bills', path: '/purchase-bills', icon: '↙' },
+        { label: 'Purchase orders', path: '/purchase-orders', icon: '▤' },
         { label: 'Payments', path: '/payments', icon: '◉' },
         { label: 'Items', path: '/inventory/items', icon: '◇' },
         { label: 'Item categories', path: '/inventory/categories', icon: '▧' },
@@ -62,6 +66,7 @@ export class Shell {
         { label: 'Stock balances', path: '/inventory/balances', icon: '▥' },
         { label: 'Stock movements', path: '/inventory/movements', icon: '↔' },
         { label: 'Inventory counts', path: '/inventory/counts', icon: '☷' },
+        { label: 'Fixed assets', path: '/fixed-assets', icon: '◇' },
       ],
     },
     {
@@ -70,6 +75,11 @@ export class Shell {
         { label: 'Trial balance', path: '/reports/trial-balance', icon: '◫' },
         { label: 'Income statement', path: '/reports/income-statement', icon: '⌁' },
         { label: 'Balance sheet', path: '/reports/balance-sheet', icon: '▦' },
+        { label: 'Budgets', path: '/reports/budget-vs-actual', icon: '◷' },
+        { label: 'Cash flow', path: '/reports/cash-flow', icon: '◉' },
+        { label: 'Receivables aging', path: '/reports/receivables-aging', icon: '◷' },
+        { label: 'Payables aging', path: '/reports/payables-aging', icon: '◷' },
+        { label: 'Consolidated trial balance', path: '/reports/consolidation', icon: '▦' },
       ],
     },
     {
@@ -77,6 +87,7 @@ export class Shell {
       links: [
         { label: 'Company settings', path: '/settings/company', icon: '⚙' },
         { label: 'Supported tax jurisdictions', path: '/settings/tax-jurisdictions', icon: '%' },
+        { label: 'Tax codes & rates', path: '/settings/tax-codes', icon: '%' },
         { label: 'Tax registrations', path: '/settings/tax-registrations', icon: '%' },
         { label: 'Team members', path: '/users', icon: '♙' },
       ],

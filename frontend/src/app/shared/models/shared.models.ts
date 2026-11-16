@@ -9,7 +9,7 @@ export interface Field {
   type?: 'text' | 'password' | 'email' | 'tel' | 'url' | 'date' | 'number' | 'checkbox' | 'select';
   required?: boolean;
   options?: Choice[];
-  optionSource?: 'groups' | 'years' | 'parties' | 'accounts' | 'categories' | 'currencies' | 'journals' | 'periods' | 'warehouses' | 'items' | 'units' | 'jurisdictions' | 'taxCodes';
+  optionSource?: 'groups' | 'years' | 'parties' | 'accounts' | 'categories' | 'taxCategories' | 'currencies' | 'journals' | 'periods' | 'warehouses' | 'items' | 'units' | 'jurisdictions' | 'taxCodes';
 }
 
 export type DataRow = Record<string, unknown>;

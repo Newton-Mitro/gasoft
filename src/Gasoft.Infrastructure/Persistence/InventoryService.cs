@@ -830,7 +830,8 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             request.Quantity,
             request.UnitCost,
             receipt: true,
-            cancellationToken);
+            cancellationToken,
+            request.PurchaseOrderLineId);
 
     public Task<StockMovementDto> IssueAsync(
         long companyId,
@@ -866,7 +867,8 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
         decimal quantity,
         decimal? unitCost,
         bool receipt,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        long? purchaseOrderLineId = null)
     {
         var tenantId = EnsureTenant();
         var company = await EnsureCompanyAsync(companyId, cancellationToken);
@@ -1037,6 +1039,31 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             throw Validation("unitCost", "Movement total cost is outside the supported functional-currency range.");
         }
 
+        PurchaseOrderLine? purchaseOrderLine = null;
+        PurchaseOrder? purchaseOrder = null;
+        if (purchaseOrderLineId.HasValue)
+        {
+            if (!receipt)
+                throw Validation("purchaseOrderLineId", "Purchase order lines can only be linked to stock receipts.");
+            purchaseOrderLine = await db.PurchaseOrderLines.SingleOrDefaultAsync(
+                line => line.Id == purchaseOrderLineId.Value &&
+                        line.CompanyId == companyId &&
+                        line.ItemId == itemId,
+                cancellationToken);
+            if (purchaseOrderLine is null)
+                throw Validation("purchaseOrderLineId", "Choose a purchase order line for this item in this company.");
+            purchaseOrder = await db.PurchaseOrders.SingleOrDefaultAsync(
+                order => order.Id == purchaseOrderLine.PurchaseOrderId &&
+                         order.CompanyId == companyId,
+                cancellationToken);
+            if (purchaseOrder is null ||
+                purchaseOrder.Status is not ("Ordered" or "PartiallyReceived") ||
+                purchaseOrder.WarehouseId != warehouseId)
+                throw Validation("purchaseOrderLineId", "The order must be open for receiving and use the selected warehouse.");
+            if (purchaseOrderLine.ReceivedQuantity + quantity > purchaseOrderLine.Quantity)
+                throw Validation("quantity", "Receipt quantity exceeds the remaining quantity on the purchase order line.");
+        }
+
         var journalEntry = new JournalEntry
         {
             TenantId = tenantId,
@@ -1087,6 +1114,7 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             WarehouseId = warehouseId,
             WarehouseLocationId = locationId,
             MovementNumber = normalizedNumber,
+            PurchaseOrderLineId = purchaseOrderLineId,
             MovementType = receipt ? "Receipt" : "Issue",
             MovementDate = movementDate,
             QuantityIn = receipt ? quantity : 0,
@@ -1137,6 +1165,19 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
                     RemainingQuantity = quantity,
                     UnitCost = calculatedUnitCost
                 });
+                if (purchaseOrderLine is not null && purchaseOrder is not null)
+                {
+                    purchaseOrderLine.ReceivedQuantity += quantity;
+                    purchaseOrderLine.Revision++;
+                    var allLines = await db.PurchaseOrderLines
+                        .Where(line => line.PurchaseOrderId == purchaseOrder.Id)
+                        .ToListAsync(cancellationToken);
+                    purchaseOrder.Status = allLines.All(line =>
+                        line.ReceivedQuantity >= line.Quantity)
+                        ? "Received"
+                        : "PartiallyReceived";
+                    purchaseOrder.Revision++;
+                }
             }
             else
             {

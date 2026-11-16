@@ -111,6 +111,72 @@ public static class BillingEndpoints
             }
         });
 
+        companies.MapGet("/sales-credit-notes", async (
+            long companyId,
+            IBillingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                return Results.Ok(await service.GetSalesCreditNotesAsync(companyId, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
+
+        companies.MapPost("/sales-credit-notes", async (
+            long companyId,
+            CreateSalesCreditNoteRequest request,
+            IBillingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var note = await service.CreateSalesCreditNoteAsync(companyId, request, cancellationToken);
+                return Results.Created($"/api/v1/companies/{companyId}/sales-credit-notes/{note.Id}", note);
+            }
+            catch (BillingValidationException exception) { return ValidationProblem(exception); }
+            catch (BillingConflictException exception) { return Results.Conflict(new { error = exception.Message }); }
+            catch (KeyNotFoundException exception) { return Results.NotFound(new { error = exception.Message }); }
+        });
+
+        companies.MapPost("/sales-credit-notes/{creditNoteId:long}/post", async (
+            long companyId,
+            long creditNoteId,
+            PostSalesCreditNoteRequest request,
+            IBillingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var note = await service.PostSalesCreditNoteAsync(companyId, creditNoteId, request, cancellationToken);
+                return note is null ? Results.NotFound() : Results.Ok(note);
+            }
+            catch (BillingValidationException exception) { return ValidationProblem(exception); }
+            catch (BillingConflictException exception) { return Results.Conflict(new { error = exception.Message }); }
+            catch (KeyNotFoundException exception) { return Results.NotFound(new { error = exception.Message }); }
+        });
+
+        companies.MapPost("/sales-credit-notes/{creditNoteId:long}/refunds", async (
+            long companyId,
+            long creditNoteId,
+            CreateCustomerRefundRequest request,
+            IBillingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var refund = await service.RefundSalesCreditNoteAsync(companyId, creditNoteId, request, cancellationToken);
+                return refund is null ? Results.NotFound() : Results.Created(
+                    $"/api/v1/companies/{companyId}/sales-credit-notes/{creditNoteId}/refunds/{refund.Id}", refund);
+            }
+            catch (BillingValidationException exception) { return ValidationProblem(exception); }
+            catch (BillingConflictException exception) { return Results.Conflict(new { error = exception.Message }); }
+            catch (KeyNotFoundException exception) { return Results.NotFound(new { error = exception.Message }); }
+        });
+
         companies.MapGet("/purchase-bills", async (
             long companyId,
             IBillingService service,

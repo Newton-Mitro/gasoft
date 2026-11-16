@@ -1,0 +1,12 @@
+.credit-form { padding: 1.5rem; }
+.section-heading, .form-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.section-heading h2 { margin: 0; }
+.section-heading p { color: var(--text-muted); }
+.header-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.header-fields label { display: grid; gap: .45rem; color: var(--text); font-size: .88rem; font-weight: 600; }
+.header-fields input, .header-fields select { width: 100%; min-width: 0; }
+.reason-field { grid-column: span 2; }
+.quantity-input { width: 130px; }
+.form-actions { justify-content: flex-start; margin-top: 1.5rem; }
+.table-action { margin: .15rem; }
+@media (max-width: 620px) { .reason-field { grid-column: auto; } }

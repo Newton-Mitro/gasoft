@@ -1,0 +1,367 @@
+:host {
+  display: block;
+}
+
+.group-form,
+.consolidation-workspace {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.group-form {
+  padding: 20px;
+}
+
+.form-heading h2,
+.run-toolbar h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 14px;
+}
+
+.form-heading p,
+.run-toolbar p {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.form-grid label,
+.group-toolbar label,
+.run-controls label,
+.run-select label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.form-grid input,
+.form-grid select,
+.group-toolbar select,
+.run-controls input,
+.run-select select {
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+}
+
+.company-picker {
+  margin: 18px 0 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.company-picker legend {
+  padding: 0 6px;
+  color: var(--text-strong);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.company-picker legend small {
+  margin-left: 6px;
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 400;
+}
+
+.company-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.company-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.company-option input {
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.company-option span {
+  display: grid;
+  gap: 4px;
+}
+
+.company-option strong {
+  color: var(--text-strong);
+  font-size: 10px;
+}
+
+.company-option small,
+.empty-note {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.group-toolbar,
+.run-toolbar,
+.group-summary,
+.run-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 16px 18px;
+}
+
+.group-toolbar {
+  border-bottom: 1px solid var(--border);
+}
+
+.group-toolbar label {
+  width: min(420px, 100%);
+}
+
+.group-toolbar .button {
+  flex: 0 0 auto;
+}
+
+.group-summary {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.group-summary > div:not(.company-chip-list) {
+  display: grid;
+  gap: 4px;
+  padding-right: 18px;
+  border-right: 1px solid var(--border);
+}
+
+.group-summary span,
+.run-summary span {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.group-summary strong,
+.run-summary strong {
+  color: var(--text-strong);
+  font-size: 11px;
+}
+
+.company-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.company-chip {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.run-toolbar {
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border);
+}
+
+.run-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.run-select {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.run-select label {
+  width: min(300px, 100%);
+}
+
+.translation-rates,
+.run-adjustments {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.translation-rates h3,
+.run-adjustments h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 12px;
+}
+
+.translation-rates > p,
+.run-adjustments > p,
+.adjustment-heading p {
+  margin: 5px 0 12px;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.translation-rates td input,
+.run-adjustments td input {
+  width: 100%;
+  min-width: 90px;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-strong);
+  font: inherit;
+}
+
+.translation-rates td input:disabled {
+  background: var(--surface-muted);
+}
+
+.adjustment-heading,
+.adjustment-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.adjustment-actions {
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.table-action {
+  white-space: nowrap;
+}
+
+.run-summary {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.run-summary > div {
+  display: grid;
+  gap: 4px;
+  min-width: 90px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 11px 15px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+th {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font-weight: 650;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.amount {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty-state {
+  padding: 36px 20px;
+  text-align: center;
+}
+
+.empty-state.compact {
+  padding: 22px;
+}
+
+.empty-state h3 {
+  margin: 10px 0 4px;
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.empty-state p {
+  margin: 0 0 14px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+@media (max-width: 780px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .run-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .group-toolbar,
+  .group-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .adjustment-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .group-summary > div:not(.company-chip-list) {
+    border: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .run-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

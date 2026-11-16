@@ -17,6 +17,44 @@ public sealed record UpdateInvoiceRequest(
     decimal ExchangeRate,
     IReadOnlyList<CreateDocumentLineRequest> Lines);
 
+public sealed record CreateSalesCreditNoteRequest(
+    long SalesInvoiceId,
+    string CreditNoteNumber,
+    DateOnly CreditNoteDate,
+    string Reason,
+    IReadOnlyList<CreateCreditNoteLineRequest> Lines);
+
+public sealed record CreateCreditNoteLineRequest(long SalesInvoiceLineId, decimal Quantity);
+
+public sealed record PostSalesCreditNoteRequest(
+    long JournalId,
+    long AccountingPeriodId,
+    long ReceivableAccountId,
+    IReadOnlyList<TaxAccountMapping> TaxAccounts);
+
+public sealed record CreateSalesQuoteRequest(
+    long CustomerId,
+    string QuoteNumber,
+    DateOnly QuoteDate,
+    DateOnly ValidUntil,
+    string CurrencyCode,
+    decimal ExchangeRate,
+    IReadOnlyList<CreateDocumentLineRequest> Lines);
+
+public sealed record UpdateSalesQuoteRequest(
+    long CustomerId,
+    string QuoteNumber,
+    DateOnly QuoteDate,
+    DateOnly ValidUntil,
+    string CurrencyCode,
+    decimal ExchangeRate,
+    IReadOnlyList<CreateDocumentLineRequest> Lines);
+
+public sealed record ConvertSalesQuoteRequest(
+    string InvoiceNumber,
+    DateOnly InvoiceDate,
+    DateOnly DueDate);
+
 public sealed record CreateBillRequest(
     long PartyId,
     string BillNumber,
@@ -74,6 +112,73 @@ public sealed record InvoiceDto(
     decimal AllocatedTotal,
     string Status,
     IReadOnlyList<DocumentLineDto> Lines);
+
+public sealed record SalesQuoteDto(
+    long Id,
+    long CompanyId,
+    long CustomerId,
+    long? SalesInvoiceId,
+    string QuoteNumber,
+    DateOnly QuoteDate,
+    DateOnly ValidUntil,
+    string CurrencyCode,
+    decimal ExchangeRate,
+    decimal NetTotal,
+    decimal TaxTotal,
+    decimal GrandTotal,
+    string Status,
+    DateTimeOffset? SentAt,
+    string? SentTo,
+    IReadOnlyList<DocumentLineDto> Lines);
+
+public sealed record SalesCreditNoteLineDto(
+    long Id,
+    long SalesInvoiceLineId,
+    long AccountId,
+    long? TaxCodeId,
+    string Description,
+    decimal Quantity,
+    decimal UnitPrice,
+    decimal NetAmount,
+    decimal TaxRatePercent,
+    decimal TaxAmount,
+    decimal GrossAmount);
+
+public sealed record SalesCreditNoteDto(
+    long Id,
+    long CompanyId,
+    long SalesInvoiceId,
+    string InvoiceNumber,
+    string CreditNoteNumber,
+    DateOnly CreditNoteDate,
+    string Reason,
+    string CurrencyCode,
+    decimal NetTotal,
+    decimal TaxTotal,
+    decimal GrandTotal,
+    string Status,
+    decimal RefundedAmount,
+    decimal RefundableAmount,
+    IReadOnlyList<SalesCreditNoteLineDto> Lines);
+
+public sealed record CreateCustomerRefundRequest(
+    string RefundNumber,
+    DateOnly RefundDate,
+    decimal Amount,
+    long JournalId,
+    long AccountingPeriodId,
+    long CashAccountId);
+
+public sealed record CustomerRefundDto(
+    long Id,
+    long CompanyId,
+    long SalesCreditNoteId,
+    long JournalEntryId,
+    string RefundNumber,
+    DateOnly RefundDate,
+    decimal Amount,
+    decimal FunctionalAmount,
+    string Status);
 
 public sealed record BillDto(
     long Id,

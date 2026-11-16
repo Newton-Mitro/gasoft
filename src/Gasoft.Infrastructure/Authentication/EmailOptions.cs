@@ -15,6 +15,9 @@ public sealed class EmailOptions
     public bool IsConfigured =>
         Uri.TryCreate(FrontendBaseUrl, UriKind.Absolute, out var frontendUri) &&
         frontendUri.Scheme is "http" or "https" &&
+        IsSmtpConfigured;
+
+    public bool IsSmtpConfigured =>
         !string.IsNullOrWhiteSpace(SmtpHost) &&
         SmtpPort is > 0 and <= 65535 &&
         !string.IsNullOrWhiteSpace(FromAddress);

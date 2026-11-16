@@ -8,6 +8,7 @@ public sealed class StockMovement : TenantOwnedEntity
     public long WarehouseId { get; set; }
     public long? WarehouseLocationId { get; set; }
     public long? JournalEntryId { get; set; }
+    public long? PurchaseOrderLineId { get; set; }
     public required string MovementNumber { get; set; }
     public required string MovementType { get; set; }
     public DateOnly MovementDate { get; set; }

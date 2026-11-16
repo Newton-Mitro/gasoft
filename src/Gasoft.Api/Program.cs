@@ -92,11 +92,17 @@ app.MapTenantRegistrationEndpoints();
 app.MapPartyEndpoints();
 app.MapAccountingEndpoints();
 app.MapBillingEndpoints();
+app.MapSalesQuoteEndpoints();
 app.MapInventoryEndpoints();
 app.MapReportingEndpoints();
 app.MapCompanyAdministrationEndpoints();
 app.MapTenantUserEndpoints();
 app.MapTaxEndpoints();
+app.MapBankReconciliationEndpoints();
+app.MapConsolidationEndpoints();
+app.MapPurchaseOrderEndpoints();
+app.MapBudgetEndpoints();
+app.MapFixedAssetEndpoints();
 
 app.Run();
 

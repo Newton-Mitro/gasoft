@@ -1,5 +1,5 @@
 import { Injectable, Signal } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { forkJoin, map, Observable } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { Choice, DataRow } from '../models/shared.models';
 import { OptionDataCacheService, OptionLoadState } from './option-data-cache.service';
@@ -21,8 +21,9 @@ const OPTION_REQUESTS: Record<string, OptionRequest> = {
   warehouses: { endpoint: 'warehouses', global: false },
   items: { endpoint: '/api/v1/items', global: true },
   units: { endpoint: '/api/v1/units-of-measure', global: true },
-  jurisdictions: { endpoint: '/api/v1/tax-reference', global: true },
-  taxCodes: { endpoint: '/api/v1/tax-reference', global: true },
+  jurisdictions: { endpoint: '/api/v1/tax-jurisdictions', global: true },
+  taxCategories: { endpoint: 'tax-reference', global: false },
+  taxCodes: { endpoint: 'tax-reference', global: false },
 };
 
 @Injectable({ providedIn: 'root' })
@@ -38,9 +39,34 @@ export class OptionDataService {
     return this.getRawOptions(request).pipe(map(result => this.toOptions(source, result)));
   }
 
+  getBankAssetAccountOptions(): Observable<Choice[]> {
+    return forkJoin({
+      accounts: this.getRawOptions(OPTION_REQUESTS['accounts']),
+      groups: this.getRawOptions(OPTION_REQUESTS['groups']),
+    }).pipe(map(({ accounts, groups }) => {
+      const assetGroupIds = new Set(this.toRows(groups)
+        .filter(group => group['accountType'] === 'Asset')
+        .map(group => Number(group['id']))
+        .filter(id => Number.isSafeInteger(id) && id > 0));
+      return this.toRows(accounts)
+        .filter(account =>
+          account['isActive'] === true &&
+          account['allowPosting'] === true &&
+          assetGroupIds.has(Number(account['accountGroupId'])) &&
+          typeof account['code'] === 'string' &&
+          typeof account['name'] === 'string')
+        .map(account => ({
+          label: `${account['code']} · ${account['name']}`,
+          value: Number(account['id']),
+        }))
+        .filter(option => Number.isSafeInteger(option.value) && option.value > 0);
+    }));
+  }
+
   getTaxReferenceRows(): Observable<DataRow[]> {
-    return this.cache.get(this.cacheKey('/api/v1/tax-reference'), () =>
-      this.api.get<DataRow>('/api/v1/tax-reference', false),
+    const endpoint = this.api.companyUrl('tax-reference');
+    return this.cache.get(this.cacheKey(endpoint), () =>
+      this.api.get<DataRow>('tax-reference', true),
     ).pipe(
       map(reference => {
         const codes = Array.isArray(reference['codes']) ? reference['codes'].filter(isDataRow) : [];
@@ -93,23 +119,27 @@ export class OptionDataService {
   }
 
   private toOptions(source: string, result: unknown): Choice[] {
-    if ((source === 'jurisdictions' || source === 'taxCodes') && result && typeof result === 'object') {
-      if (source === 'taxCodes') {
-        const codes = (result as DataRow)['codes'];
-        if (Array.isArray(codes)) {
-          return codes.filter(isDataRow).map(row => ({
-            label: `${row['code']} · ${row['taxType']}`,
+    if (source === 'taxCodes' || source === 'taxCategories') {
+      if (result && typeof result === 'object') {
+        const key = source === 'taxCodes' ? 'codes' : 'categories';
+        const rows = (result as DataRow)[key];
+        if (Array.isArray(rows)) {
+          return rows.filter(isDataRow).map(row => ({
+            label: source === 'taxCodes'
+              ? `${row['code']} · ${row['taxType']}`
+              : `${row['code']} · ${row['name']}`,
             value: Number(row['id']),
           }));
         }
       }
-      const jurisdictions = (result as DataRow)['jurisdictions'];
-      if (Array.isArray(jurisdictions)) {
-        return jurisdictions.filter(isDataRow).map(row => ({
-          label: `${row['code']} · ${row['countryCode']}`,
-          value: Number(row['id']),
-        }));
-      }
+    }
+
+    if (source === 'jurisdictions') {
+      const rows = this.toRows(result);
+      return rows.map(row => ({
+        label: `${row['code']} · ${row['countryCode']}`,
+        value: Number(row['id']),
+      }));
     }
 
     const rows = this.toRows(result);

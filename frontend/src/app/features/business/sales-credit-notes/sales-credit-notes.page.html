@@ -1,0 +1,145 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">SALES</p>
+    <h1>Credit notes</h1>
+    <p class="page-description">Credit posted invoices for returns or adjustments, and post the reversal to the ledger.</p>
+  </div>
+  @if (!creating && !postingNote && !refundingNote) {
+    <button class="button primary" type="button" (click)="beginCreate()" [disabled]="!creditableInvoices.length">＋ New credit note</button>
+  }
+</div>
+@if (error) { <div class="alert error" role="alert">{{ error }}</div> }
+@if (success) { <div class="alert success" role="status">{{ success }}</div> }
+@if (loading) { <div class="loading-card"><span class="spinner"></span> Loading credit notes…</div> }
+
+@if (!loading && creating) {
+  <section class="credit-form panel">
+    <div class="section-heading"><div><h2>Create credit note</h2><p>Credit quantities are priced and taxed using the source invoice lines.</p></div></div>
+    <div class="header-fields">
+      <label><span>Posted invoice</span>
+        <select name="invoice" [ngModel]="selectedInvoiceId" (ngModelChange)="selectInvoice($event)">
+          <option [ngValue]="null" disabled>Select invoice</option>
+          @for (invoice of creditableInvoices; track invoice.id) {
+            <option [ngValue]="invoice.id">{{ invoice.invoiceNumber }} · {{ invoice.currencyCode }} {{ invoice.grandTotal }}</option>
+          }
+        </select>
+      </label>
+      <label><span>Credit note number</span><input name="creditNoteNumber" maxlength="40" [(ngModel)]="creditNoteNumber" /></label>
+      <label><span>Credit note date</span><input name="creditNoteDate" type="date" [(ngModel)]="creditNoteDate" /></label>
+      <label class="reason-field"><span>Reason</span><input name="reason" maxlength="500" [(ngModel)]="reason" placeholder="Returned items, pricing adjustment…" /></label>
+    </div>
+    @if (selectedInvoiceId) {
+      <div class="table-scroll"><table>
+        <thead><tr><th>Invoice line</th><th>Original quantity</th><th>Credit quantity</th><th>Unit price</th></tr></thead>
+        <tbody>
+          @for (line of lines; track line.invoiceLineId) {
+            <tr>
+              <td>{{ line.description }}</td><td>{{ line.originalQuantity }}</td>
+              <td><input class="quantity-input" type="number" min="0" [max]="line.originalQuantity" step="0.000001"
+                [(ngModel)]="line.quantity" [name]="'quantity-' + line.invoiceLineId" /></td>
+              <td>{{ selectedInvoice()?.currencyCode }} {{ sourceUnitPrice(line.invoiceLineId) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table></div>
+    }
+    <div class="form-actions">
+      <button class="button primary" type="button" [disabled]="saving" (click)="create()">{{ saving ? 'Saving…' : 'Save draft credit note' }}</button>
+      <button class="button secondary" type="button" [disabled]="saving" (click)="cancel()">Cancel</button>
+    </div>
+  </section>
+}
+
+@if (!loading && postingNote) {
+  <section class="credit-form panel">
+    <div class="section-heading"><div><h2>Post {{ postingNote.creditNoteNumber }}</h2><p>Posting debits revenue and tax, credits receivables, and reduces the source invoice balance.</p></div></div>
+    <div class="header-fields">
+      <label><span>Journal</span><select name="journal" [(ngModel)]="journalId">
+        <option [ngValue]="null" disabled>Select journal</option>
+        @for (option of journals; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
+      </select></label>
+      <label><span>Accounting period</span><select name="period" [(ngModel)]="accountingPeriodId">
+        <option [ngValue]="null" disabled>Select period</option>
+        @for (option of periods; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
+      </select></label>
+      <label><span>Receivable account</span><select name="receivable" [(ngModel)]="receivableAccountId">
+        <option [ngValue]="null" disabled>Select account</option>
+        @for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
+      </select></label>
+      @for (taxCodeId of taxCodeIds; track taxCodeId) {
+        <label><span>Tax account for code {{ taxCodeId }}</span>
+          <select [name]="'tax-account-' + taxCodeId" [(ngModel)]="taxAccountIds[taxCodeId]">
+            <option [ngValue]="null" disabled>Select account</option>
+            @for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
+          </select>
+        </label>
+      }
+    </div>
+    <div class="form-actions">
+      <button class="button primary" type="button" [disabled]="saving" (click)="post()">{{ saving ? 'Posting…' : 'Post credit note' }}</button>
+      <button class="button secondary" type="button" [disabled]="saving" (click)="cancel()">Cancel</button>
+    </div>
+  </section>
+}
+
+@if (!loading && refundingNote) {
+  <section class="credit-form panel">
+    <div class="section-heading">
+      <div><h2>Refund {{ refundingNote.creditNoteNumber }}</h2>
+        <p>Refundable balance: {{ refundingNote.currencyCode }} {{ refundingNote.refundableAmount }}. The refund will debit receivables and credit cash.</p>
+      </div>
+    </div>
+    <div class="header-fields">
+      <label><span>Refund number</span><input name="refundNumber" maxlength="40" [(ngModel)]="refundNumber" /></label>
+      <label><span>Refund date</span><input name="refundDate" type="date" [(ngModel)]="refundDate" /></label>
+      <label><span>Amount ({{ refundingNote.currencyCode }})</span>
+        <input name="refundAmount" type="number" min="0.000001" [max]="refundingNote.refundableAmount" step="any" [(ngModel)]="refundAmount" />
+      </label>
+      <label><span>Journal</span><select name="refundJournal" [(ngModel)]="refundJournalId">
+        <option [ngValue]="null" disabled>Select journal</option>
+        @for (option of journals; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
+      </select></label>
+      <label><span>Accounting period</span><select name="refundPeriod" [(ngModel)]="refundPeriodId">
+        <option [ngValue]="null" disabled>Select period</option>
+        @for (option of periods; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
+      </select></label>
+      <label><span>Cash account</span><select name="cashAccount" [(ngModel)]="cashAccountId">
+        <option [ngValue]="null" disabled>Select account</option>
+        @for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
+      </select></label>
+    </div>
+    <div class="form-actions">
+      <button class="button primary" type="button" [disabled]="saving" (click)="refund()">{{ saving ? 'Posting…' : 'Post refund' }}</button>
+      <button class="button secondary" type="button" [disabled]="saving" (click)="cancel()">Cancel</button>
+    </div>
+  </section>
+}
+
+@if (!loading && !creating && !postingNote && !refundingNote) {
+  <section class="table-panel panel">
+    <div class="table-header"><div><h2>Credit notes</h2><span>{{ notes.length }} {{ notes.length === 1 ? 'record' : 'records' }}</span></div></div>
+    @if (!notes.length) {
+      <div class="empty-state"><span class="empty-icon">↙</span><h3>No credit notes yet</h3>
+        <p>Credit an existing posted invoice to record a customer return or adjustment.</p>
+        @if (creditableInvoices.length) { <button class="button secondary" type="button" (click)="beginCreate()">Create first credit note</button> }
+      </div>
+    } @else {
+      <div class="table-scroll"><table>
+        <thead><tr><th>Credit note</th><th>Invoice</th><th>Date</th><th>Reason</th><th>Currency</th><th>Total</th><th>Refunded</th><th>Refundable</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>@for (note of notes; track note.id) {
+          <tr>
+            <td>{{ note.creditNoteNumber }}</td><td>{{ note.invoiceNumber }}</td><td>{{ note.creditNoteDate }}</td>
+            <td>{{ note.reason }}</td><td>{{ note.currencyCode }}</td><td>{{ note.grandTotal }}</td>
+            <td>{{ note.refundedAmount }}</td><td>{{ note.refundableAmount }}</td>
+            <td><span class="status-tag" [class.posted]="note.status === 'Posted'">{{ note.status }}</span></td>
+            <td>@if (note.status === 'Draft') {
+              <button class="button secondary table-action" type="button" (click)="beginPost(note)">Post</button>
+            } @else if (canRefund(note)) {
+              <button class="button secondary table-action" type="button" (click)="beginRefund(note)">Refund</button>
+            }</td>
+          </tr>
+        }</tbody>
+      </table></div>
+    }
+  </section>
+}

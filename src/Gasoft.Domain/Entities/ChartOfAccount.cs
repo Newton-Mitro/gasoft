@@ -10,4 +10,5 @@ public sealed class ChartOfAccount : TenantOwnedEntity
     public required string Name { get; set; }
     public bool AllowPosting { get; set; } = true;
     public bool IsActive { get; set; } = true;
+    public string? CashFlowCategory { get; set; }
 }

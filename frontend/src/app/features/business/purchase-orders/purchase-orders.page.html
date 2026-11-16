@@ -1,0 +1,205 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">PURCHASING</p>
+    <h1>Purchase orders</h1>
+    <p class="page-description">Create supplier orders, record partial receipts, and update inventory from each receipt.</p>
+  </div>
+  @if (!editing) {
+    <button class="button primary" type="button" (click)="beginCreate()">＋ New purchase order</button>
+  }
+</div>
+@if (error) { <div class="alert error" role="alert">{{ error }}</div> }
+@if (success) { <div class="alert success" role="status">{{ success }}</div> }
+@if (loading) { <div class="loading-card"><span class="spinner"></span> Loading purchase orders…</div> }
+
+@if (!loading && editing) {
+  <section class="order-form panel">
+    <div class="section-heading">
+      <div>
+        <h2>{{ selectedOrderId ? 'Edit draft purchase order' : 'Create purchase order' }}</h2>
+        <p>Purchase order lines are inventory items. All prices are entered in the order currency.</p>
+      </div>
+    </div>
+    <div class="header-fields">
+      <label>
+        <span>Supplier</span>
+        <select name="supplier" required [(ngModel)]="supplierId">
+          <option [ngValue]="null" disabled>Select supplier</option>
+          @for (supplier of suppliers; track supplier.id) {
+            <option [ngValue]="supplier.id">{{ supplier.partyNo }} · {{ supplier.displayName }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>Warehouse</span>
+        <select name="warehouse" required [(ngModel)]="warehouseId">
+          <option [ngValue]="null" disabled>Select warehouse</option>
+          @for (warehouse of warehouses; track warehouse.value) {
+            <option [ngValue]="warehouse.value">{{ warehouse.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>Order number</span>
+        <input name="orderNumber" required maxlength="40" [(ngModel)]="orderNumber" placeholder="PO-1001" />
+      </label>
+      <label>
+        <span>Order date</span>
+        <input name="orderDate" type="date" required [(ngModel)]="orderDate" />
+      </label>
+      <label>
+        <span>Expected date <small>(optional)</small></span>
+        <input name="expectedDate" type="date" [(ngModel)]="expectedDate" />
+      </label>
+      <label>
+        <span>Currency</span>
+        <select name="currency" required [(ngModel)]="currencyCode">
+          <option value="" disabled>Select currency</option>
+          @for (currency of currencies; track currency.value) {
+            <option [value]="currency.value">{{ currency.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span>Exchange rate</span>
+        <input name="exchangeRate" type="number" min="0.0000000001" step="0.0000000001" required [(ngModel)]="exchangeRate" />
+      </label>
+    </div>
+
+    <div class="lines-heading">
+      <div><h3>Order items</h3><span>{{ lines.length }} {{ lines.length === 1 ? 'line' : 'lines' }}</span></div>
+      <button class="button secondary" type="button" (click)="addLine()">＋ Add item</button>
+    </div>
+    <div class="editable-lines">
+      @for (line of lines; track $index; let index = $index) {
+        <div class="editable-line">
+          <label>
+            <span>Inventory item</span>
+            <select [ngModel]="line.itemId" [name]="'item-' + index" (ngModelChange)="selectItem(index, $event)">
+              <option [ngValue]="null" disabled>Select item</option>
+              @for (item of items; track item.id) {
+                <option [ngValue]="item.id">{{ item.sku }} · {{ item.name }} ({{ item.baseUnitCode }})</option>
+              }
+            </select>
+          </label>
+          <label class="line-description">
+            <span>Description</span>
+            <input [(ngModel)]="line.description" [name]="'description-' + index" maxlength="500" />
+          </label>
+          <label>
+            <span>Quantity</span>
+            <input type="number" min="0.000001" step="0.000001" [(ngModel)]="line.quantity" [name]="'quantity-' + index" />
+          </label>
+          <label>
+            <span>Unit cost</span>
+            <input type="number" min="0.000001" step="0.000001" [(ngModel)]="line.unitCost" [name]="'unit-cost-' + index" />
+          </label>
+          <button class="remove-line" type="button" aria-label="Remove item" [disabled]="lines.length < 2" (click)="removeLine(index)">×</button>
+        </div>
+      }
+    </div>
+    <div class="form-footer">
+      <span>Order subtotal <strong>{{ formatAmount(remainingTotal, currencyCode) }}</strong></span>
+      <div>
+        <button class="button secondary" type="button" (click)="cancelEdit()">Cancel</button>
+        <button class="button primary" type="button" [disabled]="saving" (click)="saveOrder()">{{ saving ? 'Saving…' : 'Save draft' }}</button>
+      </div>
+    </div>
+  </section>
+}
+
+@if (!loading && !editing) {
+  @if (!orders.length) {
+    <section class="empty-state panel">
+      <span class="empty-icon">▤</span>
+      <h3>No purchase orders yet</h3>
+      <p>Create a draft, place it with your supplier, then record receipts as stock arrives.</p>
+      <button class="button primary" type="button" (click)="beginCreate()">Create first purchase order</button>
+    </section>
+  } @else {
+    <div class="order-layout">
+      <section class="order-list panel">
+        <div class="list-heading"><h2>Orders</h2><span>{{ orders.length }}</span></div>
+        @for (order of orders; track order.id) {
+          <button class="order-list-item" type="button" [class.selected]="selectedOrderId === order.id" (click)="selectedOrderId = order.id; receiveLineId = null; error = ''; success = ''">
+            <span class="order-list-main"><strong>{{ order.orderNumber }}</strong><small>{{ order.supplierName }}</small></span>
+            <span class="order-list-meta"><span class="order-status" [class.status-open]="order.status === 'Ordered' || order.status === 'PartiallyReceived'">{{ order.status }}</span><small>{{ order.orderDate }}</small></span>
+          </button>
+        }
+      </section>
+
+      @if (selectedOrder; as order) {
+        <section class="order-detail panel">
+          <div class="detail-heading">
+            <div>
+              <p class="eyebrow">PURCHASE ORDER</p>
+              <h2>{{ order.orderNumber }}</h2>
+              <p>{{ order.supplierName }} · {{ order.orderDate }} @if (order.expectedDate) { · Expected {{ order.expectedDate }} }</p>
+            </div>
+            <span class="order-status large" [class.status-open]="order.status === 'Ordered' || order.status === 'PartiallyReceived'">{{ order.status }}</span>
+          </div>
+          <div class="detail-meta">
+            <span>Warehouse <strong>{{ warehouseLabel(order.warehouseId) }}</strong></span>
+            <span>Order currency <strong>{{ order.currencyCode }}</strong></span>
+            @if (order.exchangeRate !== 1) { <span>Exchange rate <strong>{{ order.exchangeRate }}</strong></span> }
+          </div>
+          <div class="detail-actions">
+            @if (order.status === 'Draft') {
+              <button class="button secondary" type="button" [disabled]="saving" (click)="editOrder(order)">Edit draft</button>
+              <button class="button primary" type="button" [disabled]="saving" (click)="placeOrder(order)">Place order</button>
+            }
+            @if (order.status === 'Draft' || order.status === 'Ordered') {
+              <button class="button secondary danger-button" type="button" [disabled]="saving" (click)="cancelOrder(order)">Cancel order</button>
+            }
+          </div>
+          @if (receiveLineId !== null) {
+            <div class="receipt-form">
+              <div class="receipt-heading">
+                <div><h3>Receive item</h3><p>Receiving posts stock and a journal entry to the selected accounting period.</p></div>
+                <button class="remove-line" type="button" aria-label="Close receipt form" (click)="cancelReceive()">×</button>
+              </div>
+              <div class="receive-fields">
+                <label><span>Movement number</span><input name="receiveMovementNumber" maxlength="40" required [(ngModel)]="receiveMovementNumber" /></label>
+                <label><span>Receipt date</span><input name="receiveDate" type="date" required [(ngModel)]="receiveDate" /></label>
+                <label><span>Receive quantity</span><input name="receiveQuantity" type="number" min="0.000001" step="0.000001" required [(ngModel)]="receiveQuantity" /></label>
+                <label><span>Journal</span><select name="receiveJournal" required [(ngModel)]="receiveJournalId"><option [ngValue]="null" disabled>Select</option>@for (option of journals; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
+                <label><span>Accounting period</span><select name="receivePeriod" required [(ngModel)]="receivePeriodId"><option [ngValue]="null" disabled>Select</option>@for (option of periods; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
+                <label><span>Inventory asset account</span><select name="inventoryAccount" required [(ngModel)]="receiveInventoryAccountId"><option [ngValue]="null" disabled>Select</option>@for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
+                <label><span>Offset / clearing account</span><select name="offsetAccount" required [(ngModel)]="receiveOffsetAccountId"><option [ngValue]="null" disabled>Select</option>@for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
+              </div>
+              <div class="receipt-actions">
+                <button class="button secondary" type="button" (click)="cancelReceive()">Close</button>
+                <button class="button primary" type="button" [disabled]="saving" (click)="receiveLine(order)">{{ saving ? 'Posting receipt…' : 'Post receipt' }}</button>
+              </div>
+            </div>
+          }
+          <div class="detail-table">
+            <table>
+              <thead><tr><th>Item</th><th>Description</th><th>Ordered</th><th>Received</th><th>Unit cost</th><th>Line total</th><th>Action</th></tr></thead>
+              <tbody>
+                @for (line of order.lines; track line.id) {
+                  <tr>
+                    <td><strong>{{ line.sku }}</strong><small>{{ line.itemName }} · {{ line.unitCode }}</small></td>
+                    <td>{{ line.description }}</td>
+                    <td>{{ line.quantity }}</td>
+                    <td>{{ line.receivedQuantity }}</td>
+                    <td class="amount">{{ formatAmount(line.unitCost, order.currencyCode) }}</td>
+                    <td class="amount">{{ formatAmount(line.quantity * line.unitCost, order.currencyCode) }}</td>
+                    <td>
+                      @if (order.status === 'Ordered' || order.status === 'PartiallyReceived') {
+                        @if (line.receivedQuantity < line.quantity) {
+                          <button class="button secondary table-action" type="button" [disabled]="saving" (click)="beginReceive(order, line.id)">Receive</button>
+                        } @else { <span class="order-status">Complete</span> }
+                      } @else { <span>—</span> }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot><tr><th colspan="5">Order total</th><th class="amount">{{ formatAmount(orderTotal(order), order.currencyCode) }}</th><td></td></tr></tfoot>
+            </table>
+          </div>
+        </section>
+      }
+    </div>
+  }
+}
