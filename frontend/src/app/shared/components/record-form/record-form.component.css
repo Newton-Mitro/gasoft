@@ -33,7 +33,7 @@
 
 .form-panel-heading .eyebrow {
   margin: 0 0 7px;
-  color: #638a73;
+  color: var(--accent-text);
   font-size: 10px;
   font-weight: 750;
   letter-spacing: .14em;
@@ -41,7 +41,7 @@
 
 .form-panel-heading h2 {
   margin: 0;
-  color: #173b30;
+  color: var(--text-strong);
   font-size: 20px;
   font-weight: 680;
   letter-spacing: -.45px;
@@ -49,7 +49,7 @@
 
 .form-intro {
   margin: 7px 0 0;
-  color: #7b8b80;
+  color: var(--text-muted);
   font-size: 11px;
   line-height: 1.55;
 }
@@ -63,7 +63,7 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   background: #f0f8f1;
-  color: #28714e;
+  color: var(--accent-text);
   font-size: 20px;
 }
 
@@ -76,19 +76,19 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 17px;
-  color: #294d3c;
+  color: var(--text-strong);
   font-size: 12px;
   font-weight: 700;
 }
 
 .section-caption small {
-  color: #87958c;
+  color: var(--text-muted);
   font-size: 10px;
   font-weight: 500;
 }
 
 .section-caption small span {
-  color: #bd554a;
+  color: var(--error-text);
   font-weight: 700;
 }
 
@@ -103,7 +103,7 @@
   min-width: 0;
   flex-direction: column;
   gap: 7px;
-  color: #465e50;
+  color: var(--text);
   font-size: 11px;
   font-weight: 650;
 }
@@ -115,7 +115,7 @@
 }
 
 .required-marker {
-  color: #b94d42;
+  color: var(--error-text);
   font-size: 12px;
   font-weight: 750;
 }
@@ -129,14 +129,14 @@
   border-radius: 7px;
   outline: 0;
   background: #fff;
-  color: #2f493a;
+  color: var(--text-strong);
   font: inherit;
   font-size: 12px;
   transition: border-color .15s, box-shadow .15s, background .15s;
 }
 
 .field-grid input::placeholder {
-  color: #a0aca3;
+  color: var(--text-muted);
 }
 
 .field-grid input:hover,
@@ -153,7 +153,7 @@
 .field-grid input:disabled,
 .field-grid select:disabled {
   background: #f5f8f5;
-  color: #89978d;
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
@@ -166,13 +166,13 @@
   border: 1px solid var(--border);
   border-radius: 7px;
   background: #fafcfa;
-  color: #405b49;
+  color: var(--text);
 }
 
 .checkbox-label input {
   width: 16px;
   height: 16px;
-  accent-color: #28734f;
+  accent-color: var(--accent);
 }
 
 .form-note {
@@ -181,7 +181,7 @@
   border: 1px solid var(--border);
   border-radius: 7px;
   background: #f7fbf7;
-  color: #6d8073;
+  color: var(--text-muted);
   font-size: 10px;
   line-height: 1.55;
 }
@@ -203,7 +203,7 @@
 
 .action-hint {
   margin: 0;
-  color: #8a988e;
+  color: var(--text-muted);
   font-size: 10px;
 }
 

@@ -23,6 +23,7 @@
     >
     <div class="company-switcher">
       @if (currentCompany; as company) {
+        <span class="company-switcher-label">CURRENT ORGANIZATION</span>
         <div class="company-select">
           <span class="company-avatar" aria-hidden="true">
             @if (auth.companyLogoUrl() ?? company.logoUrl; as logoUrl) {

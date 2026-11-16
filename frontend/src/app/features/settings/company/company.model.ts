@@ -26,3 +26,9 @@ export interface UpdateCompanyPayload {
   country: string;
   taxId: string;
 }
+
+export interface CreateCompanyPayload {
+  code: string;
+  legalName: string;
+  functionalCurrencyCode: string;
+}

@@ -19,7 +19,7 @@ describe('CompanyService', () => {
     logoUrl: null,
   };
 
-  it('uses the selected company endpoint without company URL scoping', () => {
+  it('uses the tenant company endpoint without company URL scoping', () => {
     const calls: unknown[][] = [];
     const api = {
       get: (endpoint: string, companyScoped: boolean) => {
@@ -31,7 +31,7 @@ describe('CompanyService', () => {
         return of(company);
       },
       post: (endpoint: string, body: unknown, companyScoped: boolean) => {
-        calls.push(['POST', endpoint, body instanceof FormData, companyScoped]);
+        calls.push(['POST', endpoint, body instanceof FormData ? true : body, companyScoped]);
         return of(company);
       },
     } as unknown as ApiService;
@@ -48,13 +48,20 @@ describe('CompanyService', () => {
       country: '',
       taxId: '',
     };
+    const createPayload = {
+      code: 'NEWCO',
+      legalName: 'New Company',
+      functionalCurrencyCode: 'USD',
+    };
 
     service.getById(3).subscribe();
+    service.create(createPayload).subscribe();
     service.update(3, payload).subscribe();
     service.uploadLogo(3, new File(['image'], 'logo.png', { type: 'image/png' })).subscribe();
 
     expect(calls).toEqual([
       ['GET', '/api/v1/companies/3', false],
+      ['POST', '/api/v1/tenant/companies', createPayload, false],
       ['PUT', '/api/v1/companies/3', payload, false],
       ['POST', '/api/v1/companies/3/logo', true, false],
     ]);

@@ -1,13 +1,20 @@
+using System.Text.RegularExpressions;
+using Gasoft.Domain.Entities;
 using Gasoft.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Gasoft.Api.Endpoints;
 
 public static class CompanyAdministrationEndpoints
 {
+    private static readonly Regex CompanyCodePattern = new("^[A-Z0-9][A-Z0-9_-]{1,29}$", RegexOptions.CultureInvariant);
+
     public static IEndpointRouteBuilder MapCompanyAdministrationEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/v1/tenant/companies", async (
+        var tenantCompanies = app.MapGroup("/api/v1/tenant/companies").RequireAuthorization();
+
+        tenantCompanies.MapGet("", async (
             AppDbContext db,
             CancellationToken cancellationToken) =>
         {
@@ -33,8 +40,72 @@ public static class CompanyAdministrationEndpoints
 
             return Results.Ok(companies);
         })
-        .RequireAuthorization()
         .WithName("GetTenantCompanies");
+
+        tenantCompanies.MapPost("", async (
+            CreateCompanyRequest request,
+            AppDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            var tenantId = db.CurrentTenantId;
+            if (tenantId is null) return Results.Unauthorized();
+
+            var code = request.Code?.Trim().ToUpperInvariant() ?? string.Empty;
+            var legalName = request.LegalName?.Trim() ?? string.Empty;
+            var currencyCode = request.FunctionalCurrencyCode?.Trim().ToUpperInvariant() ?? string.Empty;
+            var errors = new Dictionary<string, string[]>();
+            if (!CompanyCodePattern.IsMatch(code))
+                errors["code"] = ["Use 2–30 letters, numbers, hyphens, or underscores."];
+            if (legalName.Length is 0 or > 250)
+                errors["legalName"] = ["Legal name is required and must be at most 250 characters."];
+            if (currencyCode.Length != 3 ||
+                !await db.Currencies.AnyAsync(item => item.Code == currencyCode, cancellationToken))
+                errors["functionalCurrencyCode"] = ["Choose a supported three-letter currency code."];
+            if (errors.Count != 0) return Results.ValidationProblem(errors);
+
+            if (await db.Companies.AnyAsync(item => item.Code == code, cancellationToken))
+                return Results.Conflict(new { error = $"Company code '{code}' is already in use in this workspace." });
+
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            var company = new Company
+            {
+                TenantId = tenantId.Value,
+                Code = code,
+                LegalName = legalName,
+                FunctionalCurrencyCode = currencyCode
+            };
+            db.Companies.Add(company);
+
+            try
+            {
+                await db.SaveChangesAsync(cancellationToken);
+                await CompanySetupSeeder.SeedAsync(db, tenantId.Value, company, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateException exception) when (IsCompanyCodeConflict(exception))
+            {
+                return Results.Conflict(new { error = $"Company code '{code}' is already in use in this workspace." });
+            }
+
+            return Results.Created(
+                $"/api/v1/companies/{company.Id}",
+                new CompanyResponse(
+                    company.Id,
+                    company.Code,
+                    company.LegalName,
+                    company.FunctionalCurrencyCode,
+                    company.Phone,
+                    company.Email,
+                    company.Website,
+                    company.Address,
+                    company.CityRegion,
+                    company.PostalCode,
+                    company.Country,
+                    company.TaxId,
+                    company.LogoUrl));
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Owner"))
+        .WithName("CreateTenantCompany");
 
         app.MapPost("/api/v1/companies/{companyId:long}/setup/defaults", async (
             long companyId,
@@ -178,6 +249,13 @@ public static class CompanyAdministrationEndpoints
         return app;
     }
 
+    private static bool IsCompanyCodeConflict(DbUpdateException exception) =>
+        exception.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            ConstraintName: "IX_Companies_TenantId_Code"
+        };
+
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static void ValidateOptionalLength(
@@ -201,6 +279,10 @@ public static class CompanyAdministrationEndpoints
         string? PostalCode,
         string? Country,
         string? TaxId);
+    public sealed record CreateCompanyRequest(
+        string? Code,
+        string? LegalName,
+        string? FunctionalCurrencyCode);
     public sealed record CompanyResponse(
         long Id,
         string Code,

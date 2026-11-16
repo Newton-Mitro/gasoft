@@ -6,7 +6,7 @@ import { errorMessage } from '../../../shared/utils/page-utils';
 import { Choice, Field } from '../../../shared/models/shared.models';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
 import { OptionDataService } from '../../../shared/data/option-data.service';
-import { Company, UpdateCompanyPayload } from './company.model';
+import { Company, CreateCompanyPayload, UpdateCompanyPayload } from './company.model';
 import { CompanyService } from './company.service';
 import { AuthenticatedImageComponent } from '../../../shared/components/authenticated-image/authenticated-image.component';
 
@@ -32,10 +32,16 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
     { key: 'country', label: 'Country' },
     { key: 'taxId', label: 'Tax/VAT registration number' },
   ];
+  readonly createFields: Field[] = [
+    { key: 'code', label: 'Company code', required: true },
+    { key: 'legalName', label: 'Legal name', required: true },
+    { key: 'functionalCurrencyCode', label: 'Functional currency', type: 'select', required: true, optionSource: 'currencies' },
+  ];
   company: Company | null = null;
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
   editing = false;
+  creating = false;
   loading = false;
   saving = false;
   logoUploading = false;
@@ -58,9 +64,11 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.routeSubscription = this.route.data.subscribe(data => {
       this.editing = data['view'] === 'edit';
+      this.creating = data['view'] === 'create';
       this.error = '';
-      this.loadCompany();
-      if (this.editing) this.loadCurrencies();
+      this.form = {};
+      if (!this.creating) this.loadCompany();
+      if (this.editing || this.creating) this.loadCurrencies();
     });
   }
 
@@ -150,6 +158,34 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.error = errorMessage(error, 'Could not save company settings.');
+        this.saving = false;
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  submitCreate(): void {
+    const code = String(this.form['code'] ?? '').trim().toUpperCase();
+    const legalName = String(this.form['legalName'] ?? '').trim();
+    const functionalCurrencyCode = String(this.form['functionalCurrencyCode'] ?? '').trim().toUpperCase();
+    if (!/^[A-Z0-9][A-Z0-9_-]{1,29}$/.test(code) ||
+      !legalName || legalName.length > 250 ||
+      !this.options['currencies']?.some(currency => currency.value === functionalCurrencyCode)) {
+      this.error = 'Enter a valid company code and legal name, then choose a supported currency.';
+      return;
+    }
+
+    const payload: CreateCompanyPayload = { code, legalName, functionalCurrencyCode };
+    this.saving = true;
+    this.error = '';
+    this.companies.create(payload).subscribe({
+      next: company => {
+        this.auth.updateCompanyId(company.id);
+        this.saving = false;
+        void this.router.navigateByUrl('/settings/company').then(() => window.location.reload());
+      },
+      error: error => {
+        this.error = errorMessage(error, 'Could not create the organization.');
         this.saving = false;
         this.changeDetector.markForCheck();
       },

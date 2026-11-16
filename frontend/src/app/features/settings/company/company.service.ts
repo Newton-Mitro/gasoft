@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
-import { Company, UpdateCompanyPayload } from './company.model';
+import { Company, CreateCompanyPayload, UpdateCompanyPayload } from './company.model';
 
 @Injectable({ providedIn: 'root' })
 export class CompanyService {
@@ -9,6 +9,10 @@ export class CompanyService {
 
   getById(id: number): Observable<Company> {
     return this.api.get<unknown>(`/api/v1/companies/${id}`, false).pipe(map(toCompany));
+  }
+
+  create(payload: CreateCompanyPayload): Observable<Company> {
+    return this.api.post<unknown>('/api/v1/tenant/companies', payload, false).pipe(map(toCompany));
   }
 
   update(id: number, payload: UpdateCompanyPayload): Observable<Company> {
