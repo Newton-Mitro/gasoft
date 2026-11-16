@@ -34,7 +34,7 @@
       <p class="page-description">{{ description }}</p>
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"
-      ><span>＋</span> New fiscal year</a
+      ><i class="fa-solid fa-plus" aria-hidden="true"></i> New fiscal year</a
     >
   </div>
   @if (error) {
@@ -56,7 +56,7 @@
       </div>
       @if (!rows.length) {
         <div class="empty-state">
-          <span class="empty-icon">▤</span>
+          <span class="empty-icon"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
           <h3>Nothing here yet</h3>
           <p>Create your first fiscal year to get started.</p>
           <a class="button secondary" [routerLink]="[indexPath, 'create']"

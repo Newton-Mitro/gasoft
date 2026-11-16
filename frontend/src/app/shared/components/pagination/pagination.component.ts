@@ -56,7 +56,7 @@ export type PaginationItem = number | 'ellipsis';
               }
             </div>
             <button type="button" class="page-nav" aria-label="Next page" [disabled]="loading || page >= totalPages" (click)="goTo(page + 1)">
-              <span class="nav-label">Next</span><span aria-hidden="true">›</span>
+              <span class="nav-label">Next</span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
             </button>
             <button type="button" class="page-nav" aria-label="Last page" [disabled]="loading || page >= totalPages" (click)="goTo(totalPages)">
               <span class="nav-label">Last</span><span aria-hidden="true">»</span>

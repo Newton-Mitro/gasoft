@@ -5,7 +5,7 @@
     <p class="page-description">Record acquisitions, post straight-line depreciation, and account for asset disposals.</p>
   </div>
   @if (!creating && !depreciatingAsset && !disposingAsset) {
-    <button class="button primary" type="button" (click)="beginCreate()" [disabled]="!openPeriods.length || !journals.length">＋ Acquire asset</button>
+    <button class="button primary" type="button" (click)="beginCreate()" [disabled]="!openPeriods.length || !journals.length"><i class="fa-solid fa-plus" aria-hidden="true"></i> Acquire asset</button>
   }
 </div>
 @if (error) { <div class="alert error" role="alert">{{ error }}</div> }
@@ -120,7 +120,7 @@
   <section class="table-panel panel">
     <div class="table-header"><div><h2>Asset register</h2><span>{{ totalCount }} {{ totalCount === 1 ? 'asset' : 'assets' }}</span></div><span class="table-badge">{{ currencyCode }}</span></div>
     @if (!assets.length) {
-      <div class="empty-state"><span class="empty-icon">◇</span><h3>No fixed assets yet</h3>
+      <div class="empty-state"><span class="empty-icon"><i class="fa-solid fa-landmark" aria-hidden="true"></i></span><h3>No fixed assets yet</h3>
         <p>Record an acquisition to create the asset register and post the initial journal entry.</p>
         @if (openPeriods.length && journals.length) { <button class="button secondary" type="button" (click)="beginCreate()">Acquire first asset</button> }
       </div>

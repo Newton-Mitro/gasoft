@@ -7,7 +7,7 @@
     aria-controls="main-navigation"
     aria-label="Toggle navigation"
   >
-    ☰
+    <i class="fa-solid fa-bars" aria-hidden="true"></i>
   </button>
   @if (mobileNavOpen) {
     <button
@@ -50,7 +50,7 @@
                 <option [ngValue]="option.id">{{ option.legalName }}</option>
               }
             </select>
-            <span class="company-chevron" aria-hidden="true">⌄</span>
+            <i class="company-chevron fa-solid fa-chevron-down" aria-hidden="true"></i>
           }
         </div>
       } @else if (companyLoadError()) {
@@ -74,7 +74,7 @@
               ariaCurrentWhenActive="page"
               (click)="mobileNavOpen = false"
             >
-              <span class="nav-icon">{{ link.icon }}</span>{{ link.label }}
+              <i class="nav-icon fa-solid {{ link.icon }}" aria-hidden="true"></i>{{ link.label }}
             </a>
           }
         </div>
@@ -128,10 +128,10 @@
           >{{ auth.profile()?.displayName || 'Your profile'
           }}<small>{{ auth.profile()?.email || 'Manage account' }}</small></span
         >
-        <span class="profile-more">›</span>
+        <i class="profile-more fa-solid fa-chevron-right" aria-hidden="true"></i>
       </a>
       <button class="logout-button" type="button" (click)="logout()">
-        Sign out <span aria-hidden="true">↗</span>
+        Sign out <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
       </button>
     </div>
   </aside>

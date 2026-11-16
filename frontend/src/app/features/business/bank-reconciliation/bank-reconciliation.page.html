@@ -16,7 +16,7 @@
 @if (!loading && (!accounts.length || showAccountForm)) {
   <section class="setup-card panel">
     <div class="section-heading">
-      <span class="section-icon" aria-hidden="true">⌁</span>
+      <span class="section-icon" aria-hidden="true"><i class="fa-solid fa-building-columns"></i></span>
       <div>
         <h2>{{ accounts.length ? 'Add a bank account' : 'Connect a bank account' }}</h2>
         <p>Link a postable asset account from your chart of accounts. Only the last four account digits are stored.</p>
@@ -81,7 +81,7 @@
           <span>{{ account.currencyCode }}</span>
         </div>
       }
-      <button class="button secondary add-account-button" type="button" (click)="openAccountForm()">＋ Add bank account</button>
+      <button class="button secondary add-account-button" type="button" (click)="openAccountForm()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add bank account</button>
     </div>
 
     <div class="import-panel">
@@ -112,7 +112,7 @@
       <div class="loading-card"><span class="spinner"></span> Loading transactions…</div>
     } @else if (!transactions.length) {
       <div class="empty-state">
-        <span class="empty-icon">⇄</span>
+        <span class="empty-icon"><i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i></span>
         <h3>No statement transactions yet</h3>
         <p>Upload a CSV statement to start reconciling this account.</p>
       </div>

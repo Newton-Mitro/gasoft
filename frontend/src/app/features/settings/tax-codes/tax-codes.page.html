@@ -36,7 +36,7 @@
       <h1>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
-    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> Add tax code</a>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add tax code</a>
   </div>
   @if (error) {
     <div class="alert error">{{ error }}</div>
@@ -46,7 +46,7 @@
   }
   @if (!loading && !rows.length) {
     <section class="empty-state panel">
-      <span class="empty-icon">%</span>
+      <span class="empty-icon"><i class="fa-solid fa-percent" aria-hidden="true"></i></span>
       <h3>No tax codes configured</h3>
       <p>
         Create a company tax code, then add effective-dated rates. Rates are not prefilled because
@@ -108,7 +108,7 @@
                   <p>Rates apply by document date. Periods for a tax code cannot overlap.</p>
                 </div>
                 <button class="button secondary" type="button" (click)="beginRateEdit()">
-                  ＋ Add rate
+                  <i class="fa-solid fa-plus" aria-hidden="true"></i> Add rate
                 </button>
               </div>
               @if (rateError) {

@@ -198,7 +198,7 @@ import { errorMessage } from '../../../shared/utils/page-utils';
                     <span class="workspace-name">{{ workspace.name }}</span>
                     <span class="workspace-caption">Workspace</span>
                   </span>
-                  <span class="workspace-indicator" aria-hidden="true">✓</span>
+                  <span class="workspace-indicator" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
                 </label>
               }
             </div>
@@ -207,7 +207,7 @@ import { errorMessage } from '../../../shared/utils/page-utils';
             </button>
             <div class="workspace-actions">
               <button class="workspace-back" type="button" [disabled]="busy" (click)="useDifferentAccount()">
-                ← Use a different account
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Use a different account
               </button>
             </div>
           }

@@ -34,7 +34,7 @@
       <h1>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
-    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> Add party</a>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add party</a>
   </div>
   @if (error) {
     <div class="alert error">{{ error }}</div>
@@ -52,7 +52,7 @@
       </div>
       @if (!rows.length) {
         <div class="empty-state">
-          <span class="empty-icon">▤</span>
+          <span class="empty-icon"><i class="fa-solid fa-address-book" aria-hidden="true"></i></span>
           <h3>Nothing here yet</h3>
           <p>Add your first customer or supplier to the tenant directory.</p>
           <a class="button secondary" [routerLink]="[indexPath, 'create']">Add first party</a>

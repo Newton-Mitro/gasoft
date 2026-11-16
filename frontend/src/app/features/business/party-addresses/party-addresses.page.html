@@ -29,12 +29,12 @@
 } @else {
   <div class="page-heading">
     <div>
-      <a class="back-link" routerLink="/parties">← Customers & suppliers</a>
+      <a class="back-link" routerLink="/parties"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Customers & suppliers</a>
       <p class="eyebrow">CUSTOMER / SUPPLIER</p>
       <h1>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
-    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> Add address</a>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add address</a>
   </div>
   @if (error) {
     <div class="alert error">{{ error }}</div>
@@ -52,7 +52,7 @@
       </div>
       @if (!rows.length) {
         <div class="empty-state">
-          <span class="empty-icon">▤</span>
+          <span class="empty-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
           <h3>No addresses yet</h3>
           <p>Add a billing, shipping, or other address for this party.</p>
           <a class="button secondary" [routerLink]="[indexPath, 'create']">Add first address</a>

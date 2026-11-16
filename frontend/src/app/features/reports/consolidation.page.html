@@ -5,7 +5,7 @@
     <p class="page-description">Combine posted balances from multiple organizations in a shared reporting currency.</p>
   </div>
   @if (!editing) {
-    <button class="button primary" type="button" (click)="beginCreate()">＋ New consolidation group</button>
+    <button class="button primary" type="button" (click)="beginCreate()"><i class="fa-solid fa-plus" aria-hidden="true"></i> New consolidation group</button>
   }
 </div>
 
@@ -115,7 +115,7 @@
       <div class="table-scroll"><table>
         <thead><tr><th>Organization</th><th>Functional currency</th><th>Closing rate · balance sheet</th><th>Average rate · revenue & expenses</th></tr></thead>
         <tbody>@for (company of group.companies; track company.id) {
-          <tr><td>{{ company.legalName }}</td><td>{{ company.functionalCurrencyCode }} → {{ group.reportingCurrencyCode }}</td>
+          <tr><td>{{ company.legalName }}</td><td>{{ company.functionalCurrencyCode }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> {{ group.reportingCurrencyCode }}</td>
             <td><input type="number" min="0.0000000001" step="0.0000000001" [name]="'closing-' + company.id"
               [(ngModel)]="translationRateInputs[company.id].closingRate"
               [disabled]="company.functionalCurrencyCode === group.reportingCurrencyCode" /></td>
@@ -140,7 +140,7 @@
       </div>
     } @else {
       <div class="empty-state">
-        <span class="empty-icon">▦</span>
+        <span class="empty-icon"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i></span>
         <h3>No consolidation runs yet</h3>
         <p>Choose a period end to snapshot posted balances from the selected organizations.</p>
       </div>
@@ -163,7 +163,7 @@
           <thead><tr><th>Organization</th><th>Currency</th><th>Closing rate</th><th>Average rate</th></tr></thead>
           <tbody>@for (rate of run.translationRates; track rate.companyId) {
             <tr><td>{{ getCompanyName(rate.companyId) }}</td>
-              <td>{{ rate.sourceCurrencyCode }} → {{ rate.targetCurrencyCode }}</td>
+              <td>{{ rate.sourceCurrencyCode }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> {{ rate.targetCurrencyCode }}</td>
               <td class="amount">{{ rate.closingRate }}</td><td class="amount">{{ rate.averageRate }}</td></tr>
           }</tbody>
         </table></div>
@@ -231,7 +231,7 @@
 
 @if (!loading && !groups.length && !editing) {
   <section class="empty-state panel">
-    <span class="empty-icon">▦</span>
+    <span class="empty-icon"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i></span>
     <h3>Set up a consolidation group</h3>
     <p>Group at least two organizations to prepare a consolidated trial balance in a shared reporting currency.</p>
     <button class="button primary" type="button" (click)="beginCreate()">Create consolidation group</button>

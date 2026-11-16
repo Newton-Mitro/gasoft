@@ -35,7 +35,7 @@
       <p class="page-description">{{ description }}</p>
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"
-      ><span>＋</span> Add registration</a
+      ><i class="fa-solid fa-plus" aria-hidden="true"></i> Add registration</a
     >
   </div>
   @if (error) {
@@ -88,7 +88,7 @@
       </div>
       @if (!rows.length) {
         <div class="empty-state">
-          <span class="empty-icon">▤</span>
+          <span class="empty-icon"><i class="fa-solid fa-file-circle-check" aria-hidden="true"></i></span>
           <h3>No registrations yet</h3>
           <p>Register your company in a configured tax jurisdiction.</p>
           <a class="button secondary" [routerLink]="[indexPath, 'create']"

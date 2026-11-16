@@ -5,7 +5,7 @@
     <p class="page-description">Create supplier orders, record partial receipts, and update inventory from each receipt.</p>
   </div>
   @if (!editing) {
-    <button class="button primary" type="button" (click)="beginCreate()">＋ New purchase order</button>
+    <button class="button primary" type="button" (click)="beginCreate()"><i class="fa-solid fa-plus" aria-hidden="true"></i> New purchase order</button>
   }
 </div>
 @if (error) { <div class="alert error" role="alert">{{ error }}</div> }
@@ -68,7 +68,7 @@
 
     <div class="lines-heading">
       <div><h3>Order items</h3><span>{{ lines.length }} {{ lines.length === 1 ? 'line' : 'lines' }}</span></div>
-      <button class="button secondary" type="button" (click)="addLine()">＋ Add item</button>
+      <button class="button secondary" type="button" (click)="addLine()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add item</button>
     </div>
     <div class="editable-lines">
       @for (line of lines; track $index; let index = $index) {
@@ -94,7 +94,7 @@
             <span>Unit cost</span>
             <input type="number" min="0.000001" step="0.000001" [(ngModel)]="line.unitCost" [name]="'unit-cost-' + index" />
           </label>
-          <button class="remove-line" type="button" aria-label="Remove item" [disabled]="lines.length < 2" (click)="removeLine(index)">×</button>
+          <button class="remove-line" type="button" aria-label="Remove item" [disabled]="lines.length < 2" (click)="removeLine(index)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </div>
       }
     </div>
@@ -111,7 +111,7 @@
 @if (!loading && !editing) {
   @if (!orders.length) {
     <section class="empty-state panel">
-      <span class="empty-icon">▤</span>
+      <span class="empty-icon"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i></span>
       <h3>No purchase orders yet</h3>
       <p>Create a draft, place it with your supplier, then record receipts as stock arrives.</p>
       <button class="button primary" type="button" (click)="beginCreate()">Create first purchase order</button>
@@ -166,7 +166,7 @@
             <div class="receipt-form">
               <div class="receipt-heading">
                 <div><h3>Receive item</h3><p>Receiving posts stock and a journal entry to the selected accounting period.</p></div>
-                <button class="remove-line" type="button" aria-label="Close receipt form" (click)="cancelReceive()">×</button>
+                <button class="remove-line" type="button" aria-label="Close receipt form" (click)="cancelReceive()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
               </div>
               <div class="receive-fields">
                 <label><span>Movement number</span><input name="receiveMovementNumber" maxlength="40" required [(ngModel)]="receiveMovementNumber" /></label>

@@ -52,7 +52,7 @@
     </div>
     @if (!report.documents.length) {
       <div class="empty-state">
-        <span class="empty-icon">◷</span>
+        <span class="empty-icon"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></span>
         <h3>No outstanding documents</h3>
         <p>There are no posted {{ kind === 'receivables' ? 'invoices' : 'bills' }} with an open balance as of this date.</p>
       </div>

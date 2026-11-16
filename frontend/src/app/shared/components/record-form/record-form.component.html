@@ -6,7 +6,7 @@
     </div>
     <div class="form-heading-side">
       <span class="form-mode-tag">{{ modeLabel }}</span>
-      <span class="form-mark" aria-hidden="true">{{ formMode === 'edit' ? '✎' : '＋' }}</span>
+      <span class="form-mark" aria-hidden="true"><i class="fa-solid" [class.fa-pen-to-square]="formMode === 'edit'" [class.fa-plus]="formMode !== 'edit'"></i></span>
     </div>
   </div>
   <form (ngSubmit)="submitForm.emit()">

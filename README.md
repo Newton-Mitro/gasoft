@@ -8,8 +8,6 @@ Multi-tenant accounting software starter: .NET 10 API, PostgreSQL, ASP.NET Core 
 - Node.js 22.12+ and npm
 - PostgreSQL 16+
 
-The Angular frontend uses Tailwind CSS 4 utilities for the application shell. Tailwind Preflight is intentionally excluded so existing feature-page styles and browser defaults remain unchanged.
-
 ## Run locally
 
 Run the API and frontend in separate terminals. The commands below assume you run them from the repository root.

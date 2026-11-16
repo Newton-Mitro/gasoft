@@ -6,7 +6,7 @@
   </div>
   @if (!editing) {
     <button class="button primary" type="button" [disabled]="supportDataLoading || !!supportDataError" (click)="beginCreate()">
-      {{ supportDataLoading ? 'Preparing…' : '＋ New quote' }}
+      @if (supportDataLoading) { Preparing… } @else { <i class="fa-solid fa-plus" aria-hidden="true"></i> New quote }
     </button>
   }
 </div>
@@ -41,7 +41,7 @@
       <label><span>Exchange rate</span><input name="exchangeRate" type="number" min="0.0000000001" step="0.0000000001" [(ngModel)]="exchangeRate" /></label>
     </div>
     <div class="lines-heading"><div><h3>Quote lines</h3><span>{{ lines.length }} {{ lines.length === 1 ? 'line' : 'lines' }}</span></div>
-      <button class="button secondary" type="button" (click)="addLine()">＋ Add line</button>
+      <button class="button secondary" type="button" (click)="addLine()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add line</button>
     </div>
     <div class="editable-lines">
       @for (line of lines; track $index; let index = $index) {
@@ -61,7 +61,7 @@
           </label>
           <label><span>Quantity</span><input type="number" min="0.000001" step="0.000001" [(ngModel)]="line.quantity" [name]="'quantity-' + index" /></label>
           <label><span>Unit price</span><input type="number" min="0" step="0.000001" [(ngModel)]="line.unitPrice" [name]="'price-' + index" /></label>
-          <button class="remove-line" type="button" aria-label="Remove line" [disabled]="lines.length < 2" (click)="removeLine(index)">×</button>
+          <button class="remove-line" type="button" aria-label="Remove line" [disabled]="lines.length < 2" (click)="removeLine(index)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </div>
       }
     </div>
@@ -91,7 +91,7 @@
   <section class="table-panel panel">
     <div class="table-header"><div><h2>Quotes</h2><span>{{ totalCount }} {{ totalCount === 1 ? 'record' : 'records' }}</span></div></div>
     @if (!quotes.length) {
-      <div class="empty-state"><span class="empty-icon">▤</span><h3>No quotes yet</h3><p>Create a quote draft to start tracking a sale.</p>
+      <div class="empty-state"><span class="empty-icon"><i class="fa-solid fa-file-signature" aria-hidden="true"></i></span><h3>No quotes yet</h3><p>Create a quote draft to start tracking a sale.</p>
         <button class="button secondary" type="button" (click)="beginCreate()">Create first quote</button></div>
     } @else {
       <div class="table-scroll"><table>
