@@ -532,10 +532,12 @@ html[data-accent] .button.primary,
 html[data-accent] .account-page .button.primary {
   color: #fff;
   background-color: var(--accent);
+  border-color: var(--accent);
 }
 html[data-accent] .button.primary:hover:not(:disabled),
 html[data-accent] .account-page .button.primary:hover:not(:disabled) {
   background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 html[data-accent] .form-panel::before {
   background: var(--accent);

@@ -5,7 +5,7 @@
 .document-lines {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #edf1ed;
+  border-top: 1px solid var(--border);
 }
 
 .document-lines-heading {
@@ -37,7 +37,7 @@
   min-inline-size: 0;
   margin: 0 0 10px;
   padding: 12px;
-  border: 1px solid #e6ede7;
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 
@@ -65,7 +65,7 @@
   min-width: 0;
   height: 34px;
   padding: 0 9px;
-  border: 1px solid #dfe8e1;
+  border: 1px solid var(--border);
   border-radius: 6px;
   background: #fff;
   color: #344c40;
@@ -80,7 +80,7 @@
 }
 
 .document-line .button.secondary {
-  border: 1px solid #dbe5de;
+  border: 1px solid var(--border);
   border-radius: 7px;
   background: #fff;
   color: #335947;

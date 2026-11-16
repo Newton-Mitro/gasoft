@@ -5,7 +5,7 @@
 .journal-lines {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #edf1ed;
+  border-top: 1px solid var(--border);
 }
 
 .journal-lines-heading {
@@ -47,7 +47,7 @@
   position: relative;
   margin-bottom: 8px;
   padding: 9px;
-  border: 1px solid #e6ede7;
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 
@@ -62,7 +62,7 @@
   min-width: 0;
   height: 36px;
   padding: 0 10px;
-  border: 1px solid #dfe8e1;
+  border: 1px solid var(--border);
   border-radius: 6px;
   background: #fff;
   color: #344c40;
@@ -72,7 +72,7 @@
 
 .journal-line select:focus,
 .journal-line input:focus {
-  border-color: #5a9a75;
+  border-color: var(--focus-color);
   outline: 2px solid #5a9a7518;
 }
 
@@ -83,7 +83,7 @@
 .remove-line {
   min-height: 32px;
   padding: 0 9px;
-  border: 1px solid #dbe5de;
+  border: 1px solid var(--border);
   border-radius: 6px;
   background: #fff;
   color: #5e7066;
