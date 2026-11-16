@@ -8,8 +8,8 @@ import { Account, AccountPage, AccountPayload } from './account.model';
 export class AccountService {
   constructor(private readonly api: ApiService) {}
 
-  getPage(search: string): Observable<AccountPage> {
-    let params = new HttpParams().set('page', '1').set('pageSize', '100');
+  getPage(search: string, page: number, pageSize: number): Observable<AccountPage> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (search.trim()) params = params.set('search', search.trim());
     return this.api.get<unknown>('accounts/page', true, params).pipe(map(toAccountPage));
   }

@@ -89,7 +89,7 @@
 
 @if (!loading && !editing) {
   <section class="table-panel panel">
-    <div class="table-header"><div><h2>Quotes</h2><span>{{ quotes.length }} {{ quotes.length === 1 ? 'record' : 'records' }}</span></div></div>
+    <div class="table-header"><div><h2>Quotes</h2><span>{{ totalCount }} {{ totalCount === 1 ? 'record' : 'records' }}</span></div></div>
     @if (!quotes.length) {
       <div class="empty-state"><span class="empty-icon">▤</span><h3>No quotes yet</h3><p>Create a quote draft to start tracking a sale.</p>
         <button class="button secondary" type="button" (click)="beginCreate()">Create first quote</button></div>
@@ -122,5 +122,12 @@
         }</tbody>
       </table></div>
     }
+    <app-pagination
+      [page]="page"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [totalPages]="totalPages"
+      (pageChange)="onPageChange($event)"
+    />
   </section>
 }

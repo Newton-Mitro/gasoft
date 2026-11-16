@@ -14,20 +14,45 @@ public static class CompanySetupSeeder
         ("EXPENSE", "Expenses", "Expense")
     ];
 
-    private static readonly (string Code, string Name, string AccountType)[] Accounts =
+    private static readonly (string Code, string Name, string AccountType, string? CashFlowCategory)[] Accounts =
     [
-        ("1000", "Cash and cash equivalents", "Asset"),
-        ("1100", "Accounts receivable", "Asset"),
-        ("1200", "Inventory", "Asset"),
-        ("1300", "Recoverable tax", "Asset"),
-        ("2000", "Accounts payable", "Liability"),
-        ("2100", "Tax payable", "Liability"),
-        ("3000", "Opening balance equity", "Equity"),
-        ("4000", "Sales revenue", "Revenue"),
-        ("5000", "Cost of goods sold", "Expense"),
-        ("6000", "General expenses", "Expense"),
-        ("6100", "Inventory adjustments", "Expense")
+        ("1000", "Cash and cash equivalents", "Asset", null),
+        ("1010", "Petty cash", "Asset", null),
+        ("1100", "Accounts receivable", "Asset", "WorkingCapitalAsset"),
+        ("1200", "Inventory", "Asset", "WorkingCapitalAsset"),
+        ("1300", "Recoverable tax", "Asset", "WorkingCapitalAsset"),
+        ("1400", "Property, plant and equipment", "Asset", "Investing"),
+        ("1450", "Furniture and equipment", "Asset", "Investing"),
+        ("1490", "Accumulated depreciation", "Asset", null),
+        ("1500", "Computer equipment", "Asset", "Investing"),
+        ("1600", "Intangible assets", "Asset", "Investing"),
+        ("2000", "Accounts payable", "Liability", "WorkingCapitalLiability"),
+        ("2100", "Tax payable", "Liability", "WorkingCapitalLiability"),
+        ("2200", "Loans payable", "Liability", "Financing"),
+        ("2300", "Accrued expenses", "Liability", "WorkingCapitalLiability"),
+        ("2400", "Deferred revenue", "Liability", "WorkingCapitalLiability"),
+        ("3000", "Opening balance equity", "Equity", "Financing"),
+        ("3100", "Retained earnings", "Equity", "Financing"),
+        ("3200", "Owner contributions", "Equity", "Financing"),
+        ("4000", "Sales revenue", "Revenue", "Operating"),
+        ("4100", "Service revenue", "Revenue", "Operating"),
+        ("4200", "Other operating income", "Revenue", "Operating"),
+        ("5000", "Cost of goods sold", "Expense", "Operating"),
+        ("6000", "General expenses", "Expense", "Operating"),
+        ("6100", "Inventory adjustments", "Expense", null),
+        ("6200", "Depreciation expense", "Expense", "NonCashAdjustment"),
+        ("6300", "Interest expense", "Expense", "Operating"),
+        ("6400", "Salaries and wages", "Expense", "Operating"),
+        ("6500", "Rent and occupancy", "Expense", "Operating"),
+        ("6600", "Utilities", "Expense", "Operating"),
+        ("6700", "Insurance", "Expense", "Operating"),
+        ("6800", "Professional fees", "Expense", "Operating"),
+        ("6900", "Bank charges", "Expense", "Operating"),
+        ("7000", "Income tax expense", "Expense", "Operating")
     ];
+
+    private const string DefaultItemCategoryCode = "GENERAL";
+    private const string DefaultWarehouseCode = "MAIN";
 
     public static async Task<CompanySetupSeedResult> SeedAsync(
         AppDbContext db,
@@ -105,10 +130,44 @@ public static class CompanySetupSeeder
                 Code = account.Code,
                 Name = account.Name,
                 AllowPosting = true,
-                IsActive = true
+                IsActive = true,
+                CashFlowCategory = account.CashFlowCategory
             })
             .ToArray();
         db.ChartOfAccounts.AddRange(accountsToAdd);
+
+        var existingItemCategory = await db.ItemCategories
+            .IgnoreQueryFilters()
+            .AnyAsync(
+                item => item.TenantId == tenantId && item.Code == DefaultItemCategoryCode,
+                cancellationToken);
+        if (!existingItemCategory)
+        {
+            db.ItemCategories.Add(new ItemCategory
+            {
+                TenantId = tenantId,
+                Code = DefaultItemCategoryCode,
+                Name = "General"
+            });
+        }
+
+        var existingWarehouse = await db.Warehouses
+            .IgnoreQueryFilters()
+            .AnyAsync(
+                item => item.TenantId == tenantId &&
+                        item.CompanyId == company.Id &&
+                        item.Code == DefaultWarehouseCode,
+                cancellationToken);
+        if (!existingWarehouse)
+        {
+            db.Warehouses.Add(new Warehouse
+            {
+                TenantId = tenantId,
+                CompanyId = company.Id,
+                Code = DefaultWarehouseCode,
+                Name = "Main warehouse"
+            });
+        }
 
         var existingPeriods = await db.AccountingPeriods
             .IgnoreQueryFilters()
@@ -139,7 +198,9 @@ public static class CompanySetupSeeder
             accountsToAdd.Length,
             journalsToAdd.Length,
             fiscalYearCreated,
-            periodsToAdd.Length);
+            periodsToAdd.Length,
+            existingItemCategory ? 0 : 1,
+            existingWarehouse ? 0 : 1);
     }
 
     private static Journal[] GetDefaultJournals(long tenantId, long companyId) =>
@@ -184,4 +245,6 @@ public sealed record CompanySetupSeedResult(
     int AccountsAdded,
     int JournalsAdded,
     bool FiscalYearAdded,
-    int AccountingPeriodsAdded);
+    int AccountingPeriodsAdded,
+    int ItemCategoriesAdded,
+    int WarehousesAdded);

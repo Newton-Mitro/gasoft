@@ -1,10 +1,11 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
-import { combineLatest, Subscription } from 'rxjs';
+import { combineLatest, map, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { Choice, Field } from '../../../shared/models/shared.models';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { OptionDataCacheService } from '../../../shared/data/option-data-cache.service';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { TaxCode, TaxCodePayload, TaxRate, TaxRatePayload } from './tax-code.model';
@@ -14,7 +15,7 @@ const TAX_CODE_OPTIONS = ['jurisdictions', 'taxCategories'];
 
 @Component({
   selector: 'app-tax-codes-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent],
+  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './tax-codes.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './tax-codes.page.css'],
 })
@@ -30,6 +31,10 @@ export class TaxCodesPageComponent implements OnInit, OnDestroy {
     { key: 'taxType', label: 'Tax type', required: true },
   ];
   rows: TaxCode[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   options: Record<string, Choice[]> = {};
   optionsLoading = [...TAX_CODE_OPTIONS];
   optionsFailed: string[] = [];
@@ -219,14 +224,36 @@ export class TaxCodesPageComponent implements OnInit, OnDestroy {
     void this.router.navigateByUrl(this.indexPath);
   }
 
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.activeTaxCodeId = null;
+    this.loadRows();
+  }
+
   private loadRows(loadRecord = false): void {
     this.loading = true;
-    this.taxCodes.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    const request = loadRecord
+      ? this.taxCodes.getAll().pipe(map(items => ({
+          items,
+          page: 1,
+          pageSize: items.length,
+          totalCount: items.length,
+          totalPages: items.length ? 1 : 0,
+        })))
+      : this.taxCodes.getPage(this.page, this.pageSize);
+    request.subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         if (loadRecord) {
-          const code = this.currentRecordId === null ? undefined : rows.find(row => row.id === this.currentRecordId);
+          const code = this.currentRecordId === null
+            ? undefined
+            : result.items.find(row => row.id === this.currentRecordId);
           if (!code) {
             this.error = 'Tax code was not found in this company.';
           } else {

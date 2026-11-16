@@ -19,7 +19,7 @@ describe('AccountGroupService', () => {
             normalBalance: 'Debit',
           }],
           page: 1,
-          pageSize: 100,
+          pageSize: 25,
           totalCount: 1,
           totalPages: 1,
         });
@@ -27,23 +27,23 @@ describe('AccountGroupService', () => {
     } as unknown as ApiService;
     let response: AccountGroupPage | undefined;
 
-    new AccountGroupService(api).getPage('assets').subscribe(result => response = result);
+    new AccountGroupService(api).getPage('assets', 1, 25).subscribe(result => response = result);
 
     expect(calls).toEqual([[
       'account-groups/page',
       true,
-      'page=1&pageSize=100&search=assets',
+      'page=1&pageSize=25&search=assets',
     ]]);
     expect(response?.items[0]?.normalBalance).toBe('Debit');
   });
 
   it('rejects invalid page or item records', () => {
     const api = ({
-      get: () => of({ items: [{ id: 2 }], page: 1, pageSize: 100, totalCount: 1, totalPages: 1 }),
+      get: () => of({ items: [{ id: 2 }], page: 1, pageSize: 25, totalCount: 1, totalPages: 1 }),
     }) as unknown as ApiService;
     let receivedError: unknown;
 
-    new AccountGroupService(api).getPage('').subscribe({ error: error => receivedError = error });
+    new AccountGroupService(api).getPage('', 1, 25).subscribe({ error: error => receivedError = error });
 
     expect(receivedError).toBeInstanceOf(Error);
     expect((receivedError as Error).message).toContain('invalid page data');

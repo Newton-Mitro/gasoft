@@ -3,6 +3,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { JournalEntryPostingService } from './journal-entry-posting.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import {
   Choice,
   Field,
@@ -22,7 +23,7 @@ const JOURNAL_ENTRY_OPTIONS = ['journals', 'periods', 'currencies', 'accounts'];
 
 @Component({
   selector: 'app-journal-entries-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './journal-entries.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -40,6 +41,10 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
     { key: 'exchangeRate', label: 'Exchange rate', type: 'number', required: true },
   ];
   rows: JournalEntry[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
   optionsLoading: string[] = [];
@@ -198,11 +203,21 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
     }).format(amount);
   }
 
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
+  }
+
   private loadRows(): void {
     this.loading = true;
-    this.entries.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.entries.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

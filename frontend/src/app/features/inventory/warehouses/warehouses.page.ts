@@ -3,6 +3,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { WarehouseLocationPayload } from '../inventory.models';
 import { InventoryService } from '../inventory.service';
@@ -11,7 +12,7 @@ import { WarehouseService } from './warehouse.service';
 
 @Component({
   selector: 'app-warehouses-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './warehouses.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -29,6 +30,10 @@ export class WarehousesPageComponent implements OnInit, OnDestroy {
   ];
   readonly indexPath = '/inventory/warehouses';
   rows: Warehouse[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   loading = false;
   saving = false;
@@ -126,11 +131,21 @@ export class WarehousesPageComponent implements OnInit, OnDestroy {
     void this.router.navigateByUrl(this.indexPath);
   }
 
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
+  }
+
   private loadRows(): void {
     this.loading = true;
-    this.warehouses.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.warehouses.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

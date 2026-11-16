@@ -101,10 +101,10 @@
     </div>
 
     <div class="summary-row">
-      <div class="summary-item"><span>Statement transactions</span><strong>{{ transactions.length }}</strong></div>
-      <div class="summary-item"><span>Matched</span><strong>{{ matchedCount }}</strong></div>
-      <div class="summary-item"><span>Partially matched</span><strong>{{ partialCount }}</strong></div>
-      <div class="summary-item"><span>Unmatched</span><strong>{{ unmatchedCount }}</strong></div>
+      <div class="summary-item"><span>Statement transactions</span><strong>{{ totalCount }}</strong></div>
+      <div class="summary-item"><span>Matched on this page</span><strong>{{ matchedCount }}</strong></div>
+      <div class="summary-item"><span>Partially matched on this page</span><strong>{{ partialCount }}</strong></div>
+      <div class="summary-item"><span>Unmatched on this page</span><strong>{{ unmatchedCount }}</strong></div>
     </div>
 
     @if (matchError) { <div class="alert error" role="alert">{{ matchError }}</div> }
@@ -171,6 +171,13 @@
                               <span>Ledger line {{ match.journalLineId }}</span>
                               <button class="button secondary table-action" type="button" [disabled]="saving" (click)="unmatchTransaction(transaction, match.id)">Remove allocation</button>
                             </div>
+                            <app-pagination
+                              [page]="page"
+                              [pageSize]="pageSize"
+                              [totalCount]="totalCount"
+                              [totalPages]="totalPages"
+                              (pageChange)="onPageChange($event)"
+                            />
                           }
                         </div>
                       }

@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { FiscalYear, FiscalYearPayload } from './fiscal-year.model';
 
 @Injectable({ providedIn: 'root' })
@@ -9,6 +12,12 @@ export class FiscalYearService {
 
   getAll(): Observable<FiscalYear[]> {
     return this.api.get<unknown>('fiscal-years', true).pipe(map(toFiscalYears));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<FiscalYear>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>('fiscal-years/page', true, params)
+      .pipe(map(result => parsePagedResult(result, isFiscalYear, 'fiscal years')));
   }
 
   getById(id: number): Observable<FiscalYear> {

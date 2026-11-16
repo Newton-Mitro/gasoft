@@ -28,6 +28,28 @@ public sealed record UpdatePartyRequest(
     string? Phone,
     string? DefaultCurrencyCode);
 
+public sealed record CreatePartyAddressRequest(
+    string? AddressType,
+    string? Line1,
+    string? Line2,
+    string? City,
+    string? Region,
+    string? PostalCode,
+    string? CountryCode,
+    bool IsDefault);
+
+public sealed record PartyAddressDto(
+    long Id,
+    long PartyId,
+    string AddressType,
+    string Line1,
+    string? Line2,
+    string City,
+    string? Region,
+    string? PostalCode,
+    string CountryCode,
+    bool IsDefault);
+
 public sealed class PartyValidationException(IReadOnlyDictionary<string, string[]> errors)
     : Exception("The party request is invalid.")
 {

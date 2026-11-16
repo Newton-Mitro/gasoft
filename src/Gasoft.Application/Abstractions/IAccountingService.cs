@@ -1,4 +1,5 @@
 using Gasoft.Application.Accounting;
+using Gasoft.Application.Common;
 
 namespace Gasoft.Application.Abstractions;
 
@@ -33,12 +34,27 @@ public interface IAccountingService
         UpdateAccountRequest request,
         CancellationToken cancellationToken);
     Task<IReadOnlyList<FiscalYearDto>> GetFiscalYearsAsync(long companyId, CancellationToken cancellationToken);
+    Task<PagedResultDto<FiscalYearDto>> GetFiscalYearsPageAsync(
+        long companyId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
     Task<FiscalYearDto?> GetFiscalYearAsync(long companyId, long fiscalYearId, CancellationToken cancellationToken);
     Task<FiscalYearDto?> UpdateFiscalYearAsync(long companyId, long fiscalYearId, UpdateFiscalYearRequest request, CancellationToken cancellationToken);
     Task<IReadOnlyList<AccountingPeriodDto>> GetPeriodsAsync(long companyId, CancellationToken cancellationToken);
+    Task<PagedResultDto<AccountingPeriodDto>> GetPeriodsPageAsync(
+        long companyId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
     Task<AccountingPeriodDto?> GetPeriodAsync(long companyId, long periodId, CancellationToken cancellationToken);
     Task<AccountingPeriodDto?> UpdatePeriodAsync(long companyId, long periodId, UpdateAccountingPeriodRequest request, CancellationToken cancellationToken);
     Task<IReadOnlyList<JournalDto>> GetJournalsAsync(long companyId, CancellationToken cancellationToken);
+    Task<PagedResultDto<JournalDto>> GetJournalsPageAsync(
+        long companyId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
     Task<JournalDto?> GetJournalAsync(long companyId, long journalId, CancellationToken cancellationToken);
     Task<JournalDto?> UpdateJournalAsync(long companyId, long journalId, UpdateJournalRequest request, CancellationToken cancellationToken);
     Task<AccountDto> CreateAccountAsync(long companyId, CreateAccountRequest request, CancellationToken cancellationToken);
@@ -48,6 +64,11 @@ public interface IAccountingService
     Task<JournalEntryDto?> CreateDraftAsync(long companyId, CreateJournalEntryRequest request, CancellationToken cancellationToken);
     Task<JournalEntryDto?> UpdateDraftAsync(long companyId, long entryId, CreateJournalEntryRequest request, CancellationToken cancellationToken);
     Task<IReadOnlyList<JournalEntryDto>> GetJournalEntriesAsync(long companyId, CancellationToken cancellationToken);
+    Task<PagedResultDto<JournalEntryDto>> GetJournalEntriesPageAsync(
+        long companyId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
     Task<JournalEntryDto?> GetJournalEntryAsync(long companyId, long entryId, CancellationToken cancellationToken);
     Task<JournalEntryDto?> PostAsync(long companyId, long entryId, CancellationToken cancellationToken);
 }

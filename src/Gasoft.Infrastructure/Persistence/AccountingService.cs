@@ -1,5 +1,6 @@
 using Gasoft.Application.Abstractions;
 using Gasoft.Application.Accounting;
+using Gasoft.Application.Common;
 using Gasoft.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -277,6 +278,29 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<PagedResultDto<FiscalYearDto>> GetFiscalYearsPageAsync(
+        long companyId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = EnsureTenant();
+        await EnsureCompanyAsync(tenantId, companyId, cancellationToken);
+        ValidatePagination(page, pageSize);
+        var years = db.FiscalYears.AsNoTracking().Where(year => year.CompanyId == companyId);
+        var totalCount = await years.CountAsync(cancellationToken);
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        var normalizedPage = totalPages == 0 ? 1 : Math.Min(page, totalPages);
+        var items = await years
+            .OrderByDescending(year => year.StartsOn)
+            .ThenByDescending(year => year.Id)
+            .Skip((normalizedPage - 1) * pageSize)
+            .Take(pageSize)
+            .Select(year => new FiscalYearDto(year.Id, year.CompanyId, year.StartsOn, year.EndsOn, year.Status))
+            .ToListAsync(cancellationToken);
+        return new PagedResultDto<FiscalYearDto>(items, normalizedPage, pageSize, totalCount, totalPages);
+    }
+
     public async Task<FiscalYearDto?> GetFiscalYearAsync(
         long companyId,
         long fiscalYearId,
@@ -329,6 +353,30 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             .Select(period => new AccountingPeriodDto(
                 period.Id, period.FiscalYearId, period.StartsOn, period.EndsOn, period.Status))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PagedResultDto<AccountingPeriodDto>> GetPeriodsPageAsync(
+        long companyId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = EnsureTenant();
+        await EnsureCompanyAsync(tenantId, companyId, cancellationToken);
+        ValidatePagination(page, pageSize);
+        var periods = db.AccountingPeriods.AsNoTracking().Where(period => period.CompanyId == companyId);
+        var totalCount = await periods.CountAsync(cancellationToken);
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        var normalizedPage = totalPages == 0 ? 1 : Math.Min(page, totalPages);
+        var items = await periods
+            .OrderByDescending(period => period.StartsOn)
+            .ThenByDescending(period => period.Id)
+            .Skip((normalizedPage - 1) * pageSize)
+            .Take(pageSize)
+            .Select(period => new AccountingPeriodDto(
+                period.Id, period.FiscalYearId, period.StartsOn, period.EndsOn, period.Status))
+            .ToListAsync(cancellationToken);
+        return new PagedResultDto<AccountingPeriodDto>(items, normalizedPage, pageSize, totalCount, totalPages);
     }
 
     public async Task<AccountingPeriodDto?> GetPeriodAsync(
@@ -389,6 +437,30 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             .Select(journal => new JournalDto(
                 journal.Id, journal.CompanyId, journal.Code, journal.Name, journal.JournalType, journal.IsActive))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PagedResultDto<JournalDto>> GetJournalsPageAsync(
+        long companyId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = EnsureTenant();
+        await EnsureCompanyAsync(tenantId, companyId, cancellationToken);
+        ValidatePagination(page, pageSize);
+        var journals = db.Journals.AsNoTracking().Where(journal => journal.CompanyId == companyId);
+        var totalCount = await journals.CountAsync(cancellationToken);
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        var normalizedPage = totalPages == 0 ? 1 : Math.Min(page, totalPages);
+        var items = await journals
+            .OrderBy(journal => journal.Code)
+            .ThenBy(journal => journal.Id)
+            .Skip((normalizedPage - 1) * pageSize)
+            .Take(pageSize)
+            .Select(journal => new JournalDto(
+                journal.Id, journal.CompanyId, journal.Code, journal.Name, journal.JournalType, journal.IsActive))
+            .ToListAsync(cancellationToken);
+        return new PagedResultDto<JournalDto>(items, normalizedPage, pageSize, totalCount, totalPages);
     }
 
     public async Task<JournalDto?> GetJournalAsync(
@@ -972,6 +1044,30 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
         return entries.Select(ToDto).ToArray();
     }
 
+    public async Task<PagedResultDto<JournalEntryDto>> GetJournalEntriesPageAsync(
+        long companyId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = EnsureTenant();
+        await EnsureCompanyAsync(tenantId, companyId, cancellationToken);
+        ValidatePagination(page, pageSize);
+        var entries = db.JournalEntries.AsNoTracking().Where(entry => entry.CompanyId == companyId);
+        var totalCount = await entries.CountAsync(cancellationToken);
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        var normalizedPage = totalPages == 0 ? 1 : Math.Min(page, totalPages);
+        var pageEntries = await entries
+            .OrderByDescending(entry => entry.EntryDate)
+            .ThenByDescending(entry => entry.Id)
+            .Skip((normalizedPage - 1) * pageSize)
+            .Take(pageSize)
+            .Include(entry => entry.Lines)
+            .ToListAsync(cancellationToken);
+        var items = pageEntries.Select(ToDto).ToArray();
+        return new PagedResultDto<JournalEntryDto>(items, normalizedPage, pageSize, totalCount, totalPages);
+    }
+
     public async Task<JournalEntryDto?> PostAsync(
         long companyId,
         long entryId,
@@ -1024,6 +1120,14 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
 
     private long EnsureTenant() =>
         currentTenant.TenantId ?? throw new UnauthorizedAccessException("A tenant-scoped access token is required.");
+
+    private static void ValidatePagination(int page, int pageSize)
+    {
+        if (page < 1 || pageSize is < 1 or > 100)
+        {
+            throw Validation("pagination", "Page must be positive and page size must be between 1 and 100.");
+        }
+    }
 
     private async Task EnsureCompanyAsync(long tenantId, long companyId, CancellationToken cancellationToken)
     {

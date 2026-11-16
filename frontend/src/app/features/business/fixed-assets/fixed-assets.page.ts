@@ -2,18 +2,20 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
+import { PaginationComponent, PageChange } from '../../../shared/components/pagination/pagination.component';
 import {
   FixedAsset,
   FixedAssetAccount,
   FixedAssetCreatePayload,
   FixedAssetPeriod,
   FixedAssetSetup,
+  PagedFixedAssetSetup,
 } from './fixed-assets.model';
 import { FixedAssetsService } from './fixed-assets.service';
 
 @Component({
   selector: 'app-fixed-assets-page',
-  imports: [FormsModule],
+  imports: [FormsModule, PaginationComponent],
   templateUrl: './fixed-assets.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './fixed-assets.page.css'],
 })
@@ -23,6 +25,10 @@ export class FixedAssetsPageComponent implements OnInit {
   journals: FixedAssetSetup['journals'] = [];
   accounts: FixedAssetAccount[] = [];
   depreciationHistory: FixedAssetSetup['depreciationHistory'] = [];
+  page = 1;
+  pageSize = 25;
+  totalCount = 0;
+  totalPages = 0;
   currencyCode = 'USD';
   creating = false;
   depreciatingAsset: FixedAsset | null = null;
@@ -85,6 +91,12 @@ export class FixedAssetsPageComponent implements OnInit {
 
   get openPeriods(): FixedAssetPeriod[] {
     return this.periods.filter(period => period.status === 'Open');
+  }
+
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.load();
   }
 
   beginCreate(): void {
@@ -245,7 +257,7 @@ export class FixedAssetsPageComponent implements OnInit {
 
   private load(): void {
     this.loading = true;
-    this.service.getAll().subscribe({
+    this.service.getPage(this.page, this.pageSize).subscribe({
       next: result => {
         this.applySetup(result);
         this.loading = false;
@@ -259,9 +271,13 @@ export class FixedAssetsPageComponent implements OnInit {
     });
   }
 
-  private applySetup(result: FixedAssetSetup): void {
+  private applySetup(result: PagedFixedAssetSetup): void {
     this.currencyCode = result.currencyCode;
-    this.assets = result.assets;
+    this.assets = result.assets.items;
+    this.page = result.assets.page;
+    this.pageSize = result.assets.pageSize;
+    this.totalCount = result.assets.totalCount;
+    this.totalPages = result.assets.totalPages;
     this.periods = result.periods;
     this.journals = result.journals;
     this.accounts = result.accounts;

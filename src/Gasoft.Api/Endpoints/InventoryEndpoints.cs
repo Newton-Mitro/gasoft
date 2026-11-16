@@ -18,6 +18,16 @@ public static class InventoryEndpoints
             IInventoryService service,
             CancellationToken cancellationToken) =>
             Results.Ok(await service.GetCategoriesAsync(cancellationToken)));
+        tenant.MapGet("/item-categories/page", async (
+            IInventoryService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            return Results.Ok(await service.GetCategoriesPageAsync(page, pageSize, cancellationToken));
+        });
         tenant.MapGet("/item-categories/{categoryId:long}", async (
             long categoryId,
             IInventoryService service,
@@ -69,6 +79,16 @@ public static class InventoryEndpoints
             IInventoryService service,
             CancellationToken cancellationToken) =>
             Results.Ok(await service.GetItemsAsync(cancellationToken)));
+        tenant.MapGet("/items/page", async (
+            IInventoryService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            return Results.Ok(await service.GetItemsPageAsync(page, pageSize, cancellationToken));
+        });
         tenant.MapGet("/items/{itemId:long}", async (
             long itemId,
             IInventoryService service,
@@ -126,6 +146,24 @@ public static class InventoryEndpoints
             try
             {
                 return Results.Ok(await service.GetWarehousesAsync(companyId, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
+        companies.MapGet("/warehouses/page", async (
+            long companyId,
+            IInventoryService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            try
+            {
+                return Results.Ok(await service.GetWarehousesPageAsync(companyId, page, pageSize, cancellationToken));
             }
             catch (KeyNotFoundException exception)
             {
@@ -239,6 +277,24 @@ public static class InventoryEndpoints
                 return Results.NotFound(new { error = exception.Message });
             }
         });
+        companies.MapGet("/inventory/balances/page", async (
+            long companyId,
+            IInventoryService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            try
+            {
+                return Results.Ok(await service.GetStockBalancesPageAsync(companyId, page, pageSize, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
         companies.MapGet("/inventory/movements", async (
             long companyId,
             IInventoryService service,
@@ -253,6 +309,24 @@ public static class InventoryEndpoints
                 return Results.NotFound(new { error = exception.Message });
             }
         });
+        companies.MapGet("/inventory/movements/page", async (
+            long companyId,
+            IInventoryService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            try
+            {
+                return Results.Ok(await service.GetStockMovementsPageAsync(companyId, page, pageSize, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
         companies.MapGet("/inventory/counts", async (
             long companyId,
             IInventoryService service,
@@ -261,6 +335,24 @@ public static class InventoryEndpoints
             try
             {
                 return Results.Ok(await service.GetCountsAsync(companyId, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
+        companies.MapGet("/inventory/counts/page", async (
+            long companyId,
+            IInventoryService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            try
+            {
+                return Results.Ok(await service.GetCountsPageAsync(companyId, page, pageSize, cancellationToken));
             }
             catch (KeyNotFoundException exception)
             {

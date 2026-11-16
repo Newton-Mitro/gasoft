@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/auth.service';
 import { CompanyService } from '../../settings/company/company.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { Choice } from '../../../shared/models/shared.models';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import {
   PurchaseOrder,
@@ -38,12 +39,16 @@ interface EditableLine {
 
 @Component({
   selector: 'app-purchase-orders-page',
-  imports: [FormsModule],
+  imports: [FormsModule, PaginationComponent],
   templateUrl: './purchase-orders.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './purchase-orders.page.css'],
 })
 export class PurchaseOrdersPageComponent implements OnInit {
   orders: PurchaseOrder[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   suppliers: PartyOption[] = [];
   items: ItemOption[] = [];
   warehouses: Choice[] = [];
@@ -102,7 +107,7 @@ export class PurchaseOrdersPageComponent implements OnInit {
       accounts: this.options.getOptions('accounts'),
       currencies: this.options.getOptions('currencies'),
       company: this.company.getById(companyId),
-      orders: this.service.getOrders(),
+      orders: this.service.getOrdersPage(this.page, this.pageSize),
     }).subscribe({
       next: result => {
         this.suppliers = parseSuppliers(result.parties);
@@ -113,7 +118,11 @@ export class PurchaseOrdersPageComponent implements OnInit {
         this.accounts = result.accounts;
         this.currencies = result.currencies;
         this.functionalCurrency = result.company.functionalCurrencyCode;
-        this.orders = result.orders;
+        this.orders = result.orders.items;
+        this.page = result.orders.page;
+        this.pageSize = result.orders.pageSize;
+        this.totalCount = result.orders.totalCount;
+        this.totalPages = result.orders.totalPages;
         this.currencyCode = this.functionalCurrency;
         this.selectFirstOrder();
         this.loading = false;
@@ -377,6 +386,31 @@ export class PurchaseOrdersPageComponent implements OnInit {
 
   private selectFirstOrder(): void {
     if (!this.selectedOrderId && this.orders.length) this.selectedOrderId = this.orders[0].id;
+  }
+
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loading = true;
+    this.receiveLineId = null;
+    this.service.getOrdersPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.orders = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
+        this.selectedOrderId = null;
+        this.selectFirstOrder();
+        this.loading = false;
+        this.changeDetector.markForCheck();
+      },
+      error: error => {
+        this.error = errorMessage(error, 'Could not load this page of purchase orders.');
+        this.loading = false;
+        this.changeDetector.markForCheck();
+      },
+    });
   }
 
   private upsertOrder(order: PurchaseOrder): void {

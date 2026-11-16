@@ -6,6 +6,7 @@ import { PurchaseBillPostingPayload, TaxAccountMapping } from '../business.model
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { Choice, DocumentLineForm, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { PurchaseBill, PurchaseBillPayload } from './purchase-bill.model';
 import { PurchaseBillService } from './purchase-bill.service';
@@ -15,7 +16,7 @@ const POSTING_OPTIONS = ['journals', 'periods', 'accounts'];
 
 @Component({
   selector: 'app-purchase-bills-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './purchase-bills.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -33,6 +34,10 @@ export class PurchaseBillsPageComponent implements OnInit, OnDestroy {
   ];
   readonly indexPath = '/purchase-bills';
   rows: PurchaseBill[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
   documentLines: DocumentLineForm[] = [];
@@ -246,9 +251,13 @@ export class PurchaseBillsPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.bills.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.bills.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -258,6 +267,12 @@ export class PurchaseBillsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
     });
+  }
+
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
   }
 
   private loadRecord(): void {

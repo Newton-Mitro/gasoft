@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import {
   AddExistingTenantUserPayload,
   CreateTenantUserPayload,
@@ -16,6 +19,12 @@ export class TenantUserService {
 
   getAll(): Observable<TenantUser[]> {
     return this.api.get<unknown>(ENDPOINT, false).pipe(map(toTenantUsers));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<TenantUser>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>(`${ENDPOINT}/page`, false, params)
+      .pipe(map(result => parsePagedResult(result, isTenantUser, 'team members')));
   }
 
   getById(id: number): Observable<TenantUser> {

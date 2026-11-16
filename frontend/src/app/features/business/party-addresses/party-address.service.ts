@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { PartyAddress, PartyAddressPayload } from './party-address.model';
 
 @Injectable({ providedIn: 'root' })
@@ -9,6 +12,12 @@ export class PartyAddressService {
 
   getAll(partyId: number): Observable<PartyAddress[]> {
     return this.api.get<unknown>(endpointForParty(partyId), false).pipe(map(toAddresses));
+  }
+
+  getPage(partyId: number, page: number, pageSize: number): Observable<PagedResult<PartyAddress>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>(`${endpointForParty(partyId)}/page`, false, params)
+      .pipe(map(result => parsePagedResult(result, isPartyAddress, 'party addresses')));
   }
 
   getById(partyId: number, addressId: number): Observable<PartyAddress> {

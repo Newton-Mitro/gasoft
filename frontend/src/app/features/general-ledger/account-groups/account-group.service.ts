@@ -8,8 +8,8 @@ import { AccountGroup, AccountGroupPage, AccountGroupPayload, AccountType } from
 export class AccountGroupService {
   constructor(private readonly api: ApiService) {}
 
-  getPage(search: string): Observable<AccountGroupPage> {
-    let params = new HttpParams().set('page', '1').set('pageSize', '100');
+  getPage(search: string, page: number, pageSize: number): Observable<AccountGroupPage> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (search.trim()) params = params.set('search', search.trim());
     return this.api.get<unknown>('account-groups/page', true, params).pipe(map(toAccountGroupPage));
   }

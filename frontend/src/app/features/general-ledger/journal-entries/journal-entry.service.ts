@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { JournalEntry, JournalEntryPayload } from './journal-entry.model';
 
 const ENDPOINT = 'journal-entries';
@@ -11,6 +14,12 @@ export class JournalEntryService {
 
   getAll(): Observable<JournalEntry[]> {
     return this.api.get<unknown>(ENDPOINT, true).pipe(map(toJournalEntries));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<JournalEntry>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>(`${ENDPOINT}/page`, true, params)
+      .pipe(map(result => parsePagedResult(result, isJournalEntry, 'journal entries')));
   }
 
   getById(id: number): Observable<JournalEntry> {

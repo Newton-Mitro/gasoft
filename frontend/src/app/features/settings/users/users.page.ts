@@ -5,6 +5,7 @@ import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { Choice, Field } from '../../../shared/models/shared.models';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import {
   AddExistingTenantUserPayload,
   CreateTenantUserPayload,
@@ -21,7 +22,7 @@ const ROLE_OPTIONS: Choice[] = [
 
 @Component({
   selector: 'app-users-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent],
+  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './users.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './users.page.css'],
 })
@@ -36,6 +37,10 @@ export class UsersPageComponent implements OnInit, OnDestroy {
     { key: 'isActive', label: 'Active membership', type: 'checkbox' },
   ];
   rows: TenantUser[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   fields: Field[] = [];
   form: Record<string, unknown> = {};
   loading = false;
@@ -184,9 +189,13 @@ export class UsersPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.users.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.users.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -196,6 +205,12 @@ export class UsersPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
     });
+  }
+
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
   }
 
   private loadRecord(): void {

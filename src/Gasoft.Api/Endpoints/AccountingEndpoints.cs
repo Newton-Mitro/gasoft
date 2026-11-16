@@ -202,6 +202,31 @@ public static class AccountingEndpoints
                 return Results.NotFound(new { error = exception.Message });
             }
         });
+        companies.MapGet("/fiscal-years/page", async (
+            long companyId,
+            IAccountingService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+            {
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            }
+
+            try
+            {
+                return Results.Ok(await service.GetFiscalYearsPageAsync(companyId, page, pageSize, cancellationToken));
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
         companies.MapGet("/fiscal-years/{fiscalYearId:long}", async (
             long companyId,
             long fiscalYearId,
@@ -226,6 +251,31 @@ public static class AccountingEndpoints
                 return Results.NotFound(new { error = exception.Message });
             }
         });
+        companies.MapGet("/accounting-periods/page", async (
+            long companyId,
+            IAccountingService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+            {
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            }
+
+            try
+            {
+                return Results.Ok(await service.GetPeriodsPageAsync(companyId, page, pageSize, cancellationToken));
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
         companies.MapGet("/accounting-periods/{periodId:long}", async (
             long companyId,
             long periodId,
@@ -244,6 +294,31 @@ public static class AccountingEndpoints
             try
             {
                 return Results.Ok(await service.GetJournalsAsync(companyId, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
+        companies.MapGet("/journals/page", async (
+            long companyId,
+            IAccountingService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+            {
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            }
+
+            try
+            {
+                return Results.Ok(await service.GetJournalsPageAsync(companyId, page, pageSize, cancellationToken));
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
             }
             catch (KeyNotFoundException exception)
             {
@@ -497,6 +572,31 @@ public static class AccountingEndpoints
             try
             {
                 return Results.Ok(await service.GetJournalEntriesAsync(companyId, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
+        companies.MapGet("/journal-entries/page", async (
+            long companyId,
+            IAccountingService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+            {
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            }
+
+            try
+            {
+                return Results.Ok(await service.GetJournalEntriesPageAsync(companyId, page, pageSize, cancellationToken));
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
             }
             catch (KeyNotFoundException exception)
             {

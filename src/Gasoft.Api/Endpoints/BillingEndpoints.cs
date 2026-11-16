@@ -23,6 +23,24 @@ public static class BillingEndpoints
                 return Results.NotFound(new { error = exception.Message });
             }
         });
+        companies.MapGet("/sales-invoices/page", async (
+            long companyId,
+            IBillingService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            try
+            {
+                return Results.Ok(await service.GetInvoicesPageAsync(companyId, page, pageSize, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
 
         companies.MapPost("/sales-invoices", async (
             long companyId,
@@ -125,7 +143,24 @@ public static class BillingEndpoints
                 return Results.NotFound(new { error = exception.Message });
             }
         });
-
+        companies.MapGet("/sales-credit-notes/page", async (
+            long companyId,
+            IBillingService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            try
+            {
+                return Results.Ok(await service.GetSalesCreditNotesPageAsync(companyId, page, pageSize, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
         companies.MapPost("/sales-credit-notes", async (
             long companyId,
             CreateSalesCreditNoteRequest request,
@@ -185,6 +220,24 @@ public static class BillingEndpoints
             try
             {
                 return Results.Ok(await service.GetBillsAsync(companyId, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
+        companies.MapGet("/purchase-bills/page", async (
+            long companyId,
+            IBillingService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            try
+            {
+                return Results.Ok(await service.GetBillsPageAsync(companyId, page, pageSize, cancellationToken));
             }
             catch (KeyNotFoundException exception)
             {
@@ -312,6 +365,24 @@ public static class BillingEndpoints
             try
             {
                 return Results.Ok(await service.GetPaymentsAsync(companyId, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
+        companies.MapGet("/payments/page", async (
+            long companyId,
+            IBillingService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            try
+            {
+                return Results.Ok(await service.GetPaymentsPageAsync(companyId, page, pageSize, cancellationToken));
             }
             catch (KeyNotFoundException exception)
             {

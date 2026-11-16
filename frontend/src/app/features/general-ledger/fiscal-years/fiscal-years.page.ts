@@ -3,13 +3,14 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { FiscalYear, FiscalYearPayload } from './fiscal-year.model';
 import { FiscalYearService } from './fiscal-year.service';
 
 @Component({
   selector: 'app-fiscal-years-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './fiscal-years.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -23,6 +24,10 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
   ];
   readonly indexPath = '/general-ledger/fiscal-years';
   rows: FiscalYear[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   loading = false;
   saving = false;
@@ -105,11 +110,21 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
     void this.router.navigateByUrl(this.indexPath);
   }
 
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
+  }
+
   private loadRows(): void {
     this.loading = true;
-    this.fiscalYears.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.fiscalYears.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

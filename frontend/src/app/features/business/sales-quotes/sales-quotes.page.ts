@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin, timeout } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Choice, DocumentLineForm } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { SalesQuote, SalesQuotePayload } from './sales-quote.model';
@@ -18,12 +19,16 @@ interface CustomerOption {
 
 @Component({
   selector: 'app-sales-quotes-page',
-  imports: [FormsModule],
+  imports: [FormsModule, PaginationComponent],
   templateUrl: './sales-quotes.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './sales-quotes.page.css'],
 })
 export class SalesQuotesPageComponent implements OnInit {
   quotes: SalesQuote[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   customers: CustomerOption[] = [];
   accounts: Choice[] = [];
   taxCodes: Choice[] = [];
@@ -57,18 +62,7 @@ export class SalesQuotesPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.service.getAll().pipe(timeout({ first: 15000 })).subscribe({
-      next: quotes => {
-        this.quotes = quotes;
-        this.loading = false;
-        this.changeDetector.markForCheck();
-      },
-      error: error => {
-        this.error = errorMessage(error, 'Could not load sales quotes.');
-        this.loading = false;
-        this.changeDetector.markForCheck();
-      },
-    });
+    this.loadQuotes();
 
     forkJoin({
       parties: this.api.get<unknown>('/api/v1/parties/', false),
@@ -252,13 +246,30 @@ export class SalesQuotesPageComponent implements OnInit {
   }
 
   private refresh(): void {
-    this.service.getAll().subscribe({
-      next: quotes => {
-        this.quotes = quotes;
+    this.loadQuotes('The action completed, but quotes could not be refreshed.');
+  }
+
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadQuotes();
+  }
+
+  private loadQuotes(failureMessage = 'Could not load sales quotes.'): void {
+    this.loading = true;
+    this.service.getPage(this.page, this.pageSize).pipe(timeout({ first: 15000 })).subscribe({
+      next: result => {
+        this.quotes = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
+        this.loading = false;
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'The action completed, but quotes could not be refreshed.');
+        this.error = errorMessage(error, failureMessage);
+        this.loading = false;
         this.changeDetector.markForCheck();
       },
     });

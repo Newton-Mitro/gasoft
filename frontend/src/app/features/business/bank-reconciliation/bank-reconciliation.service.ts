@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import {
   BankAccount,
   BankAccountPayload,
@@ -26,6 +29,12 @@ export class BankReconciliationService {
 
   getTransactions(bankAccountId: number): Observable<BankTransaction[]> {
     return this.api.get<unknown>(`${ENDPOINT}/${bankAccountId}/transactions`).pipe(map(toBankTransactions));
+  }
+
+  getTransactionsPage(bankAccountId: number, page: number, pageSize: number): Observable<PagedResult<BankTransaction>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>(`${ENDPOINT}/${bankAccountId}/transactions/page`, true, params)
+      .pipe(map(result => parsePagedResult(result, isBankTransaction, 'bank statement transactions')));
   }
 
   importStatement(bankAccountId: number, file: File): Observable<BankImportResult> {

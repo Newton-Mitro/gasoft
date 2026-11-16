@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { InventoryIssuePayload, InventoryReceiptPayload } from '../inventory.models';
@@ -14,7 +15,7 @@ const MOVEMENT_OPTIONS = ['items', 'warehouses', 'journals', 'periods', 'account
 
 @Component({
   selector: 'app-inventory-movements-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './inventory-movements.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -23,6 +24,10 @@ export class InventoryMovementsPageComponent implements OnInit, OnDestroy {
   readonly title = 'Stock movements';
   readonly description = 'Receive stock or issue stock with the matching journal and inventory accounts.';
   rows: InventoryMovement[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   fields: Field[] = [];
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
@@ -70,6 +75,12 @@ export class InventoryMovementsPageComponent implements OnInit, OnDestroy {
 
   closeForm(): void {
     void this.router.navigateByUrl(this.indexPath);
+  }
+
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
   }
 
   submit(): void {
@@ -153,9 +164,13 @@ export class InventoryMovementsPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.movements.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.movements.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

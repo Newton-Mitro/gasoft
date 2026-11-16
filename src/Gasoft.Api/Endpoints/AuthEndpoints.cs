@@ -1,10 +1,4 @@
-using System.Net.Mail;
 using Gasoft.Application.Abstractions;
-using Gasoft.Infrastructure.Authentication;
-using Gasoft.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace Gasoft.Api.Endpoints;
 
@@ -36,54 +30,17 @@ public static class AuthEndpoints
 
         app.MapPost("/api/v1/auth/password/forgot", async (
             ForgotPasswordRequest request,
-            IEmailSender emailSender,
-            IOptions<EmailOptions> emailOptions,
-            AppDbContext db,
-            UserManager<ApplicationUser> userManager,
-            ILoggerFactory loggerFactory,
+            IAuthService authService,
             CancellationToken cancellationToken) =>
         {
-            if (!emailSender.IsConfigured)
+            if (!await authService.RequestPasswordResetAsync(
+                    request.Email,
+                    request.WorkspaceSlug,
+                    cancellationToken))
                 return Results.Problem(
                     statusCode: StatusCodes.Status503ServiceUnavailable,
                     title: "Password recovery is not available",
                     detail: "Password reset email is not configured. Contact your administrator.");
-
-            var email = request.Email?.Trim() ?? string.Empty;
-            var slug = request.WorkspaceSlug?.Trim().ToLowerInvariant() ?? string.Empty;
-            var tenantId = await db.Tenants
-                .IgnoreQueryFilters()
-                .Where(tenant => tenant.Slug == slug && tenant.Status == "active")
-                .Select(tenant => (long?)tenant.Id)
-                .SingleOrDefaultAsync(cancellationToken);
-
-            if (tenantId is not null)
-            {
-                var user = await userManager.FindByEmailAsync(email);
-                var isActiveMember = user is not null && await db.TenantUsers
-                    .IgnoreQueryFilters()
-                    .AnyAsync(membership =>
-                        membership.TenantId == tenantId &&
-                        membership.UserId == user.Id &&
-                        membership.IsActive,
-                        cancellationToken);
-
-                if (user is not null && isActiveMember)
-                {
-                    var token = await userManager.GeneratePasswordResetTokenAsync(user);
-                    var resetLink = $"{emailOptions.Value.FrontendBaseUrl.TrimEnd('/')}/reset-password" +
-                        $"?email={Uri.EscapeDataString(user.Email ?? email)}&token={Uri.EscapeDataString(token)}";
-                    try
-                    {
-                        await emailSender.SendPasswordResetAsync(user.Email ?? email, resetLink, cancellationToken);
-                    }
-                    catch (SmtpException exception)
-                    {
-                        loggerFactory.CreateLogger("PasswordReset")
-                            .LogError(exception, "Could not deliver a password reset email.");
-                    }
-                }
-            }
 
             return Results.Ok(new
             {
@@ -96,32 +53,15 @@ public static class AuthEndpoints
 
         app.MapPost("/api/v1/auth/password/reset", async (
             ResetPasswordRequest request,
-            UserManager<ApplicationUser> userManager) =>
+            IAuthService authService,
+            CancellationToken cancellationToken) =>
         {
-            var email = request.Email?.Trim() ?? string.Empty;
-            var user = await userManager.FindByEmailAsync(email);
-            if (user is null)
-                return Results.ValidationProblem(new Dictionary<string, string[]>
-                {
-                    ["token"] = ["This reset link is invalid or has expired. Request a new one."]
-                });
-
-            var result = await userManager.ResetPasswordAsync(
-                user,
-                request.Token ?? string.Empty,
-                request.NewPassword ?? string.Empty);
-            if (!result.Succeeded)
-            {
-                var errors = result.Errors
-                    .Select(error => error.Code == "InvalidToken"
-                        ? ("token", "This reset link is invalid or has expired. Request a new one.")
-                        : ("newPassword", error.Description))
-                    .GroupBy(error => error.Item1)
-                    .ToDictionary(group => group.Key, group => group.Select(error => error.Item2).ToArray());
-                return Results.ValidationProblem(errors);
-            }
-
-            return Results.NoContent();
+            var errors = await authService.ResetPasswordAsync(
+                request.Email,
+                request.Token,
+                request.NewPassword,
+                cancellationToken);
+            return errors is null ? Results.NoContent() : Results.ValidationProblem(errors);
         })
         .AllowAnonymous()
         .RequireRateLimiting("public-auth")

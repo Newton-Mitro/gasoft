@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import {
   PurchaseOrder,
   PurchaseOrderPayload,
@@ -21,6 +24,12 @@ export class PurchaseOrdersService {
       }
       return value;
     }));
+  }
+
+  getOrdersPage(page: number, pageSize: number): Observable<PagedResult<PurchaseOrder>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>(`${ENDPOINT}/page`, true, params)
+      .pipe(map(value => parsePagedResult(value, isPurchaseOrder, 'purchase orders')));
   }
 
   getOrder(orderId: number): Observable<PurchaseOrder> {

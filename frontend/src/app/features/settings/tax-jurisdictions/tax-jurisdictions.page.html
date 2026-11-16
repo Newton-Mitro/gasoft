@@ -12,7 +12,7 @@
     <div class="table-header">
       <div>
         <h2>ISO 3166-1 countries</h2>
-        <span>{{ rows.length }} supported {{ rows.length === 1 ? 'country' : 'countries' }}</span>
+        <span>{{ totalCount }} supported {{ totalCount === 1 ? 'country' : 'countries' }}</span>
       </div>
     </div>
     @if (!rows.length) {
@@ -36,5 +36,12 @@
         </table>
       </div>
     }
+    <app-pagination
+      [page]="page"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [totalPages]="totalPages"
+      (pageChange)="onPageChange($event)"
+    />
   </section>
 }

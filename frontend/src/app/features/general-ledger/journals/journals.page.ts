@@ -3,6 +3,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { Journal, JournalPayload, JournalType } from './journal.model';
 import { JournalService } from './journal.service';
@@ -12,7 +13,7 @@ const JOURNAL_TYPES: Choice[] = ['General', 'Sales', 'Purchase', 'Bank']
 
 @Component({
   selector: 'app-journals-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './journals.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -27,6 +28,10 @@ export class JournalsPageComponent implements OnInit, OnDestroy {
   ];
   readonly indexPath = '/general-ledger/journals';
   rows: Journal[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   loading = false;
   saving = false;
@@ -119,11 +124,21 @@ export class JournalsPageComponent implements OnInit, OnDestroy {
     void this.router.navigateByUrl(this.indexPath);
   }
 
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
+  }
+
   private loadRows(): void {
     this.loading = true;
-    this.journals.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.journals.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

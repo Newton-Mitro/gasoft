@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { InventoryBalance } from './inventory-balance.model';
 
 @Injectable({ providedIn: 'root' })
@@ -9,6 +12,12 @@ export class InventoryBalanceService {
 
   getAll(): Observable<InventoryBalance[]> {
     return this.api.get<unknown>('inventory/balances', true).pipe(map(toBalances));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<InventoryBalance>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>('inventory/balances/page', true, params)
+      .pipe(map(result => parsePagedResult(result, isInventoryBalance, 'stock balances')));
   }
 }
 

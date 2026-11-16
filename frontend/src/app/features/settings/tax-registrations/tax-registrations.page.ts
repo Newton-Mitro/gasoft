@@ -4,6 +4,7 @@ import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { Choice, Field } from '../../../shared/models/shared.models';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { TaxRegistration, TaxRegistrationPayload } from './tax-registration.model';
 import { TaxRegistrationService } from './tax-registration.service';
@@ -12,7 +13,7 @@ const TAX_REGISTRATION_OPTIONS = ['jurisdictions'];
 
 @Component({
   selector: 'app-tax-registrations-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './tax-registrations.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -26,6 +27,10 @@ export class TaxRegistrationsPageComponent implements OnInit, OnDestroy {
     { key: 'registrationNumber', label: 'Registration number', required: true },
   ];
   rows: TaxRegistration[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   taxReferenceRows: Record<string, unknown>[] = [];
   options: Record<string, Choice[]> = {};
   form: Record<string, unknown> = {};
@@ -109,6 +114,12 @@ export class TaxRegistrationsPageComponent implements OnInit, OnDestroy {
     void this.router.navigateByUrl(this.indexPath);
   }
 
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
+  }
+
   displayValue(value: unknown): string {
     if (value === null || value === undefined || value === '') return '—';
     return String(value);
@@ -116,9 +127,13 @@ export class TaxRegistrationsPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.registrations.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.registrations.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

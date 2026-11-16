@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { InventoryMovement } from './inventory-movement.model';
 
 @Injectable({ providedIn: 'root' })
@@ -9,6 +12,12 @@ export class InventoryMovementService {
 
   getAll(): Observable<InventoryMovement[]> {
     return this.api.get<unknown>('inventory/movements', true).pipe(map(toMovements));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<InventoryMovement>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>('inventory/movements/page', true, params)
+      .pipe(map(result => parsePagedResult(result, isMovement, 'stock movements')));
   }
 }
 

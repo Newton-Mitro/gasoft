@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { Warehouse, WarehousePayload } from './warehouse.model';
 
 const ENDPOINT = 'warehouses';
@@ -11,6 +14,12 @@ export class WarehouseService {
 
   getAll(): Observable<Warehouse[]> {
     return this.api.get<unknown>(ENDPOINT, true).pipe(map(toWarehouses));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<Warehouse>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>(`${ENDPOINT}/page`, true, params)
+      .pipe(map(result => parsePagedResult(result, isWarehouse, 'warehouses')));
   }
 
   getById(id: number): Observable<Warehouse> {

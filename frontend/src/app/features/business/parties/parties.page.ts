@@ -3,6 +3,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { Party, PartyPayload } from './party.model';
@@ -10,7 +11,7 @@ import { PartyService } from './party.service';
 
 @Component({
   selector: 'app-parties-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './parties.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -29,6 +30,10 @@ export class PartiesPageComponent implements OnInit, OnDestroy {
   ];
   readonly indexPath = '/parties';
   rows: Party[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
   loading = false;
@@ -122,6 +127,12 @@ export class PartiesPageComponent implements OnInit, OnDestroy {
     void this.router.navigateByUrl(this.indexPath);
   }
 
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
+  }
+
   private loadCurrencyOptions(): void {
     this.optionData.getOptions('currencies').subscribe({
       next: options => {
@@ -137,9 +148,13 @@ export class PartiesPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.parties.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.parties.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

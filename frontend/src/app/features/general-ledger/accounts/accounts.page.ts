@@ -4,6 +4,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PaginationComponent, PageChange } from '../../../shared/components/pagination/pagination.component';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { Account, AccountPayload } from './account.model';
@@ -11,7 +12,7 @@ import { AccountService } from './account.service';
 
 @Component({
   selector: 'app-accounts-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent],
+  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './accounts.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -29,6 +30,9 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   readonly indexPath = '/general-ledger/accounts';
   rows: Account[] = [];
   totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
   loading = false;
@@ -83,8 +87,15 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
 
   onSearchChange(value: string): void {
     this.search = value;
+    this.page = 1;
     if (this.searchTimer) clearTimeout(this.searchTimer);
     this.searchTimer = setTimeout(() => this.loadRows(), 300);
+  }
+
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
   }
 
   setFormValue(key: string, value: unknown): void {
@@ -158,10 +169,13 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.accounts.getPage(this.search).subscribe({
+    this.accounts.getPage(this.search, this.page, this.pageSize).subscribe({
       next: page => {
         this.rows = page.items;
+        this.page = page.page;
+        this.pageSize = page.pageSize;
         this.totalCount = page.totalCount;
+        this.totalPages = page.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

@@ -6,6 +6,7 @@ import { SalesInvoiceService } from '../sales-invoices/sales-invoice.service';
 import { Choice } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import {
   CustomerRefundPayload,
   SalesCreditNote,
@@ -22,12 +23,16 @@ interface CreditLineInput {
 
 @Component({
   selector: 'app-sales-credit-notes-page',
-  imports: [FormsModule],
+  imports: [FormsModule, PaginationComponent],
   templateUrl: './sales-credit-notes.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './sales-credit-notes.page.css'],
 })
 export class SalesCreditNotesPageComponent implements OnInit {
   notes: SalesCreditNote[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   invoices: SalesInvoice[] = [];
   journals: Choice[] = [];
   periods: Choice[] = [];
@@ -66,18 +71,7 @@ export class SalesCreditNotesPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.service.getAll().pipe(timeout({ first: 15000 })).subscribe({
-      next: notes => {
-        this.notes = notes;
-        this.loading = false;
-        this.changeDetector.markForCheck();
-      },
-      error: error => {
-        this.error = errorMessage(error, 'Could not load sales credit notes.');
-        this.loading = false;
-        this.changeDetector.markForCheck();
-      },
-    });
+    this.loadNotes();
 
     forkJoin({
       invoices: this.invoicesService.getAll(),
@@ -286,14 +280,44 @@ export class SalesCreditNotesPageComponent implements OnInit {
   }
 
   private refresh(): void {
-    forkJoin({ notes: this.service.getAll(), invoices: this.invoicesService.getAll() }).subscribe({
+    forkJoin({ notes: this.service.getPage(this.page, this.pageSize), invoices: this.invoicesService.getAll() }).subscribe({
       next: result => {
-        this.notes = result.notes;
+        this.notes = result.notes.items;
+        this.page = result.notes.page;
+        this.pageSize = result.notes.pageSize;
+        this.totalCount = result.notes.totalCount;
+        this.totalPages = result.notes.totalPages;
         this.invoices = result.invoices;
         this.changeDetector.markForCheck();
       },
       error: error => {
         this.error = errorMessage(error, 'The operation succeeded, but credit notes could not be refreshed.');
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadNotes();
+  }
+
+  private loadNotes(): void {
+    this.loading = true;
+    this.service.getPage(this.page, this.pageSize).pipe(timeout({ first: 15000 })).subscribe({
+      next: result => {
+        this.notes = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
+        this.loading = false;
+        this.changeDetector.markForCheck();
+      },
+      error: error => {
+        this.error = errorMessage(error, 'Could not load sales credit notes.');
+        this.loading = false;
         this.changeDetector.markForCheck();
       },
     });

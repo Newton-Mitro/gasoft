@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { InventoryCount, InventoryCountItem, InventoryCountPayload } from './inventory-count.model';
 
 const ENDPOINT = 'inventory/counts';
@@ -11,6 +14,12 @@ export class InventoryCountService {
 
   getAll(): Observable<InventoryCount[]> {
     return this.api.get<unknown>(ENDPOINT, true).pipe(map(toInventoryCounts));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<InventoryCount>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>(`${ENDPOINT}/page`, true, params)
+      .pipe(map(result => parsePagedResult(result, isInventoryCount, 'inventory counts')));
   }
 
   getById(id: number): Observable<InventoryCount> {

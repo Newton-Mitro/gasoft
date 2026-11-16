@@ -1,6 +1,4 @@
 using Gasoft.Application.Abstractions;
-using Gasoft.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 namespace Gasoft.Api.Endpoints;
 
@@ -8,39 +6,19 @@ public static class TenantRegistrationEndpoints
 {
     public static IEndpointRouteBuilder MapTenantRegistrationEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/v1/currencies", async (AppDbContext dbContext, CancellationToken cancellationToken) =>
-                Results.Ok(await dbContext.Currencies
-                    .AsNoTracking()
-                    .OrderBy(currency => currency.Code)
-                    .Select(currency => new CurrencyResponse(currency.Code, currency.Name, currency.DecimalPlaces))
-                    .ToListAsync(cancellationToken)))
+        app.MapGet("/api/v1/currencies", async (
+                ICompanyReadService companyReadService,
+                CancellationToken cancellationToken) =>
+                Results.Ok(await companyReadService.GetCurrenciesAsync(cancellationToken)))
             .AllowAnonymous()
             .WithName("GetSupportedCurrencies");
 
         app.MapGet("/api/v1/companies/{companyId:long}", async (
             long companyId,
-            AppDbContext dbContext,
+            ICompanyReadService companyReadService,
             CancellationToken cancellationToken) =>
         {
-            var company = await dbContext.Companies
-                .AsNoTracking()
-                .Where(company => company.Id == companyId)
-                .Select(company => new CompanyResponse(
-                    company.Id,
-                    company.Code,
-                    company.LegalName,
-                    company.FunctionalCurrencyCode,
-                    company.Phone,
-                    company.Email,
-                    company.Website,
-                    company.Address,
-                    company.CityRegion,
-                    company.PostalCode,
-                    company.Country,
-                    company.TaxId,
-                    company.LogoUrl))
-                .SingleOrDefaultAsync(cancellationToken);
-
+            var company = await companyReadService.GetCompanyAsync(companyId, cancellationToken);
             return company is null ? Results.NotFound() : Results.Ok(company);
         })
         .RequireAuthorization()
@@ -76,19 +54,4 @@ public static class TenantRegistrationEndpoints
     }
 
     public sealed record TenantRegistrationResponse(long TenantId, long CompanyId, string AccessToken);
-    public sealed record CurrencyResponse(string Code, string Name, byte DecimalPlaces);
-    public sealed record CompanyResponse(
-        long Id,
-        string Code,
-        string LegalName,
-        string FunctionalCurrencyCode,
-        string? Phone,
-        string? Email,
-        string? Website,
-        string? Address,
-        string? CityRegion,
-        string? PostalCode,
-        string? Country,
-        string? TaxId,
-        string? LogoUrl);
 }

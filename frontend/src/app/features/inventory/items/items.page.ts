@@ -3,6 +3,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { CostingMethod, Item, ItemPayload } from './item.model';
@@ -12,7 +13,7 @@ const COSTING_METHODS: Choice[] = ['FIFO', 'AVCO'].map(value => ({ label: value,
 
 @Component({
   selector: 'app-items-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './items.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -29,6 +30,10 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
   ];
   readonly indexPath = '/inventory/items';
   rows: Item[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
   loading = false;
@@ -124,6 +129,12 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
     void this.router.navigateByUrl(this.indexPath);
   }
 
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
+  }
+
   private loadOptions(): void {
     this.options = {};
     for (const source of ['categories', 'units']) {
@@ -142,9 +153,13 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.items.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.items.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

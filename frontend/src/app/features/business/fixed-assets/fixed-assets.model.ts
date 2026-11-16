@@ -59,6 +59,10 @@ export interface FixedAssetSetup {
   depreciationHistory: FixedAssetDepreciationRecord[];
 }
 
+export interface PagedFixedAssetSetup extends Omit<FixedAssetSetup, 'assets'> {
+  assets: PagedResult<FixedAsset>;
+}
+
 export interface FixedAssetCreatePayload {
   assetNumber: string;
   name: string;
@@ -75,3 +79,4 @@ export interface FixedAssetCreatePayload {
   depreciationExpenseAccountId: number;
   creditAccountId: number;
 }
+import { PagedResult } from '../../../shared/models/paged-result.model';

@@ -6,6 +6,7 @@ import { SalesInvoicePostingPayload, TaxAccountMapping } from '../business.model
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { DocumentLineForm, Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { SalesInvoice, SalesInvoicePayload } from './sales-invoice.model';
 import { SalesInvoiceService } from './sales-invoice.service';
@@ -15,7 +16,7 @@ const POSTING_OPTIONS = ['journals', 'periods', 'accounts'];
 
 @Component({
   selector: 'app-sales-invoices-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './sales-invoices.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -33,6 +34,10 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
   ];
   readonly indexPath = '/sales-invoices';
   rows: SalesInvoice[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
   documentLines: DocumentLineForm[] = [];
@@ -241,9 +246,13 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.invoices.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.invoices.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -253,6 +262,12 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
     });
+  }
+
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
   }
 
   private loadRecord(): void {

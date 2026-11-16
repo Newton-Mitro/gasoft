@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { Item, ItemPayload } from './item.model';
 
 @Injectable({ providedIn: 'root' })
@@ -9,6 +12,12 @@ export class ItemService {
 
   getAll(): Observable<Item[]> {
     return this.api.get<unknown>('/api/v1/items', false).pipe(map(toItems));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<Item>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>('/api/v1/items/page', false, params)
+      .pipe(map(result => parsePagedResult(result, isItem, 'inventory items')));
   }
 
   getById(id: number): Observable<Item> {

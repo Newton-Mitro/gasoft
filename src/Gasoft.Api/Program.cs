@@ -1,10 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using Gasoft.Api.Endpoints;
-using Gasoft.Application.Abstractions;
 using Gasoft.Infrastructure;
-using Gasoft.Infrastructure.Authentication;
-using Gasoft.Infrastructure.Persistence;
 using Gasoft.Api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
@@ -18,15 +15,6 @@ var signingKey = builder.Configuration["Jwt:SigningKey"]
 
 builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentTenant, CurrentTenant>();
-builder.Services.AddScoped<IPartyService, PartyService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITokenService, JwtTokenService>();
-builder.Services.AddScoped<ITenantRegistrationService, TenantRegistrationService>();
-builder.Services.AddScoped<IAccountingService, AccountingService>();
-builder.Services.AddScoped<IBillingService, BillingService>();
-builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

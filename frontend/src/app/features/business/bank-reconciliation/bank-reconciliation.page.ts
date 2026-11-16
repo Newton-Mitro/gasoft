@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { PaginationComponent, PageChange } from '../../../shared/components/pagination/pagination.component';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { Choice } from '../../../shared/models/shared.models';
 import { OptionDataCacheService } from '../../../shared/data/option-data-cache.service';
@@ -16,13 +17,17 @@ import { BankReconciliationService } from './bank-reconciliation.service';
 
 @Component({
   selector: 'app-bank-reconciliation-page',
-  imports: [FormsModule],
+  imports: [FormsModule, PaginationComponent],
   templateUrl: './bank-reconciliation.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './bank-reconciliation.page.css'],
 })
 export class BankReconciliationPageComponent implements OnInit {
   accounts: BankAccount[] = [];
   transactions: BankTransaction[] = [];
+  page = 1;
+  pageSize = 25;
+  totalCount = 0;
+  totalPages = 0;
   chartAccounts: Choice[] = [];
   adjustmentAccounts: Choice[] = [];
   company: Company | null = null;
@@ -94,6 +99,12 @@ export class BankReconciliationPageComponent implements OnInit {
     return this.transactions.filter(transaction => transaction.matchedAmount === 0).length;
   }
 
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadTransactions();
+  }
+
   createAccount(): void {
     if (!this.company || !this.name.trim() || !this.bankName.trim() ||
         !/^[A-Za-z0-9]{4}$/.test(this.accountNumberLastFour) ||
@@ -113,6 +124,7 @@ export class BankReconciliationPageComponent implements OnInit {
       next: account => {
         this.accounts = [...this.accounts, account];
         this.selectedAccountId = account.id;
+        this.page = 1;
         this.showAccountForm = false;
         this.name = '';
         this.bankName = '';
@@ -134,6 +146,7 @@ export class BankReconciliationPageComponent implements OnInit {
     const accountId = Number(value);
     if (!this.accounts.some(account => account.id === accountId)) return;
     this.selectedAccountId = accountId;
+    this.page = 1;
     this.transactions = [];
     this.matchTransactionId = null;
     this.importMessage = '';
@@ -168,6 +181,7 @@ export class BankReconciliationPageComponent implements OnInit {
         this.importing = false;
         this.importMessage = `Imported ${result.imported} transaction${result.imported === 1 ? '' : 's'}; skipped ${result.duplicates} duplicate${result.duplicates === 1 ? '' : 's'}.`;
         this.selectedFile = null;
+        this.page = 1;
         this.optionCache.clear();
         this.loadTransactions();
         this.changeDetector.markForCheck();
@@ -350,12 +364,16 @@ export class BankReconciliationPageComponent implements OnInit {
   private loadTransactions(expandedTransactionId?: number): void {
     if (!this.selectedAccountId) return;
     this.loading = true;
-    this.bankService.getTransactions(this.selectedAccountId).subscribe({
-      next: transactions => {
-        this.transactions = transactions;
+    this.bankService.getTransactionsPage(this.selectedAccountId, this.page, this.pageSize).subscribe({
+      next: result => {
+        this.transactions = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         if (expandedTransactionId) {
-          const transaction = transactions.find(item => item.id === expandedTransactionId);
+          const transaction = result.items.find(item => item.id === expandedTransactionId);
           if (transaction && transaction.remainingAmount !== 0) this.showMatches(transaction);
           else {
             this.matchTransactionId = null;

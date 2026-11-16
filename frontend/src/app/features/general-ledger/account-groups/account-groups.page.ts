@@ -4,6 +4,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PaginationComponent, PageChange } from '../../../shared/components/pagination/pagination.component';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { AccountGroup, AccountGroupPayload, AccountType } from './account-group.model';
 import { AccountGroupService } from './account-group.service';
@@ -13,7 +14,7 @@ const ACCOUNT_TYPES: Choice[] = ['Asset', 'Liability', 'Equity', 'Revenue', 'Exp
 
 @Component({
   selector: 'app-account-groups-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent],
+  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './account-groups.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -29,6 +30,9 @@ export class AccountGroupsPageComponent implements OnInit, OnDestroy {
   readonly indexPath = '/general-ledger/account-groups';
   rows: AccountGroup[] = [];
   totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   loading = false;
   saving = false;
@@ -73,8 +77,15 @@ export class AccountGroupsPageComponent implements OnInit, OnDestroy {
 
   onSearchChange(value: string): void {
     this.search = value;
+    this.page = 1;
     if (this.searchTimer) clearTimeout(this.searchTimer);
     this.searchTimer = setTimeout(() => this.loadRows(), 300);
+  }
+
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
   }
 
   setFormValue(key: string, value: unknown): void {
@@ -125,10 +136,13 @@ export class AccountGroupsPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.groups.getPage(this.search).subscribe({
+    this.groups.getPage(this.search, this.page, this.pageSize).subscribe({
       next: page => {
         this.rows = page.items;
+        this.page = page.page;
+        this.pageSize = page.pageSize;
         this.totalCount = page.totalCount;
+        this.totalPages = page.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

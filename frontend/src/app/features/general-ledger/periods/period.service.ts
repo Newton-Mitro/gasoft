@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { AccountingPeriod, AccountingPeriodPayload } from './period.model';
 
 @Injectable({ providedIn: 'root' })
@@ -9,6 +12,12 @@ export class AccountingPeriodService {
 
   getAll(): Observable<AccountingPeriod[]> {
     return this.api.get<unknown>('accounting-periods', true).pipe(map(toAccountingPeriods));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<AccountingPeriod>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>('accounting-periods/page', true, params)
+      .pipe(map(result => parsePagedResult(result, isAccountingPeriod, 'accounting periods')));
   }
 
   getById(id: number): Observable<AccountingPeriod> {

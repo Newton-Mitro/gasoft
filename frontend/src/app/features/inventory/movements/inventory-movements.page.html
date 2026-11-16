@@ -45,7 +45,7 @@
       <div class="table-header">
         <div>
           <h2>{{ title }}</h2>
-          <span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span>
+          <span>{{ totalCount }} {{ totalCount === 1 ? 'record' : 'records' }}</span>
         </div>
       </div>
       @if (!rows.length) {
@@ -87,6 +87,13 @@
           </table>
         </div>
       }
+      <app-pagination
+        [page]="page"
+        [pageSize]="pageSize"
+        [totalCount]="totalCount"
+        [totalPages]="totalPages"
+        (pageChange)="onPageChange($event)"
+      />
     </section>
   }
 }

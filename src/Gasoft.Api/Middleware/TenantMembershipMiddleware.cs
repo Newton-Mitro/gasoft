@@ -1,12 +1,11 @@
 using System.Security.Claims;
-using Gasoft.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
+using Gasoft.Application.Abstractions;
 
 namespace Gasoft.Api.Middleware;
 
 public sealed class TenantMembershipMiddleware(RequestDelegate next)
 {
-    public async Task InvokeAsync(HttpContext context, IServiceScopeFactory scopeFactory)
+    public async Task InvokeAsync(HttpContext context, ITenantUserService tenantUserService)
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
@@ -17,17 +16,9 @@ public sealed class TenantMembershipMiddleware(RequestDelegate next)
                 return;
             }
 
-            await using var scope = scopeFactory.CreateAsyncScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            var role = await db.TenantUsers
-                .Where(item => item.TenantId == tenantId && item.UserId == userId && item.IsActive)
-                .Select(item => item.Role)
-                .SingleOrDefaultAsync(context.RequestAborted);
-            var tenantIsActive = await db.Tenants
-                .IgnoreQueryFilters()
-                .AnyAsync(item => item.Id == tenantId && item.Status == "active", context.RequestAborted);
-
-            if (role is null || !tenantIsActive)
+            var role = await tenantUserService.GetActiveMembershipRoleAsync(
+                tenantId, userId, context.RequestAborted);
+            if (role is null)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;

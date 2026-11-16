@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { TaxRegistration, TaxRegistrationMutation, TaxRegistrationPayload } from './tax-registration.model';
 
 const ENDPOINT = 'tax-registrations';
@@ -11,6 +14,12 @@ export class TaxRegistrationService {
 
   getAll(): Observable<TaxRegistration[]> {
     return this.api.get<unknown>(ENDPOINT, true).pipe(map(toTaxRegistrations));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<TaxRegistration>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>(`${ENDPOINT}/page`, true, params)
+      .pipe(map(result => parsePagedResult(result, isTaxRegistration, 'tax registrations')));
   }
 
   getById(id: number): Observable<TaxRegistration> {

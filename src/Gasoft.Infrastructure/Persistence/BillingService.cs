@@ -1,5 +1,6 @@
 using Gasoft.Application.Abstractions;
 using Gasoft.Application.Billing;
+using Gasoft.Application.Common;
 using Gasoft.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -21,6 +22,24 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
             .Take(500)
             .ToListAsync(cancellationToken);
         return invoices.Select(ToDto).ToArray();
+    }
+
+    public async Task<PagedResultDto<InvoiceDto>> GetInvoicesPageAsync(
+        long companyId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        var result = await PagedQuery.ToPageAsync(
+            db.SalesInvoices.AsNoTracking()
+                .Where(invoice => invoice.CompanyId == companyId)
+                .OrderByDescending(invoice => invoice.InvoiceDate)
+                .ThenByDescending(invoice => invoice.Id)
+                .Include(invoice => invoice.Lines),
+            page,
+            pageSize,
+            invoice => invoice,
+            cancellationToken);
+        return new PagedResultDto<InvoiceDto>(
+            result.Items.Select(ToDto).ToArray(), result.Page, result.PageSize, result.TotalCount, result.TotalPages);
     }
 
     public async Task<InvoiceDto> CreateInvoiceAsync(
@@ -210,6 +229,26 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
             .Take(500)
             .ToListAsync(cancellationToken);
         return notes.Select(ToDto).ToArray();
+    }
+
+    public async Task<PagedResultDto<SalesCreditNoteDto>> GetSalesCreditNotesPageAsync(
+        long companyId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        var result = await PagedQuery.ToPageAsync(
+            db.SalesCreditNotes.AsNoTracking()
+                .Where(note => note.CompanyId == companyId)
+                .OrderByDescending(note => note.CreditNoteDate)
+                .ThenByDescending(note => note.Id)
+                .Include(note => note.Lines)
+                .Include(note => note.SalesInvoice)
+                .Include(note => note.Refunds),
+            page,
+            pageSize,
+            note => note,
+            cancellationToken);
+        return new PagedResultDto<SalesCreditNoteDto>(
+            result.Items.Select(ToDto).ToArray(), result.Page, result.PageSize, result.TotalCount, result.TotalPages);
     }
 
     public async Task<SalesCreditNoteDto> CreateSalesCreditNoteAsync(
@@ -527,6 +566,24 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
         return bills.Select(ToDto).ToArray();
     }
 
+    public async Task<PagedResultDto<BillDto>> GetBillsPageAsync(
+        long companyId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        var result = await PagedQuery.ToPageAsync(
+            db.PurchaseBills.AsNoTracking()
+                .Where(bill => bill.CompanyId == companyId)
+                .OrderByDescending(bill => bill.BillDate)
+                .ThenByDescending(bill => bill.Id)
+                .Include(bill => bill.Lines),
+            page,
+            pageSize,
+            bill => bill,
+            cancellationToken);
+        return new PagedResultDto<BillDto>(
+            result.Items.Select(ToDto).ToArray(), result.Page, result.PageSize, result.TotalCount, result.TotalPages);
+    }
+
     public async Task<BillDto> CreateBillAsync(
         long companyId,
         CreateBillRequest request,
@@ -774,6 +831,23 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
             .Take(500)
             .ToListAsync(cancellationToken);
         return payments.Select(ToDto).ToArray();
+    }
+
+    public async Task<PagedResultDto<PaymentDto>> GetPaymentsPageAsync(
+        long companyId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        var result = await PagedQuery.ToPageAsync(
+            db.Payments.AsNoTracking()
+                .Where(payment => payment.CompanyId == companyId)
+                .OrderByDescending(payment => payment.PaymentDate)
+                .ThenByDescending(payment => payment.Id),
+            page,
+            pageSize,
+            payment => payment,
+            cancellationToken);
+        return new PagedResultDto<PaymentDto>(
+            result.Items.Select(ToDto).ToArray(), result.Page, result.PageSize, result.TotalCount, result.TotalPages);
     }
 
     public async Task<PaymentDto?> GetPaymentAsync(

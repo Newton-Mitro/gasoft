@@ -17,6 +17,27 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException("Configure ConnectionStrings:Default.");
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentTenant, CurrentTenant>();
+        services.AddScoped<IPartyService, PartyService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<ITenantRegistrationService, TenantRegistrationService>();
+        services.AddScoped<IAccountingService, AccountingService>();
+        services.AddScoped<IBillingService, BillingService>();
+        services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<ICompanyReadService, CompanyReadService>();
+        services.AddScoped<ISalesQuoteService, SalesQuoteService>();
+        services.AddScoped<IBudgetService, BudgetService>();
+        services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
+        services.AddScoped<ITenantUserService, TenantUserService>();
+        services.AddScoped<ICompanyAdministrationService, CompanyAdministrationService>();
+        services.AddScoped<ITaxService, TaxService>();
+        services.AddScoped<IFixedAssetService, FixedAssetService>();
+        services.AddScoped<IReportingService, ReportingService>();
+        services.AddScoped<IConsolidationService, ConsolidationService>();
+        services.AddScoped<IBankReconciliationService, BankReconciliationService>();
         services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.User.RequireUniqueEmail = true;

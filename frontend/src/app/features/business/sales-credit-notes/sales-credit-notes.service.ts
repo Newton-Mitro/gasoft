@@ -1,6 +1,8 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
 import {
   SalesCreditNote,
   SalesCreditNotePayload,
@@ -16,6 +18,11 @@ export class SalesCreditNotesService {
 
   getAll(): Observable<SalesCreditNote[]> {
     return this.api.get<SalesCreditNote[]>(ENDPOINT, true);
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<SalesCreditNote>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<PagedResult<SalesCreditNote>>(`${ENDPOINT}/page`, true, params);
   }
 
   create(payload: SalesCreditNotePayload): Observable<SalesCreditNote> {

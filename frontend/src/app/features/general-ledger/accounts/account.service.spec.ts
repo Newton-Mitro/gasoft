@@ -21,7 +21,7 @@ describe('AccountService', () => {
             isActive: true,
           }],
           page: 1,
-          pageSize: 100,
+          pageSize: 25,
           totalCount: 1,
           totalPages: 1,
           totalAccounts: 1,
@@ -30,19 +30,19 @@ describe('AccountService', () => {
     } as unknown as ApiService;
     let response: AccountPage | undefined;
 
-    new AccountService(api).getPage(' cash ').subscribe(result => response = result);
+    new AccountService(api).getPage(' cash ', 1, 25).subscribe(result => response = result);
 
-    expect(calls).toEqual([['accounts/page', true, 'page=1&pageSize=100&search=cash']]);
+    expect(calls).toEqual([['accounts/page', true, 'page=1&pageSize=25&search=cash']]);
     expect(response?.items[0]?.code).toBe('1000');
   });
 
   it('rejects malformed account results', () => {
     const api = ({
-      get: () => of({ items: [{ id: 2 }], page: 1, pageSize: 100, totalCount: 1, totalPages: 1, totalAccounts: 1 }),
+      get: () => of({ items: [{ id: 2 }], page: 1, pageSize: 25, totalCount: 1, totalPages: 1, totalAccounts: 1 }),
     }) as unknown as ApiService;
     let receivedError: unknown;
 
-    new AccountService(api).getPage('').subscribe({ error: error => receivedError = error });
+    new AccountService(api).getPage('', 1, 25).subscribe({ error: error => receivedError = error });
 
     expect(receivedError).toBeInstanceOf(Error);
     expect((receivedError as Error).message).toContain('invalid page data');

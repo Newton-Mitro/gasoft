@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { SalesQuote, SalesQuotePayload } from './sales-quote.model';
 
 const ENDPOINT = 'sales-quotes';
@@ -11,6 +14,12 @@ export class SalesQuotesService {
 
   getAll(): Observable<SalesQuote[]> {
     return this.api.get<SalesQuote[]>(ENDPOINT, true);
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<SalesQuote>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>(`${ENDPOINT}/page`, true, params)
+      .pipe(map(result => parsePagedResult(result, isQuote, 'sales quotes')));
   }
 
   getById(id: number): Observable<SalesQuote> {
@@ -36,4 +45,10 @@ export class SalesQuotesService {
   convert(id: number, invoiceNumber: string, invoiceDate: string, dueDate: string): Observable<unknown> {
     return this.api.post(`${ENDPOINT}/${id}/convert`, { invoiceNumber, invoiceDate, dueDate }, true);
   }
+}
+
+function isQuote(value: unknown): value is SalesQuote {
+  return Boolean(value && typeof value === 'object' &&
+    Number.isSafeInteger((value as Record<string, unknown>)['id']) &&
+    typeof (value as Record<string, unknown>)['quoteNumber'] === 'string');
 }

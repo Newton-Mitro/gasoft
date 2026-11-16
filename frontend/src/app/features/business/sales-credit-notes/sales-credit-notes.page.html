@@ -121,7 +121,7 @@
 
 @if (!loading && !creating && !postingNote && !refundingNote) {
   <section class="table-panel panel">
-    <div class="table-header"><div><h2>Credit notes</h2><span>{{ notes.length }} {{ notes.length === 1 ? 'record' : 'records' }}</span></div></div>
+    <div class="table-header"><div><h2>Credit notes</h2><span>{{ totalCount }} {{ totalCount === 1 ? 'record' : 'records' }}</span></div></div>
     @if (!notes.length) {
       <div class="empty-state"><span class="empty-icon">↙</span><h3>No credit notes yet</h3>
         <p>Credit an existing posted invoice to record a customer return or adjustment.</p>
@@ -145,5 +145,12 @@
         }</tbody>
       </table></div>
     }
+    <app-pagination
+      [page]="page"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [totalPages]="totalPages"
+      (pageChange)="onPageChange($event)"
+    />
   </section>
 }

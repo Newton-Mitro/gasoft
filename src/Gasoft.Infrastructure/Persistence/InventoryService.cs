@@ -1,5 +1,6 @@
 using Gasoft.Application.Abstractions;
 using Gasoft.Application.Inventory;
+using Gasoft.Application.Common;
 using Gasoft.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -23,6 +24,18 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             .OrderBy(category => category.Code)
             .Select(category => new ItemCategoryDto(category.Id, category.Code, category.Name))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PagedResultDto<ItemCategoryDto>> GetCategoriesPageAsync(
+        int page, int pageSize, CancellationToken cancellationToken)
+    {
+        EnsureTenant();
+        return await PagedQuery.ToPageAsync(
+            db.ItemCategories.AsNoTracking().OrderBy(category => category.Code).ThenBy(category => category.Id),
+            page,
+            pageSize,
+            category => new ItemCategoryDto(category.Id, category.Code, category.Name),
+            cancellationToken);
     }
 
     public async Task<ItemCategoryDto?> GetCategoryAsync(long categoryId, CancellationToken cancellationToken)
@@ -71,6 +84,18 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             .OrderBy(item => item.Sku)
             .Select(item => new ItemDto(item.Id, item.CategoryId, item.Sku, item.Name, item.BaseUnitCode, item.CostingMethod))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PagedResultDto<ItemDto>> GetItemsPageAsync(
+        int page, int pageSize, CancellationToken cancellationToken)
+    {
+        EnsureTenant();
+        return await PagedQuery.ToPageAsync(
+            db.Items.AsNoTracking().OrderBy(item => item.Sku).ThenBy(item => item.Id),
+            page,
+            pageSize,
+            item => new ItemDto(item.Id, item.CategoryId, item.Sku, item.Name, item.BaseUnitCode, item.CostingMethod),
+            cancellationToken);
     }
 
     public async Task<ItemDto?> GetItemAsync(long itemId, CancellationToken cancellationToken)
@@ -162,6 +187,22 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             .Select(warehouse => new WarehouseDto(
                 warehouse.Id, warehouse.CompanyId, warehouse.Code, warehouse.Name))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PagedResultDto<WarehouseDto>> GetWarehousesPageAsync(
+        long companyId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        return await PagedQuery.ToPageAsync(
+            db.Warehouses.AsNoTracking()
+                .Where(warehouse => warehouse.CompanyId == companyId)
+                .OrderBy(warehouse => warehouse.Code)
+                .ThenBy(warehouse => warehouse.Id),
+            page,
+            pageSize,
+            warehouse => new WarehouseDto(
+                warehouse.Id, warehouse.CompanyId, warehouse.Code, warehouse.Name),
+            cancellationToken);
     }
 
     public async Task<WarehouseDto> CreateWarehouseAsync(
@@ -275,6 +316,23 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             .ToArray();
     }
 
+    public async Task<PagedResultDto<StockBalanceDto>> GetStockBalancesPageAsync(
+        long companyId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        var balances = db.InventoryValuationLayers.AsNoTracking()
+            .Where(layer => layer.CompanyId == companyId && layer.RemainingQuantity > 0)
+            .GroupBy(layer => new { layer.ItemId, layer.WarehouseId })
+            .Select(group => new StockBalanceDto(
+                group.Key.ItemId,
+                group.Key.WarehouseId,
+                group.Sum(layer => layer.RemainingQuantity),
+                group.Sum(layer => layer.RemainingQuantity * layer.UnitCost)))
+            .OrderBy(balance => balance.ItemId)
+            .ThenBy(balance => balance.WarehouseId);
+        return await PagedQuery.ToPageAsync(balances, page, pageSize, balance => balance, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<StockMovementDto>> GetStockMovementsAsync(
         long companyId,
         CancellationToken cancellationToken)
@@ -286,6 +344,27 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             .ThenByDescending(movement => movement.Id)
             .ToListAsync(cancellationToken);
         return movements.Select(ToDto).ToArray();
+    }
+
+    public async Task<PagedResultDto<StockMovementDto>> GetStockMovementsPageAsync(
+        long companyId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        var result = await PagedQuery.ToPageAsync(
+            db.StockMovements.AsNoTracking()
+                .Where(movement => movement.CompanyId == companyId)
+                .OrderByDescending(movement => movement.MovementDate)
+                .ThenByDescending(movement => movement.Id),
+            page,
+            pageSize,
+            movement => movement,
+            cancellationToken);
+        return new PagedResultDto<StockMovementDto>(
+            result.Items.Select(ToDto).ToArray(),
+            result.Page,
+            result.PageSize,
+            result.TotalCount,
+            result.TotalPages);
     }
 
     public async Task<IReadOnlyList<InventoryCountDto>> GetCountsAsync(
@@ -305,6 +384,30 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
         return counts.Select(count => ToCountDto(
             count,
             lines.Where(line => line.InventoryCountId == count.Id))).ToArray();
+    }
+
+    public async Task<PagedResultDto<InventoryCountDto>> GetCountsPageAsync(
+        long companyId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        var result = await PagedQuery.ToPageAsync(
+            db.InventoryCounts.AsNoTracking()
+                .Where(count => count.CompanyId == companyId)
+                .OrderByDescending(count => count.Id),
+            page,
+            pageSize,
+            count => count,
+            cancellationToken);
+        var countIds = result.Items.Select(count => count.Id).ToArray();
+        var lines = await db.InventoryCountLines.AsNoTracking()
+            .Where(line => line.CompanyId == companyId && countIds.Contains(line.InventoryCountId))
+            .OrderBy(line => line.ItemId)
+            .ToListAsync(cancellationToken);
+        var items = result.Items.Select(count => ToCountDto(
+            count,
+            lines.Where(line => line.InventoryCountId == count.Id))).ToArray();
+        return new PagedResultDto<InventoryCountDto>(
+            items, result.Page, result.PageSize, result.TotalCount, result.TotalPages);
     }
 
     public async Task<InventoryCountDto?> GetCountAsync(

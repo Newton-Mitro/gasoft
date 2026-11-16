@@ -1,6 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
+import { PagedResult } from '../../../shared/models/paged-result.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
 import { PurchaseBill, PurchaseBillPayload } from './purchase-bill.model';
 
 const ENDPOINT = 'purchase-bills';
@@ -11,6 +14,12 @@ export class PurchaseBillService {
 
   getAll(): Observable<PurchaseBill[]> {
     return this.api.get<unknown>(ENDPOINT, true).pipe(map(toPurchaseBills));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedResult<PurchaseBill>> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>(`${ENDPOINT}/page`, true, params)
+      .pipe(map(result => parsePagedResult(result, isPurchaseBill, 'purchase bills')));
   }
 
   getById(id: number): Observable<PurchaseBill> {

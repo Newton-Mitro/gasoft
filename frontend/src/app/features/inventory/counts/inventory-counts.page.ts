@@ -3,6 +3,7 @@ import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
+import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { InventoryCountPostingPayload } from '../inventory.models';
@@ -12,7 +13,7 @@ import { InventoryCountService } from './inventory-count.service';
 
 @Component({
   selector: 'app-inventory-counts-page',
-  imports: [RouterLink, RecordFormComponent],
+  imports: [RouterLink, RecordFormComponent, PaginationComponent],
   templateUrl: './inventory-counts.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -36,6 +37,10 @@ export class InventoryCountsPageComponent implements OnInit, OnDestroy {
   ];
   readonly indexPath = '/inventory/counts';
   rows: InventoryCount[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
+  totalPages = 0;
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
   loading = false;
@@ -146,6 +151,12 @@ export class InventoryCountsPageComponent implements OnInit, OnDestroy {
     this.error = '';
   }
 
+  onPageChange(change: PageChange): void {
+    this.page = change.page;
+    this.pageSize = change.pageSize;
+    this.loadRows();
+  }
+
   openPostForm(count: InventoryCount): void {
     if (count.status !== 'Draft') return;
     this.postingCountId = count.id;
@@ -201,9 +212,13 @@ export class InventoryCountsPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.counts.getAll().subscribe({
-      next: rows => {
-        this.rows = rows;
+    this.counts.getPage(this.page, this.pageSize).subscribe({
+      next: result => {
+        this.rows = result.items;
+        this.page = result.page;
+        this.pageSize = result.pageSize;
+        this.totalCount = result.totalCount;
+        this.totalPages = result.totalPages;
         this.loading = false;
         this.changeDetector.markForCheck();
       },

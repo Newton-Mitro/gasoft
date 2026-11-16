@@ -1,8 +1,6 @@
 using System.Security.Claims;
-using Gasoft.Infrastructure.Authentication;
-using Gasoft.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Gasoft.Application.Abstractions;
+using Gasoft.Application.Authentication;
 
 namespace Gasoft.Api.Endpoints;
 
@@ -14,39 +12,28 @@ public static class AccountEndpoints
 
         account.MapGet("/profile", async (
             ClaimsPrincipal principal,
-            UserManager<ApplicationUser> userManager) =>
+            IAccountService service,
+            CancellationToken cancellationToken) =>
         {
-            var user = await userManager.GetUserAsync(principal);
-            return user is null
-                ? Results.Unauthorized()
-                : Results.Ok(new ProfileResponse(user.DisplayName ?? string.Empty, user.Email ?? string.Empty, user.ProfileImageUrl));
+            if (!TryGetUserId(principal, out var userId)) return Results.Unauthorized();
+            var profile = await service.GetProfileAsync(userId, cancellationToken);
+            return profile is null ? Results.Unauthorized() : Results.Ok(profile);
         })
         .WithName("GetAccountProfile");
 
         account.MapPut("/profile", async (
             UpdateProfileRequest request,
             ClaimsPrincipal principal,
-            UserManager<ApplicationUser> userManager) =>
+            IAccountService service,
+            CancellationToken cancellationToken) =>
         {
-            var displayName = request.DisplayName?.Trim() ?? string.Empty;
-            if (displayName.Length is 0 or > 200)
-                return Results.ValidationProblem(new Dictionary<string, string[]>
-                {
-                    ["displayName"] = ["Display name is required and must be at most 200 characters."]
-                });
-
-            var user = await userManager.GetUserAsync(principal);
-            if (user is null) return Results.Unauthorized();
-
-            user.DisplayName = displayName;
-            var result = await userManager.UpdateAsync(user);
-            if (!result.Succeeded)
-                return Results.ValidationProblem(new Dictionary<string, string[]>
-                {
-                    ["displayName"] = result.Errors.Select(error => error.Description).ToArray()
-                });
-
-            return Results.Ok(new ProfileResponse(user.DisplayName, user.Email ?? string.Empty, user.ProfileImageUrl));
+            if (!TryGetUserId(principal, out var userId)) return Results.Unauthorized();
+            try
+            {
+                var profile = await service.UpdateProfileAsync(userId, request.DisplayName, cancellationToken);
+                return profile is null ? Results.Unauthorized() : Results.Ok(profile);
+            }
+            catch (AccountValidationException exception) { return ValidationProblem(exception); }
         })
         .WithName("UpdateAccountProfile");
 
@@ -54,12 +41,15 @@ public static class AccountEndpoints
             long userId,
             string fileName,
             ClaimsPrincipal principal,
-            UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment environment) =>
+            IAccountService service,
+            IWebHostEnvironment environment,
+            CancellationToken cancellationToken) =>
         {
-            var user = await userManager.GetUserAsync(principal);
-            if (user is null || user.Id != userId ||
-                user.ProfileImageUrl != ImageUpload.ProfileImageUrl(userId, fileName))
+            if (!TryGetUserId(principal, out var currentUserId) || currentUserId != userId)
+                return Results.NotFound();
+            var profile = await service.GetProfileAsync(currentUserId, cancellationToken);
+            if (profile is null ||
+                profile.ProfileImageUrl != ImageUpload.ProfileImageUrl(userId, fileName))
                 return Results.NotFound();
 
             var image = ImageUpload.OpenRead(environment, "users", userId.ToString(), fileName);
@@ -72,31 +62,35 @@ public static class AccountEndpoints
         account.MapPost("/profile/image", async (
             IFormFile image,
             ClaimsPrincipal principal,
-            UserManager<ApplicationUser> userManager,
+            IAccountService service,
             IWebHostEnvironment environment,
             CancellationToken cancellationToken) =>
         {
-            var user = await userManager.GetUserAsync(principal);
-            if (user is null) return Results.Unauthorized();
+            if (!TryGetUserId(principal, out var userId)) return Results.Unauthorized();
+            var currentProfile = await service.GetProfileAsync(userId, cancellationToken);
+            if (currentProfile is null) return Results.Unauthorized();
 
-            var savedImage = await ImageUpload.SaveAsync(image, environment, "users", user.Id.ToString(), cancellationToken);
+            var savedImage = await ImageUpload.SaveAsync(
+                image, environment, "users", userId.ToString(), cancellationToken);
             if (savedImage.Error is not null)
                 return Results.ValidationProblem(new Dictionary<string, string[]> { ["image"] = [savedImage.Error] });
 
-            var previousImageUrl = user.ProfileImageUrl;
-            user.ProfileImageUrl = savedImage.Url;
-            var result = await userManager.UpdateAsync(user);
-            if (!result.Succeeded)
+            try
             {
-                ImageUpload.Delete(environment, savedImage.Url!);
-                return Results.ValidationProblem(new Dictionary<string, string[]>
+                var profile = await service.UpdateProfileImageAsync(userId, savedImage.Url, cancellationToken);
+                if (profile is null)
                 {
-                    ["image"] = result.Errors.Select(error => error.Description).ToArray()
-                });
+                    ImageUpload.Delete(environment, savedImage.Url);
+                    return Results.Unauthorized();
+                }
+                ImageUpload.Delete(environment, currentProfile.ProfileImageUrl);
+                return Results.Ok(profile);
             }
-
-            ImageUpload.Delete(environment, previousImageUrl);
-            return Results.Ok(new ProfileResponse(user.DisplayName ?? string.Empty, user.Email ?? string.Empty, user.ProfileImageUrl));
+            catch (AccountValidationException exception)
+            {
+                ImageUpload.Delete(environment, savedImage.Url);
+                return ValidationProblem(exception);
+            }
         })
         .DisableAntiforgery()
         .WithName("UploadAccountProfileImage");
@@ -104,30 +98,17 @@ public static class AccountEndpoints
         account.MapPost("/password", async (
             ChangePasswordRequest request,
             ClaimsPrincipal principal,
-            UserManager<ApplicationUser> userManager) =>
+            IAccountService service) =>
         {
             if (string.IsNullOrEmpty(request.CurrentPassword) || string.IsNullOrEmpty(request.NewPassword))
                 return Results.ValidationProblem(new Dictionary<string, string[]>
                 {
                     ["password"] = ["Enter your current password and a new password."]
                 });
+            if (!TryGetUserId(principal, out var userId)) return Results.Unauthorized();
 
-            var user = await userManager.GetUserAsync(principal);
-            if (user is null) return Results.Unauthorized();
-
-            var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
-            if (!result.Succeeded)
-            {
-                var errors = result.Errors
-                    .Select(error => error.Code == "PasswordMismatch"
-                        ? ("currentPassword", "Your current password is incorrect.")
-                        : ("newPassword", error.Description))
-                    .GroupBy(error => error.Item1)
-                    .ToDictionary(group => group.Key, group => group.Select(error => error.Item2).ToArray());
-                return Results.ValidationProblem(errors);
-            }
-
-            return Results.NoContent();
+            var errors = await service.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
+            return errors is null ? Results.NoContent() : Results.ValidationProblem(errors);
         })
         .RequireRateLimiting("public-auth")
         .WithName("ChangeAccountPassword");
@@ -135,7 +116,12 @@ public static class AccountEndpoints
         return app;
     }
 
-    public sealed record ProfileResponse(string DisplayName, string Email, string? ProfileImageUrl);
+    private static bool TryGetUserId(ClaimsPrincipal principal, out long userId) =>
+        long.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
+
+    private static IResult ValidationProblem(AccountValidationException exception) =>
+        Results.ValidationProblem(exception.Errors);
+
     public sealed record UpdateProfileRequest(string? DisplayName);
     public sealed record ChangePasswordRequest(string? CurrentPassword, string? NewPassword);
 }

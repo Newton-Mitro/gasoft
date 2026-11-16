@@ -1,7 +1,9 @@
+import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
-import { FixedAsset, FixedAssetCreatePayload, FixedAssetSetup } from './fixed-assets.model';
+import { parsePagedResult } from '../../../shared/utils/paged-result';
+import { FixedAsset, FixedAssetCreatePayload, FixedAssetSetup, PagedFixedAssetSetup } from './fixed-assets.model';
 
 @Injectable({ providedIn: 'root' })
 export class FixedAssetsService {
@@ -9,6 +11,11 @@ export class FixedAssetsService {
 
   getAll(): Observable<FixedAssetSetup> {
     return this.api.get<unknown>('fixed-assets', true).pipe(map(toSetup));
+  }
+
+  getPage(page: number, pageSize: number): Observable<PagedFixedAssetSetup> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.api.get<unknown>('fixed-assets/page', true, params).pipe(map(toPagedSetup));
   }
 
   create(payload: FixedAssetCreatePayload): Observable<unknown> {
@@ -35,6 +42,15 @@ export class FixedAssetsService {
   }
 }
 
+function toPagedSetup(value: unknown): PagedFixedAssetSetup {
+  const setup = toSetupWithoutAssets(value);
+  if (!isRecord(value)) throw new Error('The fixed-assets response contains invalid setup data.');
+  return {
+    ...setup,
+    assets: parsePagedResult(value['assets'], isFixedAsset, 'fixed assets'),
+  };
+}
+
 function toSetup(value: unknown): FixedAssetSetup {
   if (!isRecord(value) ||
     typeof value['currencyCode'] !== 'string' ||
@@ -47,6 +63,25 @@ function toSetup(value: unknown): FixedAssetSetup {
     throw new Error('The fixed-assets response contains invalid setup data.');
   }
   return value as unknown as FixedAssetSetup;
+}
+
+function toSetupWithoutAssets(value: unknown): Omit<FixedAssetSetup, 'assets'> {
+  if (!isRecord(value) ||
+    typeof value['currencyCode'] !== 'string' ||
+    !/^[A-Z]{3}$/.test(value['currencyCode']) ||
+    !Array.isArray(value['periods']) || !value['periods'].every(isPeriod) ||
+    !Array.isArray(value['journals']) || !value['journals'].every(isJournal) ||
+    !Array.isArray(value['accounts']) || !value['accounts'].every(isAccount) ||
+    !Array.isArray(value['depreciationHistory']) || !value['depreciationHistory'].every(isDepreciation)) {
+    throw new Error('The fixed-assets response contains invalid setup data.');
+  }
+  return {
+    currencyCode: value['currencyCode'],
+    periods: value['periods'],
+    journals: value['journals'],
+    accounts: value['accounts'],
+    depreciationHistory: value['depreciationHistory'],
+  } as Omit<FixedAssetSetup, 'assets'>;
 }
 
 function isFixedAsset(value: unknown): value is FixedAsset {
