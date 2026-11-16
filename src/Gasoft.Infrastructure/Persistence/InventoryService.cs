@@ -320,17 +320,42 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
         long companyId, int page, int pageSize, CancellationToken cancellationToken)
     {
         await EnsureCompanyAsync(companyId, cancellationToken);
-        var balances = db.InventoryValuationLayers.AsNoTracking()
-            .Where(layer => layer.CompanyId == companyId && layer.RemainingQuantity > 0)
-            .GroupBy(layer => new { layer.ItemId, layer.WarehouseId })
-            .Select(group => new StockBalanceDto(
+        if (page < 1 || pageSize is < 1 or > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(page), "Page must be positive and page size must be between 1 and 100.");
+        }
+
+        var balanceLayers = db.InventoryValuationLayers.AsNoTracking()
+            .Where(layer => layer.CompanyId == companyId && layer.RemainingQuantity > 0);
+        var balanceGroups = balanceLayers
+            .GroupBy(layer => new { layer.ItemId, layer.WarehouseId });
+        var balances = balanceGroups
+            .Select(group => new
+            {
                 group.Key.ItemId,
                 group.Key.WarehouseId,
-                group.Sum(layer => layer.RemainingQuantity),
-                group.Sum(layer => layer.RemainingQuantity * layer.UnitCost)))
+                Quantity = group.Sum(layer => layer.RemainingQuantity),
+                Value = group.Sum(layer => layer.RemainingQuantity * layer.UnitCost),
+            })
             .OrderBy(balance => balance.ItemId)
             .ThenBy(balance => balance.WarehouseId);
-        return await PagedQuery.ToPageAsync(balances, page, pageSize, balance => balance, cancellationToken);
+        var countQuery = balanceLayers
+            .Select(layer => new { layer.ItemId, layer.WarehouseId })
+            .Distinct();
+        var totalCount = await countQuery.CountAsync(cancellationToken);
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        var normalizedPage = totalPages == 0 ? 1 : Math.Min(page, totalPages);
+        var rows = await balances
+            .Skip((normalizedPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+        return new PagedResultDto<StockBalanceDto>(
+            rows.Select(balance => new StockBalanceDto(
+                balance.ItemId, balance.WarehouseId, balance.Quantity, balance.Value)).ToArray(),
+            normalizedPage,
+            pageSize,
+            totalCount,
+            totalPages);
     }
 
     public async Task<IReadOnlyList<StockMovementDto>> GetStockMovementsAsync(

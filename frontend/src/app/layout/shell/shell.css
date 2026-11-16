@@ -46,3 +46,11 @@
 .company-details{font-size:9px}
 .company-chevron{display:grid;width:22px;height:22px;place-items:center;border-radius:6px;background:color-mix(in srgb,var(--accent) 26%,transparent);color:#e1eee8;font-size:13px;transition:transform .16s ease}
 .company-select:has(select:focus-visible) .company-chevron{transform:rotate(180deg)}
+
+.sidebar .company-switcher,
+.sidebar .sidebar-bottom,
+.sidebar .profile-button,
+.sidebar .theme-controls select,
+.sidebar .company-loading {
+  border-color: var(--sidebar-border);
+}

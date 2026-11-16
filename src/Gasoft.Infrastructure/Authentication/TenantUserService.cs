@@ -72,15 +72,28 @@ public sealed class TenantUserService(
         var users = db.TenantUsers
             .Where(membership => membership.TenantId == tenantId)
             .Join(db.Users, membership => membership.UserId, user => user.Id, (membership, user) =>
-                new TenantUserDto(
+                new
+                {
                     user.Id,
-                    user.Email ?? string.Empty,
-                    user.DisplayName ?? string.Empty,
+                    Email = user.Email ?? string.Empty,
+                    DisplayName = user.DisplayName ?? string.Empty,
                     membership.Role,
-                    membership.IsActive))
+                    membership.IsActive
+                })
             .OrderBy(user => user.DisplayName)
-            .ThenBy(user => user.Email);
-        return PagedQuery.ToPageAsync(users, page, pageSize, user => user, cancellationToken);
+            .ThenBy(user => user.Email)
+            .ThenBy(user => user.Id);
+        return PagedQuery.ToPageAsync(
+            users,
+            page,
+            pageSize,
+            user => new TenantUserDto(
+                user.Id,
+                user.Email,
+                user.DisplayName,
+                user.Role,
+                user.IsActive),
+            cancellationToken);
     }
 
     public Task<TenantUserDto?> GetUserAsync(

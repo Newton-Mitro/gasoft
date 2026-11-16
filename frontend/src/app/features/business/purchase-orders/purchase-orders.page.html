@@ -120,13 +120,16 @@
     <div class="order-layout">
       <section class="order-list panel">
         <div class="list-heading"><h2>Orders</h2><span>{{ totalCount }}</span></div>
-        @for (order of orders; track order.id) {
-          <button class="order-list-item" type="button" [class.selected]="selectedOrderId === order.id" (click)="selectedOrderId = order.id; receiveLineId = null; error = ''; success = ''">
-            <span class="order-list-main"><strong>{{ order.orderNumber }}</strong><small>{{ order.supplierName }}</small></span>
-            <span class="order-list-meta"><span class="order-status" [class.status-open]="order.status === 'Ordered' || order.status === 'PartiallyReceived'">{{ order.status }}</span><small>{{ order.orderDate }}</small></span>
-          </button>
-        }
+        <div class="order-items">
+          @for (order of orders; track order.id) {
+            <button class="order-list-item" type="button" [class.selected]="selectedOrderId === order.id" (click)="selectedOrderId = order.id; receiveLineId = null; error = ''; success = ''">
+              <span class="order-list-main"><strong>{{ order.orderNumber }}</strong><small>{{ order.supplierName }}</small></span>
+              <span class="order-list-meta"><span class="order-status" [class.status-open]="order.status === 'Ordered' || order.status === 'PartiallyReceived'">{{ order.status }}</span><small>{{ order.orderDate }}</small></span>
+            </button>
+          }
+        </div>
         <app-pagination
+          [loading]="loading"
           [page]="page"
           [pageSize]="pageSize"
           [totalCount]="totalCount"

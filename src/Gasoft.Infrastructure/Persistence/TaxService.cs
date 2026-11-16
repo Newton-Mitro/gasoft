@@ -284,16 +284,29 @@ public sealed class TaxService(AppDbContext db, ICurrentTenant currentTenant) : 
             .Join(db.TaxJurisdictions.AsNoTracking(),
                 registration => registration.JurisdictionId,
                 jurisdiction => jurisdiction.Id,
-                (registration, jurisdiction) => new TaxRegistrationDto(
+                (registration, jurisdiction) => new
+                {
                     registration.Id,
                     registration.CompanyId,
                     registration.JurisdictionId,
-                    jurisdiction.Code,
+                    JurisdictionCode = jurisdiction.Code,
                     jurisdiction.CountryCode,
-                    registration.RegistrationNumber))
-            .OrderBy(item => item.Code)
+                    registration.RegistrationNumber
+                })
+            .OrderBy(item => item.JurisdictionCode)
             .ThenBy(item => item.Id);
-        return PagedQuery.ToPageAsync(registrations, page, pageSize, item => item, cancellationToken);
+        return PagedQuery.ToPageAsync(
+            registrations,
+            page,
+            pageSize,
+            item => new TaxRegistrationDto(
+                item.Id,
+                item.CompanyId,
+                item.JurisdictionId,
+                item.JurisdictionCode,
+                item.CountryCode,
+                item.RegistrationNumber),
+            cancellationToken);
     }
 
     public async Task<TaxRegistrationDto?> GetRegistrationAsync(

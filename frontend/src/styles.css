@@ -21,7 +21,8 @@
   --surface: color-mix(in srgb, #fff 98%, var(--accent) 2%);
   --surface-muted: color-mix(in srgb, #f8faf8 90%, var(--accent) 10%);
   --surface-raised: color-mix(in srgb, #f0f7f1 86%, var(--accent) 14%);
-  --border: color-mix(in srgb, #e1ebe3 78%, var(--accent) 22%);
+  --border: color-mix(in srgb, #dce7df 72%, var(--accent) 28%);
+  --sidebar-border: color-mix(in srgb, var(--accent) 35%, #ffffff22);
   --text: color-mix(in srgb, #233d31 68%, var(--accent) 32%);
   --text-strong: color-mix(in srgb, #173b30 58%, var(--accent) 42%);
   --text-muted: color-mix(in srgb, #718078 62%, var(--accent) 38%);
@@ -84,7 +85,7 @@
   --surface: color-mix(in srgb, #1b2420 86%, var(--accent) 14%);
   --surface-muted: color-mix(in srgb, #222c27 78%, var(--accent) 22%);
   --surface-raised: color-mix(in srgb, #26342c 72%, var(--accent) 28%);
-  --border: color-mix(in srgb, #35443b 76%, var(--accent) 24%);
+  --border: color-mix(in srgb, #35443b 70%, var(--accent) 30%);
   --text: color-mix(in srgb, #d9e3dc 78%, var(--accent) 22%);
   --text-strong: color-mix(in srgb, #edf4ef 78%, var(--accent) 22%);
   --text-muted: color-mix(in srgb, #a4b2a9 72%, var(--accent) 28%);
@@ -543,6 +544,7 @@ html[data-accent] .form-panel::before {
   background: var(--accent);
 }
 html[data-accent] .spinner {
+  border-color: var(--border);
   border-top-color: var(--accent);
 }
 html[data-accent] .field-grid input:focus,
@@ -1300,5 +1302,143 @@ html[data-accent] .account-page .image-hint {
   }
   .company-details dl {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+html[data-accent] :is(.content-area, .auth-page) :is(.alert.error, .alert.success) {
+  border-color: color-mix(in srgb, currentColor 25%, var(--border));
+}
+
+.content-area:has(app-pagination) {
+  display: flex;
+  height: calc(100dvh - 62px);
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: 20px;
+  padding-bottom: 16px;
+}
+
+.content-area:has(app-pagination) > router-outlet + * {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content-area:has(app-pagination) > router-outlet + * > .page-heading,
+.content-area:has(app-pagination) > router-outlet + * > .toolbar,
+.content-area:has(app-pagination) > router-outlet + * > .alert {
+  flex: 0 0 auto;
+}
+
+.content-area:has(app-pagination) > router-outlet + * > .page-heading {
+  margin-bottom: 14px;
+}
+
+.content-area:has(app-pagination) .table-panel:not(:has(app-record-form)) {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content-area:has(app-pagination) .table-panel > .table-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+.content-area:has(app-pagination) .table-scroll thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.content-area:has(app-pagination) .table-panel:has(app-record-form) {
+  min-height: 0;
+  max-height: 45%;
+  flex: 0 1 auto;
+  overflow: auto;
+}
+
+.content-area:has(app-pagination) app-pagination {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.content-area:has(app-pagination) .tax-reference-panel {
+  min-height: 0;
+  flex: 0 1 30%;
+}
+
+.content-area:has(app-pagination) .tax-reference-panel > .table-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+.content-area:has(app-pagination) .workspace-card {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content-area:has(app-pagination) .workspace-card > .table-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.content-area:has(app-pagination) .order-layout {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.content-area:has(app-pagination) .order-list,
+.content-area:has(app-pagination) .order-detail {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.content-area:has(app-pagination) .order-items,
+.content-area:has(app-pagination) .order-detail .detail-table {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+.content-area:has(app-pagination) .tax-code-list {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.content-area:has(app-pagination) .tax-code-rows {
+  display: grid;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-content: start;
+  gap: 14px;
+  overflow: auto;
+}
+
+@media (max-width: 850px) {
+  .content-area:has(app-pagination) {
+    padding: 16px 14px;
+  }
+}
+
+@media (max-width: 950px) {
+  .content-area:has(app-pagination) .order-layout:has(.order-detail) {
+    grid-template-rows: minmax(0, .8fr) minmax(0, 1.2fr);
+  }
+
+  .content-area:has(app-pagination) .order-layout:not(:has(.order-detail)) {
+    grid-template-rows: minmax(0, 1fr);
   }
 }

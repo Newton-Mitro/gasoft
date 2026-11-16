@@ -171,13 +171,6 @@
                               <span>Ledger line {{ match.journalLineId }}</span>
                               <button class="button secondary table-action" type="button" [disabled]="saving" (click)="unmatchTransaction(transaction, match.id)">Remove allocation</button>
                             </div>
-                            <app-pagination
-                              [page]="page"
-                              [pageSize]="pageSize"
-                              [totalCount]="totalCount"
-                              [totalPages]="totalPages"
-                              (pageChange)="onPageChange($event)"
-                            />
                           }
                         </div>
                       }
@@ -222,5 +215,13 @@
         </table>
       </div>
     }
+    <app-pagination
+      [loading]="loading"
+      [page]="page"
+      [pageSize]="pageSize"
+      [totalCount]="totalCount"
+      [totalPages]="totalPages"
+      (pageChange)="onPageChange($event)"
+    />
   </section>
 }

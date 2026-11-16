@@ -57,8 +57,9 @@
   }
   @if (!loading && rows.length) {
     <section class="tax-code-list" aria-label="Configured tax codes">
-      @for (code of rows; track code.id) {
-        <article class="tax-code-card panel">
+      <div class="tax-code-rows">
+        @for (code of rows; track code.id) {
+          <article class="tax-code-card panel">
           <div class="tax-code-header">
             <div class="tax-code-title">
               <span class="tax-code-symbol" aria-hidden="true">%</span>
@@ -192,9 +193,11 @@
               </form>
             </div>
           }
-        </article>
-      }
+          </article>
+        }
+      </div>
       <app-pagination
+        [loading]="loading"
         [page]="page"
         [pageSize]="pageSize"
         [totalCount]="totalCount"
