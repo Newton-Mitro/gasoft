@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, timeout } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { Choice, DocumentLineForm } from '../../../shared/models/shared.models';
@@ -20,7 +20,7 @@ interface CustomerOption {
   selector: 'app-sales-quotes-page',
   imports: [FormsModule],
   templateUrl: './sales-quotes.page.html',
-  styleUrl: './sales-quotes.page.css',
+  styleUrls: ['../../../shared/styles/feature-page.css', './sales-quotes.page.css'],
 })
 export class SalesQuotesPageComponent implements OnInit {
   quotes: SalesQuote[] = [];
@@ -29,6 +29,8 @@ export class SalesQuotesPageComponent implements OnInit {
   taxCodes: Choice[] = [];
   currencies: Choice[] = [];
   loading = true;
+  supportDataLoading = true;
+  supportDataError = '';
   editing = false;
   saving = false;
   error = '';
@@ -55,21 +57,11 @@ export class SalesQuotesPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    forkJoin({
-      parties: this.api.get<unknown>('/api/v1/parties/', false),
-      accounts: this.options.getOptions('accounts'),
-      taxCodes: this.options.getOptions('taxCodes'),
-      currencies: this.options.getOptions('currencies'),
-      quotes: this.service.getAll(),
-    }).subscribe({
-      next: result => {
-        const rows = Array.isArray(result.parties) ? result.parties : [];
-        this.customers = rows.filter(isCustomerOption);
-        this.accounts = result.accounts;
-        this.taxCodes = result.taxCodes;
-        this.currencies = result.currencies;
-        this.quotes = result.quotes;
+    this.service.getAll().pipe(timeout({ first: 15000 })).subscribe({
+      next: quotes => {
+        this.quotes = quotes;
         this.loading = false;
+        this.changeDetector.markForCheck();
       },
       error: error => {
         this.error = errorMessage(error, 'Could not load sales quotes.');
@@ -77,9 +69,32 @@ export class SalesQuotesPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
     });
+
+    forkJoin({
+      parties: this.api.get<unknown>('/api/v1/parties/', false),
+      accounts: this.options.getOptions('accounts'),
+      taxCodes: this.options.getOptions('taxCodes'),
+      currencies: this.options.getOptions('currencies'),
+    }).pipe(timeout({ first: 15000 })).subscribe({
+      next: result => {
+        const rows = Array.isArray(result.parties) ? result.parties : [];
+        this.customers = rows.filter(isCustomerOption);
+        this.accounts = result.accounts;
+        this.taxCodes = result.taxCodes;
+        this.currencies = result.currencies;
+        this.supportDataLoading = false;
+        this.changeDetector.markForCheck();
+      },
+      error: error => {
+        this.supportDataError = errorMessage(error, 'Could not load sales quote form options.');
+        this.supportDataLoading = false;
+        this.changeDetector.markForCheck();
+      },
+    });
   }
 
   beginCreate(): void {
+    if (this.supportDataLoading || this.supportDataError) return;
     this.quoteId = null;
     this.customerId = null;
     this.quoteNumber = '';
@@ -94,7 +109,7 @@ export class SalesQuotesPageComponent implements OnInit {
   }
 
   beginEdit(quote: SalesQuote): void {
-    if (quote.status !== 'Draft') return;
+    if (quote.status !== 'Draft' || this.supportDataLoading || this.supportDataError) return;
     this.quoteId = quote.id;
     this.customerId = quote.customerId;
     this.quoteNumber = quote.quoteNumber;

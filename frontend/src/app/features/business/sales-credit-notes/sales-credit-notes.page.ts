@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, timeout } from 'rxjs';
 import { SalesInvoice } from '../sales-invoices/sales-invoice.model';
 import { SalesInvoiceService } from '../sales-invoices/sales-invoice.service';
 import { Choice } from '../../../shared/models/shared.models';
@@ -24,7 +24,7 @@ interface CreditLineInput {
   selector: 'app-sales-credit-notes-page',
   imports: [FormsModule],
   templateUrl: './sales-credit-notes.page.html',
-  styleUrl: './sales-credit-notes.page.css',
+  styleUrls: ['../../../shared/styles/feature-page.css', './sales-credit-notes.page.css'],
 })
 export class SalesCreditNotesPageComponent implements OnInit {
   notes: SalesCreditNote[] = [];
@@ -34,6 +34,8 @@ export class SalesCreditNotesPageComponent implements OnInit {
   accounts: Choice[] = [];
   taxCodes: Choice[] = [];
   loading = true;
+  supportDataLoading = true;
+  supportDataError = '';
   saving = false;
   creating = false;
   error = '';
@@ -64,26 +66,38 @@ export class SalesCreditNotesPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.service.getAll().pipe(timeout({ first: 15000 })).subscribe({
+      next: notes => {
+        this.notes = notes;
+        this.loading = false;
+        this.changeDetector.markForCheck();
+      },
+      error: error => {
+        this.error = errorMessage(error, 'Could not load sales credit notes.');
+        this.loading = false;
+        this.changeDetector.markForCheck();
+      },
+    });
+
     forkJoin({
-      notes: this.service.getAll(),
       invoices: this.invoicesService.getAll(),
       journals: this.options.getOptions('journals'),
       periods: this.options.getOptions('periods'),
       accounts: this.options.getOptions('accounts'),
       taxCodes: this.options.getOptions('taxCodes'),
-    }).subscribe({
+    }).pipe(timeout({ first: 15000 })).subscribe({
       next: result => {
-        this.notes = result.notes;
         this.invoices = result.invoices;
         this.journals = result.journals;
         this.periods = result.periods;
         this.accounts = result.accounts;
         this.taxCodes = result.taxCodes;
-        this.loading = false;
+        this.supportDataLoading = false;
+        this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load sales credit notes.');
-        this.loading = false;
+        this.supportDataError = errorMessage(error, 'Could not load credit note form options.');
+        this.supportDataLoading = false;
         this.changeDetector.markForCheck();
       },
     });
@@ -111,6 +125,7 @@ export class SalesCreditNotesPageComponent implements OnInit {
   }
 
   beginCreate(): void {
+    if (this.supportDataLoading || this.supportDataError) return;
     this.creating = true;
     this.postingNote = null;
     this.selectedInvoiceId = null;
@@ -167,7 +182,7 @@ export class SalesCreditNotesPageComponent implements OnInit {
   }
 
   beginPost(note: SalesCreditNote): void {
-    if (note.status !== 'Draft') return;
+    if (note.status !== 'Draft' || this.supportDataLoading || this.supportDataError) return;
     this.postingNote = note;
     this.creating = false;
     this.journalId = null;
@@ -216,7 +231,8 @@ export class SalesCreditNotesPageComponent implements OnInit {
   }
 
   beginRefund(note: SalesCreditNote): void {
-    if (note.status !== 'Posted' || Number(note.refundableAmount) <= 0) return;
+    if (note.status !== 'Posted' || Number(note.refundableAmount) <= 0 ||
+      this.supportDataLoading || this.supportDataError) return;
     this.refundingNote = note;
     this.creating = false;
     this.postingNote = null;

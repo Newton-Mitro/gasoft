@@ -1,14 +1,17 @@
 @if (view !== 'index') {
   <div class="page-heading">
     <div>
-      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
       <p class="eyebrow">{{ view === 'create' ? 'NEW INVOICE' : 'EDIT INVOICE' }}</p>
       <h1>{{ view === 'create' ? 'Create sales invoice' : 'Edit sales invoice' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
-  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading sales invoice…</div> }
+  @if (error && !loading) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading sales invoice…</div>
+  }
   @if (!loading) {
     <app-record-form
       [pageKey]="pageKey"
@@ -35,12 +38,21 @@
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> New invoice</a>
   </div>
-  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
   @if (postingInvoiceId !== null) {
     <section class="table-panel panel">
-      <div class="table-header"><div><h2>Post sales invoice</h2><span>Posting creates the receivable and revenue journal entries.</span></div></div>
+      <div class="table-header">
+        <div>
+          <h2>Post sales invoice</h2>
+          <span>Posting creates the receivable and revenue journal entries.</span>
+        </div>
+      </div>
       @if (postingLoading) {
-        <div class="loading-card"><span class="spinner"></span> Loading invoice posting details…</div>
+        <div class="loading-card">
+          <span class="spinner"></span> Loading invoice posting details…
+        </div>
       } @else {
         <app-record-form
           [pageKey]="pageKey"
@@ -58,10 +70,17 @@
       }
     </section>
   }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading sales invoices…</div> }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading sales invoices…</div>
+  }
   @if (!loading) {
     <section class="table-panel panel">
-      <div class="table-header"><div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span></div></div>
+      <div class="table-header">
+        <div>
+          <h2>{{ title }}</h2>
+          <span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span>
+        </div>
+      </div>
       @if (!rows.length) {
         <div class="empty-state">
           <span class="empty-icon">▤</span>
@@ -72,7 +91,18 @@
       } @else {
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Invoice number</th><th>Invoice date</th><th>Due date</th><th>Currency</th><th>Total</th><th>Allocated</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Invoice number</th>
+                <th>Invoice date</th>
+                <th>Due date</th>
+                <th>Currency</th>
+                <th>Total</th>
+                <th>Allocated</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
             <tbody>
               @for (invoice of rows; track invoice.id) {
                 <tr>
@@ -82,12 +112,24 @@
                   <td>{{ invoice.currencyCode }}</td>
                   <td>{{ invoice.grandTotal }}</td>
                   <td>{{ invoice.allocatedTotal }}</td>
-                  <td><span class="status-tag" [class.posted]="invoice.status === 'Posted'">{{ invoice.status }}</span></td>
+                  <td>
+                    <span class="status-tag" [class.posted]="invoice.status === 'Posted'">{{
+                      invoice.status
+                    }}</span>
+                  </td>
                   <td class="action-cell">
                     @if (invoice.status === 'Draft') {
-                      <a class="button secondary table-action" [routerLink]="[indexPath, invoice.id, 'edit']">Edit</a>
+                      <a
+                        class="button secondary table-action"
+                        [routerLink]="[indexPath, invoice.id, 'edit']"
+                        >Edit</a
+                      >
                     }
-                    <button class="button secondary table-action" [disabled]="invoice.status === 'Posted'" (click)="openPostForm(invoice)">
+                    <button
+                      class="button secondary table-action"
+                      [disabled]="invoice.status === 'Posted'"
+                      (click)="openPostForm(invoice)"
+                    >
                       {{ invoice.status === 'Posted' ? 'Posted' : 'Post' }}
                     </button>
                   </td>

@@ -9,7 +9,7 @@ import { FinancialReportService } from './report.service';
   selector: 'app-cash-flow-page',
   imports: [FormsModule],
   templateUrl: './cash-flow.page.html',
-  styleUrl: './cash-flow.page.css',
+  styleUrls: ['../../shared/styles/feature-page.css', './cash-flow.page.css'],
 })
 export class CashFlowPageComponent implements OnInit {
   fromDate = `${new Date().getUTCFullYear()}-01-01`;

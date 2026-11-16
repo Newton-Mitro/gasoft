@@ -16,7 +16,7 @@ const TAX_CODE_OPTIONS = ['jurisdictions', 'taxCategories'];
   selector: 'app-tax-codes-page',
   imports: [FormsModule, RouterLink, RecordFormComponent],
   templateUrl: './tax-codes.page.html',
-  styleUrl: './tax-codes.page.css',
+  styleUrls: ['../../../shared/styles/feature-page.css', './tax-codes.page.css'],
 })
 export class TaxCodesPageComponent implements OnInit, OnDestroy {
   readonly pageKey = 'tax-codes';

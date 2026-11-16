@@ -10,7 +10,7 @@
   margin-bottom: 16px;
   padding: 16px 18px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface);
 }
 
@@ -48,7 +48,7 @@
 .currency-card {
   padding: 16px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface);
 }
 
@@ -96,7 +96,7 @@
 .table-panel {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface);
 }
 
@@ -115,7 +115,6 @@ td {
   padding: 11px 13px;
   border-bottom: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 10px;
   white-space: nowrap;
 }
 

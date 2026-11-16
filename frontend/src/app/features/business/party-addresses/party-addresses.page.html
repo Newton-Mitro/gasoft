@@ -1,14 +1,17 @@
 @if (view !== 'index') {
   <div class="page-heading">
     <div>
-      <a class="back-link" [routerLink]="indexPath">← Back to addresses</a>
       <p class="eyebrow">{{ view === 'create' ? 'NEW ADDRESS' : 'EDIT ADDRESS' }}</p>
       <h1>{{ view === 'create' ? 'Add party address' : 'Edit party address' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
-  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading party address…</div> }
+  @if (error && !loading) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading party address…</div>
+  }
   @if (!loading) {
     <app-record-form
       [pageKey]="pageKey"
@@ -33,12 +36,19 @@
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> Add address</a>
   </div>
-  @if (error) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading party addresses…</div> }
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading party addresses…</div>
+  }
   @if (!loading) {
     <section class="table-panel panel">
       <div class="table-header">
-        <div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'address' : 'addresses' }}</span></div>
+        <div>
+          <h2>{{ title }}</h2>
+          <span>{{ rows.length }} {{ rows.length === 1 ? 'address' : 'addresses' }}</span>
+        </div>
       </div>
       @if (!rows.length) {
         <div class="empty-state">
@@ -51,7 +61,16 @@
         <div class="table-scroll">
           <table>
             <thead>
-              <tr><th>Type</th><th>Address</th><th>City</th><th>Region</th><th>Postal code</th><th>Country</th><th>Default</th><th>Actions</th></tr>
+              <tr>
+                <th>Type</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>Region</th>
+                <th>Postal code</th>
+                <th>Country</th>
+                <th>Default</th>
+                <th>Actions</th>
+              </tr>
             </thead>
             <tbody>
               @for (address of rows; track address.id) {
@@ -63,7 +82,13 @@
                   <td>{{ address.postalCode || '—' }}</td>
                   <td>{{ address.countryCode }}</td>
                   <td>{{ address.isDefault ? 'Yes' : 'No' }}</td>
-                  <td><a class="button secondary table-action" [routerLink]="[indexPath, address.id, 'edit']">Edit</a></td>
+                  <td>
+                    <a
+                      class="button secondary table-action"
+                      [routerLink]="[indexPath, address.id, 'edit']"
+                      >Edit</a
+                    >
+                  </td>
                 </tr>
               }
             </tbody>

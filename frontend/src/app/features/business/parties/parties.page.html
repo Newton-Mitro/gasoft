@@ -1,14 +1,17 @@
 @if (view !== 'index') {
   <div class="page-heading">
     <div>
-      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
       <p class="eyebrow">{{ view === 'create' ? 'NEW RECORD' : 'EDIT RECORD' }}</p>
       <h1>{{ view === 'create' ? 'Add customer or supplier' : 'Edit customer or supplier' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
-  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading party…</div> }
+  @if (error && !loading) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading party…</div>
+  }
   @if (!loading) {
     <app-record-form
       [pageKey]="pageKey"
@@ -33,12 +36,19 @@
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> Add party</a>
   </div>
-  @if (error) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading customers and suppliers…</div> }
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading customers and suppliers…</div>
+  }
   @if (!loading) {
     <section class="table-panel panel">
       <div class="table-header">
-        <div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span></div>
+        <div>
+          <h2>{{ title }}</h2>
+          <span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span>
+        </div>
       </div>
       @if (!rows.length) {
         <div class="empty-state">
@@ -51,7 +61,16 @@
         <div class="table-scroll">
           <table>
             <thead>
-              <tr><th>Party number</th><th>Display name</th><th>Customer</th><th>Supplier</th><th>Email</th><th>Phone</th><th>Default currency</th><th>Actions</th></tr>
+              <tr>
+                <th>Party number</th>
+                <th>Display name</th>
+                <th>Customer</th>
+                <th>Supplier</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Default currency</th>
+                <th>Actions</th>
+              </tr>
             </thead>
             <tbody>
               @for (party of rows; track party.id) {
@@ -64,8 +83,16 @@
                   <td>{{ party.phone || '—' }}</td>
                   <td>{{ party.defaultCurrencyCode || '—' }}</td>
                   <td class="action-cell">
-                    <a class="button secondary table-action" [routerLink]="[indexPath, party.id, 'edit']">Edit</a>
-                    <a class="button secondary table-action" [routerLink]="[indexPath, party.id, 'addresses']">Addresses</a>
+                    <a
+                      class="button secondary table-action"
+                      [routerLink]="[indexPath, party.id, 'edit']"
+                      >Edit</a
+                    >
+                    <a
+                      class="button secondary table-action"
+                      [routerLink]="[indexPath, party.id, 'addresses']"
+                      >Addresses</a
+                    >
                   </td>
                 </tr>
               }

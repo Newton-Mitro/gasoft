@@ -1,14 +1,17 @@
 @if (view !== 'index') {
   <div class="page-heading">
     <div>
-      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
       <p class="eyebrow">{{ view === 'create' ? 'NEW RECORD' : 'EDIT RECORD' }}</p>
       <h1>{{ view === 'create' ? 'Create accounting period' : 'Edit accounting period' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
-  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading accounting period…</div> }
+  @if (error && !loading) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading accounting period…</div>
+  }
   @if (!loading) {
     <app-record-form
       [pageKey]="pageKey"
@@ -31,14 +34,23 @@
       <h1>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
-    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> New accounting period</a>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"
+      ><span>＋</span> New accounting period</a
+    >
   </div>
-  @if (error) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading accounting periods…</div> }
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading accounting periods…</div>
+  }
   @if (!loading) {
     <section class="table-panel panel">
       <div class="table-header">
-        <div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span></div>
+        <div>
+          <h2>{{ title }}</h2>
+          <span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span>
+        </div>
       </div>
       @if (!rows.length) {
         <div class="empty-state">
@@ -50,7 +62,15 @@
       } @else {
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Fiscal year</th><th>Starts on</th><th>Ends on</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Fiscal year</th>
+                <th>Starts on</th>
+                <th>Ends on</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
             <tbody>
               @for (period of rows; track period.id) {
                 <tr>
@@ -58,7 +78,13 @@
                   <td>{{ period.startsOn }}</td>
                   <td>{{ period.endsOn }}</td>
                   <td>{{ period.status }}</td>
-                  <td><a class="button secondary table-action" [routerLink]="[indexPath, period.id, 'edit']">Edit</a></td>
+                  <td>
+                    <a
+                      class="button secondary table-action"
+                      [routerLink]="[indexPath, period.id, 'edit']"
+                      >Edit</a
+                    >
+                  </td>
                 </tr>
               }
             </tbody>

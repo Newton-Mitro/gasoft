@@ -40,7 +40,7 @@ interface EditableLine {
   selector: 'app-purchase-orders-page',
   imports: [FormsModule],
   templateUrl: './purchase-orders.page.html',
-  styleUrl: './purchase-orders.page.css',
+  styleUrls: ['../../../shared/styles/feature-page.css', './purchase-orders.page.css'],
 })
 export class PurchaseOrdersPageComponent implements OnInit {
   orders: PurchaseOrder[] = [];

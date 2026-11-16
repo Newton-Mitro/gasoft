@@ -7,7 +7,7 @@
 .order-detail,
 .empty-state {
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--surface);
 }
 
@@ -213,13 +213,13 @@
 
 .order-list-main strong {
   color: var(--text-strong);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .order-list-main small,
 .order-list-meta small {
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .order-list-meta {
@@ -233,7 +233,7 @@
   border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 650;
   white-space: nowrap;
 }
@@ -256,7 +256,7 @@
 
 .detail-heading .eyebrow {
   margin: 0 0 5px;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .detail-heading h2 {
@@ -274,7 +274,7 @@
 
 .detail-meta span {
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .detail-meta strong {
@@ -309,7 +309,6 @@ td {
   padding: 10px 11px;
   border-bottom: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 9px;
   white-space: nowrap;
 }
 
@@ -329,7 +328,6 @@ td small {
   display: block;
   margin-top: 3px;
   color: var(--text-muted);
-  font-size: 8px;
 }
 
 .amount {
@@ -340,7 +338,7 @@ td small {
 .table-action {
   min-height: 29px;
   padding: 0 8px;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .receipt-form {

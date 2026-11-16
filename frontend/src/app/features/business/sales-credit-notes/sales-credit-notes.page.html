@@ -5,10 +5,14 @@
     <p class="page-description">Credit posted invoices for returns or adjustments, and post the reversal to the ledger.</p>
   </div>
   @if (!creating && !postingNote && !refundingNote) {
-    <button class="button primary" type="button" (click)="beginCreate()" [disabled]="!creditableInvoices.length">＋ New credit note</button>
+    <button class="button primary" type="button" (click)="beginCreate()"
+      [disabled]="supportDataLoading || !!supportDataError || !creditableInvoices.length">
+      {{ supportDataLoading ? 'Preparing…' : '＋ New credit note' }}
+    </button>
   }
 </div>
 @if (error) { <div class="alert error" role="alert">{{ error }}</div> }
+@if (supportDataError) { <div class="alert error" role="alert">{{ supportDataError }}</div> }
 @if (success) { <div class="alert success" role="status">{{ success }}</div> }
 @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading credit notes…</div> }
 
@@ -133,9 +137,9 @@
             <td>{{ note.refundedAmount }}</td><td>{{ note.refundableAmount }}</td>
             <td><span class="status-tag" [class.posted]="note.status === 'Posted'">{{ note.status }}</span></td>
             <td>@if (note.status === 'Draft') {
-              <button class="button secondary table-action" type="button" (click)="beginPost(note)">Post</button>
+              <button class="button secondary table-action" type="button" [disabled]="supportDataLoading || !!supportDataError" (click)="beginPost(note)">Post</button>
             } @else if (canRefund(note)) {
-              <button class="button secondary table-action" type="button" (click)="beginRefund(note)">Refund</button>
+              <button class="button secondary table-action" type="button" [disabled]="supportDataLoading || !!supportDataError" (click)="beginRefund(note)">Refund</button>
             }</td>
           </tr>
         }</tbody>

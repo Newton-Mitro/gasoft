@@ -15,7 +15,7 @@ import { FixedAssetsService } from './fixed-assets.service';
   selector: 'app-fixed-assets-page',
   imports: [FormsModule],
   templateUrl: './fixed-assets.page.html',
-  styleUrl: './fixed-assets.page.css',
+  styleUrls: ['../../../shared/styles/feature-page.css', './fixed-assets.page.css'],
 })
 export class FixedAssetsPageComponent implements OnInit {
   assets: FixedAsset[] = [];

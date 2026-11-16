@@ -6,7 +6,7 @@
 .workspace-card {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--surface);
 }
 
@@ -241,7 +241,6 @@ td {
   padding: 11px 15px;
   border-bottom: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 10px;
   white-space: nowrap;
 }
 

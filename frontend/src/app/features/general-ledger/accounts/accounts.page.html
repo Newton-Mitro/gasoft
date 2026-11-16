@@ -1,14 +1,17 @@
 @if (view !== 'index') {
   <div class="page-heading">
     <div>
-      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
       <p class="eyebrow">{{ view === 'create' ? 'NEW RECORD' : 'EDIT RECORD' }}</p>
       <h1>{{ view === 'create' ? 'Create account' : 'Edit account' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
-  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading account…</div> }
+  @if (error && !loading) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading account…</div>
+  }
   @if (!loading) {
     <app-record-form
       [pageKey]="pageKey"
@@ -33,30 +36,62 @@
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> New account</a>
   </div>
-  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
   <div class="toolbar">
     <label class="search-box">
       <span>⌕</span>
-      <input name="search" placeholder="Search by code or name…" [ngModel]="search" (ngModelChange)="onSearchChange($event)" />
+      <input
+        name="search"
+        placeholder="Search by code or name…"
+        [ngModel]="search"
+        (ngModelChange)="onSearchChange($event)"
+      />
     </label>
   </div>
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading accounts…</div> }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading accounts…</div>
+  }
   @if (!loading) {
     <section class="table-panel panel">
       <div class="table-header">
-        <div><h2>{{ title }}</h2><span>{{ totalCount }} {{ totalCount === 1 ? 'record' : 'records' }}</span></div>
+        <div>
+          <h2>{{ title }}</h2>
+          <span>{{ totalCount }} {{ totalCount === 1 ? 'record' : 'records' }}</span>
+        </div>
       </div>
       @if (!rows.length) {
         <div class="empty-state">
           <span class="empty-icon">▤</span>
           <h3>{{ search ? 'No matching accounts' : 'Nothing here yet' }}</h3>
-          <p>{{ search ? 'Try another search term.' : 'Create the first account in your chart of accounts.' }}</p>
-          @if (!search) { <a class="button secondary" [routerLink]="[indexPath, 'create']">Create first account</a> }
+          <p>
+            {{
+              search
+                ? 'Try another search term.'
+                : 'Create the first account in your chart of accounts.'
+            }}
+          </p>
+          @if (!search) {
+            <a class="button secondary" [routerLink]="[indexPath, 'create']"
+              >Create first account</a
+            >
+          }
         </div>
       } @else {
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Code</th><th>Name</th><th>Account group</th><th>Parent account</th><th>Posting</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Account group</th>
+                <th>Parent account</th>
+                <th>Posting</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
             <tbody>
               @for (account of rows; track account.id) {
                 <tr>
@@ -65,8 +100,18 @@
                   <td>{{ account.accountGroupId }}</td>
                   <td>{{ account.parentId ?? '—' }}</td>
                   <td>{{ account.allowPosting ? 'Allowed' : 'No' }}</td>
-                  <td><span class="status-tag" [class.posted]="account.isActive">{{ account.isActive ? 'Active' : 'Inactive' }}</span></td>
-                  <td><a class="button secondary table-action" [routerLink]="[indexPath, account.id, 'edit']">Edit</a></td>
+                  <td>
+                    <span class="status-tag" [class.posted]="account.isActive">{{
+                      account.isActive ? 'Active' : 'Inactive'
+                    }}</span>
+                  </td>
+                  <td>
+                    <a
+                      class="button secondary table-action"
+                      [routerLink]="[indexPath, account.id, 'edit']"
+                      >Edit</a
+                    >
+                  </td>
                 </tr>
               }
             </tbody>

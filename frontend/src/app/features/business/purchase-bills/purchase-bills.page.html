@@ -1,14 +1,17 @@
 @if (view !== 'index') {
   <div class="page-heading">
     <div>
-      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
       <p class="eyebrow">{{ view === 'create' ? 'NEW BILL' : 'EDIT BILL' }}</p>
       <h1>{{ view === 'create' ? 'Create purchase bill' : 'Edit purchase bill' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
-  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading purchase bill…</div> }
+  @if (error && !loading) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading purchase bill…</div>
+  }
   @if (!loading) {
     <app-record-form
       [pageKey]="pageKey"
@@ -35,10 +38,17 @@
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> New bill</a>
   </div>
-  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
   @if (postingBillId !== null) {
     <section class="table-panel panel">
-      <div class="table-header"><div><h2>Post purchase bill</h2><span>Posting creates the payable and expense journal entries.</span></div></div>
+      <div class="table-header">
+        <div>
+          <h2>Post purchase bill</h2>
+          <span>Posting creates the payable and expense journal entries.</span>
+        </div>
+      </div>
       @if (postingLoading) {
         <div class="loading-card"><span class="spinner"></span> Loading bill posting details…</div>
       } @else {
@@ -58,10 +68,17 @@
       }
     </section>
   }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading purchase bills…</div> }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading purchase bills…</div>
+  }
   @if (!loading) {
     <section class="table-panel panel">
-      <div class="table-header"><div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span></div></div>
+      <div class="table-header">
+        <div>
+          <h2>{{ title }}</h2>
+          <span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span>
+        </div>
+      </div>
       @if (!rows.length) {
         <div class="empty-state">
           <span class="empty-icon">▤</span>
@@ -72,7 +89,18 @@
       } @else {
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Bill number</th><th>Bill date</th><th>Due date</th><th>Currency</th><th>Total</th><th>Allocated</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Bill number</th>
+                <th>Bill date</th>
+                <th>Due date</th>
+                <th>Currency</th>
+                <th>Total</th>
+                <th>Allocated</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
             <tbody>
               @for (bill of rows; track bill.id) {
                 <tr>
@@ -82,12 +110,24 @@
                   <td>{{ bill.currencyCode }}</td>
                   <td>{{ bill.grandTotal }}</td>
                   <td>{{ bill.allocatedTotal }}</td>
-                  <td><span class="status-tag" [class.posted]="bill.status === 'Posted'">{{ bill.status }}</span></td>
+                  <td>
+                    <span class="status-tag" [class.posted]="bill.status === 'Posted'">{{
+                      bill.status
+                    }}</span>
+                  </td>
                   <td class="action-cell">
                     @if (bill.status === 'Draft') {
-                      <a class="button secondary table-action" [routerLink]="[indexPath, bill.id, 'edit']">Edit</a>
+                      <a
+                        class="button secondary table-action"
+                        [routerLink]="[indexPath, bill.id, 'edit']"
+                        >Edit</a
+                      >
                     }
-                    <button class="button secondary table-action" [disabled]="bill.status === 'Posted'" (click)="openPostForm(bill)">
+                    <button
+                      class="button secondary table-action"
+                      [disabled]="bill.status === 'Posted'"
+                      (click)="openPostForm(bill)"
+                    >
                       {{ bill.status === 'Posted' ? 'Posted' : 'Post' }}
                     </button>
                   </td>

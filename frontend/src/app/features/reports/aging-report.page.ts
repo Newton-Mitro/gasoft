@@ -12,7 +12,7 @@ type AgingReportKind = 'receivables' | 'payables';
   selector: 'app-aging-report-page',
   imports: [FormsModule],
   templateUrl: './aging-report.page.html',
-  styleUrl: './aging-report.page.css',
+  styleUrls: ['../../shared/styles/feature-page.css', './aging-report.page.css'],
 })
 export class AgingReportPageComponent implements OnInit {
   kind: AgingReportKind = 'receivables';

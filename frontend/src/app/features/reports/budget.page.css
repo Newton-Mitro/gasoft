@@ -1,5 +1,5 @@
 :host { display: block; }
-.budget-toolbar { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 14px; padding: 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.budget-toolbar { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 14px; padding: 15px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
 .budget-toolbar label { display: grid; min-width: 180px; gap: 6px; color: var(--text-muted); font-size: 11px; font-weight: 600; }
 .budget-toolbar input, .budget-toolbar select, .plan-table input { min-height: 36px; padding: 0 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--text-strong); font: inherit; }
 .create-budget { display: flex; align-items: flex-end; gap: 8px; margin-left: auto; }
@@ -19,14 +19,14 @@
 .view-switch button { padding: 8px 12px; border: 0; border-radius: 6px; color: var(--text-muted); background: transparent; font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
 .view-switch button.active { color: var(--text-strong); background: var(--surface-muted); }
 .view-switch button:disabled { opacity: .5; cursor: not-allowed; }
-.table-panel { overflow: hidden; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.table-panel { overflow: hidden; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
 .table-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; }
 .table-header h2 { margin: 0 0 4px; color: var(--text-strong); font-size: 13px; }
 .table-header span { color: var(--text-muted); font-size: 10px; }
 .table-header .table-badge { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; color: var(--text-strong); }
 .table-scroll { overflow: auto; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
-th, td { padding: 10px 12px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 10px; white-space: nowrap; }
+th, td { padding: 10px 12px; border-top: 1px solid var(--border); color: var(--text-muted); white-space: nowrap; }
 th { background: var(--surface-muted); color: var(--text-strong); font-weight: 650; }
 td strong { color: var(--text-strong); }
 .amount { text-align: right; font-variant-numeric: tabular-nums; }

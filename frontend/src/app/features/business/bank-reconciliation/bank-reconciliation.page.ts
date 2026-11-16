@@ -18,7 +18,7 @@ import { BankReconciliationService } from './bank-reconciliation.service';
   selector: 'app-bank-reconciliation-page',
   imports: [FormsModule],
   templateUrl: './bank-reconciliation.page.html',
-  styleUrl: './bank-reconciliation.page.css',
+  styleUrls: ['../../../shared/styles/feature-page.css', './bank-reconciliation.page.css'],
 })
 export class BankReconciliationPageComponent implements OnInit {
   accounts: BankAccount[] = [];

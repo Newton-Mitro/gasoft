@@ -1,13 +1,14 @@
 @if (view !== 'index') {
   <div class="page-heading">
     <div>
-      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
       <p class="eyebrow">{{ view === 'receive' ? 'STOCK RECEIPT' : 'STOCK ISSUE' }}</p>
       <h1>{{ movementTitle }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
-  @if (error) { <div class="alert error">{{ error }}</div> }
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
   <app-record-form
     [pageKey]="pageKey"
     [title]="title"
@@ -33,12 +34,19 @@
       <a class="button primary" [routerLink]="[indexPath, 'receive']">Receive stock</a>
     </div>
   </div>
-  @if (error) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading stock movements…</div> }
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading stock movements…</div>
+  }
   @if (!loading) {
     <section class="table-panel panel">
       <div class="table-header">
-        <div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span></div>
+        <div>
+          <h2>{{ title }}</h2>
+          <span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span>
+        </div>
       </div>
       @if (!rows.length) {
         <div class="empty-state">
@@ -51,7 +59,16 @@
         <div class="table-scroll">
           <table>
             <thead>
-              <tr><th>Movement number</th><th>Type</th><th>Date</th><th>Item</th><th>Warehouse</th><th>Quantity in</th><th>Quantity out</th><th>Total cost</th></tr>
+              <tr>
+                <th>Movement number</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Warehouse</th>
+                <th>Quantity in</th>
+                <th>Quantity out</th>
+                <th>Total cost</th>
+              </tr>
             </thead>
             <tbody>
               @for (movement of rows; track movement.id) {

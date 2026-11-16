@@ -1,14 +1,17 @@
 @if (view !== 'index') {
   <div class="page-heading">
     <div>
-      <a class="back-link" [routerLink]="indexPath">← Back to {{ title.toLowerCase() }}</a>
       <p class="eyebrow">{{ view === 'create' ? 'NEW RECORD' : 'EDIT RECORD' }}</p>
       <h1>{{ view === 'create' ? 'Create fiscal year' : 'Edit fiscal year' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
-  @if (error && !loading) { <div class="alert error">{{ error }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading fiscal year…</div> }
+  @if (error && !loading) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading fiscal year…</div>
+  }
   @if (!loading) {
     <app-record-form
       [pageKey]="pageKey"
@@ -30,34 +33,60 @@
       <h1>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
-    <a class="button primary" [routerLink]="[indexPath, 'create']"><span>＋</span> New fiscal year</a>
+    <a class="button primary" [routerLink]="[indexPath, 'create']"
+      ><span>＋</span> New fiscal year</a
+    >
   </div>
-  @if (error) { <div class="alert error">{{ error }}</div> }
-  @if (success) { <div class="alert success">{{ success }}</div> }
-  @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading fiscal years…</div> }
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (success) {
+    <div class="alert success">{{ success }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading fiscal years…</div>
+  }
   @if (!loading) {
     <section class="table-panel panel">
       <div class="table-header">
-        <div><h2>{{ title }}</h2><span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span></div>
+        <div>
+          <h2>{{ title }}</h2>
+          <span>{{ rows.length }} {{ rows.length === 1 ? 'record' : 'records' }}</span>
+        </div>
       </div>
       @if (!rows.length) {
         <div class="empty-state">
           <span class="empty-icon">▤</span>
           <h3>Nothing here yet</h3>
           <p>Create your first fiscal year to get started.</p>
-          <a class="button secondary" [routerLink]="[indexPath, 'create']">Create first fiscal year</a>
+          <a class="button secondary" [routerLink]="[indexPath, 'create']"
+            >Create first fiscal year</a
+          >
         </div>
       } @else {
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Starts on</th><th>Ends on</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Starts on</th>
+                <th>Ends on</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
             <tbody>
               @for (year of rows; track year.id) {
                 <tr>
                   <td>{{ year.startsOn }}</td>
                   <td>{{ year.endsOn }}</td>
                   <td>{{ year.status }}</td>
-                  <td><a class="button secondary table-action" [routerLink]="[indexPath, year.id, 'edit']">Edit</a></td>
+                  <td>
+                    <a
+                      class="button secondary table-action"
+                      [routerLink]="[indexPath, year.id, 'edit']"
+                      >Edit</a
+                    >
+                  </td>
                 </tr>
               }
             </tbody>

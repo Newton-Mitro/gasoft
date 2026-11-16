@@ -20,7 +20,7 @@ interface EditableBudgetAccount extends BudgetAccount {
   selector: 'app-budget-page',
   imports: [FormsModule],
   templateUrl: './budget.page.html',
-  styleUrl: './budget.page.css',
+  styleUrls: ['../../shared/styles/feature-page.css', './budget.page.css'],
 })
 export class BudgetPageComponent implements OnInit {
   fiscalYears: BudgetSetup['fiscalYears'] = [];

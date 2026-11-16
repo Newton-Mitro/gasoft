@@ -17,7 +17,7 @@ import { ConsolidationService } from './consolidation.service';
   selector: 'app-consolidation-page',
   imports: [FormsModule],
   templateUrl: './consolidation.page.html',
-  styleUrl: './consolidation.page.css',
+  styleUrls: ['../../shared/styles/feature-page.css', './consolidation.page.css'],
 })
 export class ConsolidationPageComponent implements OnInit {
   groups: ConsolidationGroup[] = [];
