@@ -22,16 +22,13 @@ import { errorMessage } from '../../../shared/utils/page-utils';
         <form class="auth-card" (ngSubmit)="submit()">
           <p class="eyebrow">RESET PASSWORD</p>
           <h2>Forgot your password?</h2>
-          <p class="muted">Enter the workspace address and email linked to your account.</p>
+          <p class="muted">Enter the email linked to your account.</p>
           @if (error()) { <div class="alert error" role="alert">{{ error() }}</div> }
           @if (sent()) {
             <div class="alert success" role="status" aria-live="polite">
               If an account matches those details, a password reset link will be sent shortly. Check your inbox.
             </div>
           } @else {
-            <label>Workspace address
-              <input name="workspaceSlug" [(ngModel)]="workspaceSlug" autocomplete="organization" placeholder="your-workspace" required />
-            </label>
             <label>Email address
               <input name="email" type="email" [(ngModel)]="email" autocomplete="email" required />
             </label>
@@ -47,17 +44,14 @@ export class ForgotPasswordPage {
   readonly busy = signal(false);
   readonly sent = signal(false);
   readonly error = signal('');
-  workspaceSlug = '';
   email = '';
 
-  constructor(private readonly auth: AuthService) {
-    this.workspaceSlug = auth.workspaceSlug();
-  }
+  constructor(private readonly auth: AuthService) {}
 
   submit(): void {
     this.busy.set(true);
     this.error.set('');
-    this.auth.requestPasswordReset(this.email.trim(), this.workspaceSlug.trim().toLowerCase()).subscribe({
+    this.auth.requestPasswordReset(this.email.trim()).subscribe({
       next: () => {
         this.sent.set(true);
         this.busy.set(false);

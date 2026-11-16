@@ -7,6 +7,12 @@ interface LoginResponse {
   accessToken: string;
   tenantId: number;
   companyId: number;
+  workspaceSlug: string;
+}
+
+export interface WorkspaceOption {
+  tenantId: number;
+  name: string;
 }
 
 export interface RegistrationResponse {
@@ -50,9 +56,18 @@ export class AuthService {
     private readonly optionCache: OptionDataCacheService,
   ) {}
 
-  login(email: string, password: string, workspaceSlug: string): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>('/api/v1/auth/token', { email, password, workspaceSlug }).pipe(
-      tap(result => this.save(result.accessToken, result.tenantId, result.companyId, workspaceSlug)),
+  getSignInWorkspaces(email: string, password: string): Observable<WorkspaceOption[]> {
+    return this.http.post<WorkspaceOption[]>('/api/v1/auth/workspaces', { email, password });
+  }
+
+  login(email: string, password: string, tenantId: number): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>('/api/v1/auth/token', { email, password, tenantId }).pipe(
+      tap(result => this.save(
+        result.accessToken,
+        result.tenantId,
+        result.companyId,
+        result.workspaceSlug,
+      )),
     );
   }
 
@@ -86,8 +101,8 @@ export class AuthService {
     return this.http.post<void>('/api/v1/account/password', { currentPassword, newPassword });
   }
 
-  requestPasswordReset(email: string, workspaceSlug: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>('/api/v1/auth/password/forgot', { email, workspaceSlug });
+  requestPasswordReset(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>('/api/v1/auth/password/forgot', { email });
   }
 
   resetPassword(email: string, token: string, newPassword: string): Observable<void> {

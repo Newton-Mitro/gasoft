@@ -106,7 +106,7 @@ public static class CompanyAdministrationEndpoints
             ImageUpload.Delete(environment, existingCompany.LogoUrl);
             return Results.Ok(company);
         })
-        .RequireAuthorization(policy => policy.RequireRole("Owner"))
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"))
         .DisableAntiforgery()
         .WithName("UploadCompanyLogo");
 
@@ -132,7 +132,7 @@ public static class CompanyAdministrationEndpoints
                 return Results.Conflict(new { error = exception.Message });
             }
         })
-        .RequireAuthorization(policy => policy.RequireRole("Owner"))
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"))
         .WithName("UpdateCompany");
 
         return app;

@@ -14,7 +14,7 @@ public static class AuthEndpoints
             var workspace = await authService.AuthenticateAsync(
                 request.Email,
                 request.Password,
-                request.WorkspaceSlug,
+                request.TenantId,
                 cancellationToken);
 
             return workspace is null
@@ -22,11 +22,29 @@ public static class AuthEndpoints
                 : Results.Ok(new TokenResponse(
                     workspace.AccessToken,
                     workspace.TenantId,
-                    workspace.CompanyId));
+                    workspace.CompanyId,
+                    workspace.WorkspaceSlug));
         })
         .AllowAnonymous()
         .RequireRateLimiting("public-auth")
         .WithName("CreateAccessToken");
+
+        app.MapPost("/api/v1/auth/workspaces", async (
+            WorkspaceRequest request,
+            IAuthService authService,
+            CancellationToken cancellationToken) =>
+        {
+            var workspaces = await authService.GetAvailableWorkspacesAsync(
+                request.Email,
+                request.Password,
+                cancellationToken);
+            return workspaces is null or { Count: 0 }
+                ? Results.Unauthorized()
+                : Results.Ok(workspaces);
+        })
+        .AllowAnonymous()
+        .RequireRateLimiting("public-auth")
+        .WithName("GetSignInWorkspaces");
 
         app.MapPost("/api/v1/auth/password/forgot", async (
             ForgotPasswordRequest request,
@@ -35,7 +53,6 @@ public static class AuthEndpoints
         {
             if (!await authService.RequestPasswordResetAsync(
                     request.Email,
-                    request.WorkspaceSlug,
                     cancellationToken))
                 return Results.Problem(
                     statusCode: StatusCodes.Status503ServiceUnavailable,
@@ -70,8 +87,9 @@ public static class AuthEndpoints
         return app;
     }
 
-    public sealed record LoginRequest(string Email, string Password, string WorkspaceSlug);
-    public sealed record TokenResponse(string AccessToken, long TenantId, long CompanyId);
-    public sealed record ForgotPasswordRequest(string? Email, string? WorkspaceSlug);
+    public sealed record LoginRequest(string Email, string Password, long TenantId);
+    public sealed record WorkspaceRequest(string Email, string Password);
+    public sealed record TokenResponse(string AccessToken, long TenantId, long CompanyId, string WorkspaceSlug);
+    public sealed record ForgotPasswordRequest(string? Email);
     public sealed record ResetPasswordRequest(string? Email, string? Token, string? NewPassword);
 }

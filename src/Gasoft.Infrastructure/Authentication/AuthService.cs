@@ -17,40 +17,65 @@ public sealed class AuthService(
     IOptions<EmailOptions> emailOptions,
     ILogger<AuthService> logger) : IAuthService
 {
-    public async Task<AuthenticatedWorkspace?> AuthenticateAsync(
+    public async Task<IReadOnlyList<AvailableWorkspace>?> GetAvailableWorkspacesAsync(
         string email,
         string password,
-        string workspaceSlug,
         CancellationToken cancellationToken)
     {
-        var user = await signInManager.UserManager.FindByEmailAsync(email);
+        var user = await signInManager.UserManager.FindByEmailAsync(email.Trim());
         if (user is null ||
             !(await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true)).Succeeded)
         {
             return null;
         }
 
-        var normalizedSlug = workspaceSlug.Trim().ToLowerInvariant();
-        var tenantId = await dbContext.Tenants
+        return await dbContext.TenantUsers
             .IgnoreQueryFilters()
-            .Where(tenant => tenant.Slug == normalizedSlug && tenant.Status == "active")
-            .Select(tenant => (long?)tenant.Id)
-            .SingleOrDefaultAsync(cancellationToken);
-        if (tenantId is null) return null;
+            .Where(membership => membership.UserId == user.Id && membership.IsActive)
+            .Join(
+                dbContext.Tenants.IgnoreQueryFilters().Where(tenant => tenant.Status == "active"),
+                membership => membership.TenantId,
+                tenant => tenant.Id,
+                (membership, tenant) => tenant)
+            .Where(tenant => dbContext.Companies
+                .IgnoreQueryFilters()
+                .Any(company => company.TenantId == tenant.Id))
+            .OrderBy(tenant => tenant.Name)
+            .ThenBy(tenant => tenant.Id)
+            .Select(tenant => new AvailableWorkspace(tenant.Id, tenant.Name))
+            .ToListAsync(cancellationToken);
+    }
 
-        var membershipRole = await dbContext.TenantUsers
+    public async Task<AuthenticatedWorkspace?> AuthenticateAsync(
+        string email,
+        string password,
+        long tenantId,
+        CancellationToken cancellationToken)
+    {
+        var user = await signInManager.UserManager.FindByEmailAsync(email.Trim());
+        if (user is null ||
+            !(await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true)).Succeeded)
+        {
+            return null;
+        }
+
+        var tenantMembership = await dbContext.TenantUsers
             .IgnoreQueryFilters()
-            .Where(
-                membership => membership.UserId == user.Id &&
-                              membership.TenantId == tenantId.Value &&
-                              membership.IsActive)
-            .Select(membership => membership.Role)
+            .Where(membership =>
+                membership.UserId == user.Id &&
+                membership.TenantId == tenantId &&
+                membership.IsActive)
+            .Join(
+                dbContext.Tenants.IgnoreQueryFilters().Where(tenant => tenant.Status == "active"),
+                membership => membership.TenantId,
+                tenant => tenant.Id,
+                (membership, tenant) => new { membership.Role, tenant.Slug })
             .SingleOrDefaultAsync(cancellationToken);
-        if (membershipRole is null) return null;
+        if (tenantMembership is null) return null;
 
         var companyId = await dbContext.Companies
             .IgnoreQueryFilters()
-            .Where(company => company.TenantId == tenantId.Value)
+            .Where(company => company.TenantId == tenantId)
             .OrderBy(company => company.Id)
             .Select(company => (long?)company.Id)
             .FirstOrDefaultAsync(cancellationToken);
@@ -59,38 +84,33 @@ public sealed class AuthService(
         var accessToken = tokenService.CreateToken(
             user.Id,
             user.Email ?? email,
-            tenantId.Value,
-            membershipRole);
-        return new AuthenticatedWorkspace(accessToken, tenantId.Value, companyId.Value);
+            tenantId,
+            tenantMembership.Role);
+        return new AuthenticatedWorkspace(accessToken, tenantId, companyId.Value, tenantMembership.Slug);
     }
 
     public async Task<bool> RequestPasswordResetAsync(
         string? email,
-        string? workspaceSlug,
         CancellationToken cancellationToken)
     {
         if (!emailSender.IsConfigured) return false;
 
         var normalizedEmail = email?.Trim() ?? string.Empty;
-        var slug = workspaceSlug?.Trim().ToLowerInvariant() ?? string.Empty;
-        var tenantId = await dbContext.Tenants
-            .IgnoreQueryFilters()
-            .Where(tenant => tenant.Slug == slug && tenant.Status == "active")
-            .Select(tenant => (long?)tenant.Id)
-            .SingleOrDefaultAsync(cancellationToken);
-
-        if (tenantId is not null)
+        var user = await userManager.FindByEmailAsync(normalizedEmail);
+        if (user is not null)
         {
-            var user = await userManager.FindByEmailAsync(normalizedEmail);
-            var isActiveMember = user is not null && await dbContext.TenantUsers
+            var isActiveMember = await dbContext.TenantUsers
                 .IgnoreQueryFilters()
-                .AnyAsync(membership =>
-                        membership.TenantId == tenantId &&
-                        membership.UserId == user.Id &&
-                        membership.IsActive,
+                .Where(membership => membership.UserId == user.Id && membership.IsActive)
+                .Join(
+                    dbContext.Tenants.IgnoreQueryFilters().Where(tenant => tenant.Status == "active"),
+                    membership => membership.TenantId,
+                    tenant => tenant.Id,
+                    (membership, tenant) => tenant.Id)
+                .AnyAsync(
                     cancellationToken);
 
-            if (user is not null && isActiveMember)
+            if (isActiveMember)
             {
                 var token = await userManager.GeneratePasswordResetTokenAsync(user);
                 var resetLink = $"{emailOptions.Value.FrontendBaseUrl.TrimEnd('/')}/reset-password" +

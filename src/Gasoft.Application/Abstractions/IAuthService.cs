@@ -2,14 +2,17 @@ namespace Gasoft.Application.Abstractions;
 
 public interface IAuthService
 {
+    Task<IReadOnlyList<AvailableWorkspace>?> GetAvailableWorkspacesAsync(
+        string email,
+        string password,
+        CancellationToken cancellationToken);
     Task<AuthenticatedWorkspace?> AuthenticateAsync(
         string email,
         string password,
-        string workspaceSlug,
+        long tenantId,
         CancellationToken cancellationToken);
     Task<bool> RequestPasswordResetAsync(
         string? email,
-        string? workspaceSlug,
         CancellationToken cancellationToken);
     Task<IReadOnlyDictionary<string, string[]>?> ResetPasswordAsync(
         string? email,
@@ -18,4 +21,5 @@ public interface IAuthService
         CancellationToken cancellationToken);
 }
 
-public sealed record AuthenticatedWorkspace(string AccessToken, long TenantId, long CompanyId);
+public sealed record AvailableWorkspace(long TenantId, string Name);
+public sealed record AuthenticatedWorkspace(string AccessToken, long TenantId, long CompanyId, string WorkspaceSlug);
