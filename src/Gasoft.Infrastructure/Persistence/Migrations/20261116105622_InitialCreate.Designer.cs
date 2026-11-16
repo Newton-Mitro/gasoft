@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gasoft.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261116052919_SalesQuotes")]
-    partial class SalesQuotes
+    [Migration("20261116105622_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -158,6 +158,50 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.ToTable("BankAccounts");
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.BankReconciliationMatch", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<long>("BankAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("BankStatementTransactionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("JournalLineId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "BankAccountId");
+
+                    b.HasIndex("TenantId", "CompanyId", "JournalLineId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BankStatementTransactionId", "JournalLineId")
+                        .IsUnique();
+
+                    b.ToTable("BankReconciliationMatches", t =>
+                        {
+                            t.HasCheckConstraint("CK_BankReconciliationMatches_Amount", "\"Amount\" <> 0");
+                        });
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.BankStatementTransaction", b =>
                 {
                     b.Property<long>("Id")
@@ -187,9 +231,6 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .HasColumnType("character(64)")
                         .IsFixedLength();
 
-                    b.Property<long?>("JournalLineId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Reference")
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
@@ -202,17 +243,84 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("TenantId", "CompanyId", "Id");
-
-                    b.HasIndex("TenantId", "CompanyId", "JournalLineId")
-                        .IsUnique();
-
                     b.HasIndex("TenantId", "CompanyId", "BankAccountId", "ImportKey")
                         .IsUnique();
 
                     b.ToTable("BankStatementTransactions", t =>
                         {
                             t.HasCheckConstraint("CK_BankStatementTransactions_Amount", "\"Amount\" <> 0");
+                        });
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.Budget", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "FiscalYearId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Budgets");
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.BudgetLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("AccountingPeriodId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<long>("BudgetId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountId");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountingPeriodId");
+
+                    b.HasIndex("TenantId", "CompanyId", "BudgetId", "AccountingPeriodId", "AccountId")
+                        .IsUnique();
+
+                    b.ToTable("BudgetLines", t =>
+                        {
+                            t.HasCheckConstraint("CK_BudgetLines_Amount", "\"Amount\" >= 0");
                         });
                 });
 
@@ -229,6 +337,10 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("AllowPosting")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("CashFlowCategory")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -436,7 +548,7 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .HasMaxLength(160)
                         .HasColumnType("character varying(160)");
 
-                    b.Property<long>("CompanyId")
+                    b.Property<long?>("CompanyId")
                         .HasColumnType("bigint");
 
                     b.Property<long>("ConsolidationRunId")
@@ -450,9 +562,19 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .HasPrecision(20, 6)
                         .HasColumnType("numeric(20,6)");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<decimal>("ExchangeRate")
                         .HasPrecision(20, 10)
                         .HasColumnType("numeric(20,10)");
+
+                    b.Property<bool>("IsElimination")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsTranslationAdjustment")
+                        .HasColumnType("boolean");
 
                     b.Property<long>("TenantId")
                         .HasColumnType("bigint");
@@ -483,6 +605,9 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("PeriodEnd")
                         .HasColumnType("date");
 
+                    b.Property<DateOnly>("PeriodStart")
+                        .HasColumnType("date");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -497,6 +622,60 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("ConsolidationRuns");
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.ConsolidationTranslationRate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("AverageRate")
+                        .HasPrecision(20, 10)
+                        .HasColumnType("numeric(20,10)");
+
+                    b.Property<decimal>("ClosingRate")
+                        .HasPrecision(20, 10)
+                        .HasColumnType("numeric(20,10)");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ConsolidationRunId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SourceCurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .IsFixedLength();
+
+                    b.Property<string>("TargetCurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .IsFixedLength();
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SourceCurrencyCode");
+
+                    b.HasIndex("TargetCurrencyCode");
+
+                    b.HasIndex("TenantId", "CompanyId");
+
+                    b.HasIndex("TenantId", "ConsolidationRunId", "CompanyId")
+                        .IsUnique();
+
+                    b.ToTable("ConsolidationTranslationRates", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConsolidationTranslationRates_Rates", "\"ClosingRate\" > 0 AND \"AverageRate\" > 0");
+                        });
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.CostCenter", b =>
@@ -619,6 +798,64 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.CustomerRefund", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("FunctionalAmount")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<long>("JournalEntryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("RefundDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("RefundNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<long>("SalesCreditNoteId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("TenantId", "CompanyId", "Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "JournalEntryId");
+
+                    b.HasIndex("TenantId", "CompanyId", "RefundNumber")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "SalesCreditNoteId");
+
+                    b.ToTable("CustomerRefunds", t =>
+                        {
+                            t.HasCheckConstraint("CK_CustomerRefunds_Amounts", "\"Amount\" > 0 AND \"FunctionalAmount\" > 0");
+                        });
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.ExchangeRate", b =>
                 {
                     b.Property<long>("Id")
@@ -692,6 +929,144 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.ToTable("FiscalYears", t =>
                         {
                             t.HasCheckConstraint("CK_FiscalYears_DateRange", "\"EndsOn\" >= \"StartsOn\"");
+                        });
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.FixedAsset", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AccumulatedDepreciationAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("AcquisitionCost")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<DateOnly>("AcquisitionDate")
+                        .HasColumnType("date");
+
+                    b.Property<long>("AcquisitionJournalEntryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("AssetAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AssetNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DepreciationExpenseAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateOnly?>("DisposalDate")
+                        .HasColumnType("date");
+
+                    b.Property<long?>("DisposalJournalEntryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal?>("DisposalProceeds")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<DateOnly>("InServiceDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<decimal>("ResidualValue")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("UsefulLifeMonths")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccumulatedDepreciationAccountId");
+
+                    b.HasIndex("TenantId", "CompanyId", "AcquisitionJournalEntryId");
+
+                    b.HasIndex("TenantId", "CompanyId", "AssetAccountId");
+
+                    b.HasIndex("TenantId", "CompanyId", "AssetNumber")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "DepreciationExpenseAccountId");
+
+                    b.HasIndex("TenantId", "CompanyId", "DisposalJournalEntryId");
+
+                    b.ToTable("FixedAssets", t =>
+                        {
+                            t.HasCheckConstraint("CK_FixedAssets_Amounts", "\"AcquisitionCost\" > 0 AND \"ResidualValue\" >= 0 AND \"ResidualValue\" <= \"AcquisitionCost\" AND \"UsefulLifeMonths\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.FixedAssetDepreciation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AccountingPeriodId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("DepreciationDate")
+                        .HasColumnType("date");
+
+                    b.Property<long>("FixedAssetId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("JournalEntryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountingPeriodId");
+
+                    b.HasIndex("TenantId", "CompanyId", "JournalEntryId");
+
+                    b.HasIndex("TenantId", "CompanyId", "FixedAssetId", "AccountingPeriodId")
+                        .IsUnique();
+
+                    b.ToTable("FixedAssetDepreciations", t =>
+                        {
+                            t.HasCheckConstraint("CK_FixedAssetDepreciations_Amount", "\"Amount\" > 0");
                         });
                 });
 
@@ -1586,6 +1961,151 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.SalesCreditNote", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("CreditNoteDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CreditNoteNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<long?>("JournalEntryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("NetTotal")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<long?>("ReceivableAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<long>("SalesInvoiceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<decimal>("TaxTotal")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId", "CreditNoteNumber")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "JournalEntryId");
+
+                    b.HasIndex("TenantId", "CompanyId", "ReceivableAccountId");
+
+                    b.HasIndex("TenantId", "CompanyId", "SalesInvoiceId");
+
+                    b.ToTable("SalesCreditNotes", t =>
+                        {
+                            t.HasCheckConstraint("CK_SalesCreditNotes_Totals", "\"NetTotal\" >= 0 AND \"TaxTotal\" >= 0 AND \"GrandTotal\" = \"NetTotal\" + \"TaxTotal\"");
+                        });
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.SalesCreditNoteLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<decimal>("GrossAmount")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<decimal>("NetAmount")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<long>("SalesCreditNoteId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SalesInvoiceLineId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.Property<long?>("TaxCodeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("TaxRatePercent")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("numeric(9,6)");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaxCodeId");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountId");
+
+                    b.HasIndex("TenantId", "CompanyId", "SalesCreditNoteId");
+
+                    b.HasIndex("TenantId", "CompanyId", "SalesInvoiceLineId");
+
+                    b.ToTable("SalesCreditNoteLines", t =>
+                        {
+                            t.HasCheckConstraint("CK_SalesCreditNoteLines_Amounts", "\"Quantity\" > 0 AND \"UnitPrice\" >= 0 AND \"NetAmount\" >= 0 AND \"TaxAmount\" >= 0 AND \"GrossAmount\" = \"NetAmount\" + \"TaxAmount\"");
+                        });
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.SalesInvoice", b =>
                 {
                     b.Property<long>("Id")
@@ -1781,6 +2301,13 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
 
                     b.Property<long?>("SalesInvoiceId")
                         .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SentTo")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -2556,11 +3083,18 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Gasoft.Domain.Entities.BankStatementTransaction", b =>
+            modelBuilder.Entity("Gasoft.Domain.Entities.BankReconciliationMatch", b =>
                 {
                     b.HasOne("Gasoft.Domain.Entities.BankAccount", null)
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId", "BankAccountId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.BankStatementTransaction", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BankStatementTransactionId")
                         .HasPrincipalKey("TenantId", "CompanyId", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -2569,7 +3103,52 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId", "JournalLineId")
                         .HasPrincipalKey("TenantId", "CompanyId", "Id")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.BankStatementTransaction", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.BankAccount", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "BankAccountId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.Budget", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.FiscalYear", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "FiscalYearId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.BudgetLine", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.ChartOfAccount", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AccountId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.AccountingPeriod", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AccountingPeriodId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.Budget", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("TenantId", "CompanyId", "BudgetId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.ChartOfAccount", b =>
@@ -2657,8 +3236,7 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId")
                         .HasPrincipalKey("TenantId", "Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Gasoft.Domain.Entities.ConsolidationRun", null)
                         .WithMany()
@@ -2678,6 +3256,35 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.ConsolidationTranslationRate", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.Currency", null)
+                        .WithMany()
+                        .HasForeignKey("SourceCurrencyCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.Currency", null)
+                        .WithMany()
+                        .HasForeignKey("TargetCurrencyCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.Company", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.ConsolidationRun", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "ConsolidationRunId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.CostCenter", b =>
                 {
                     b.HasOne("Gasoft.Domain.Entities.Company", null)
@@ -2686,6 +3293,25 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .HasPrincipalKey("TenantId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.CustomerRefund", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.JournalEntry", "JournalEntry")
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "JournalEntryId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.SalesCreditNote", null)
+                        .WithMany("Refunds")
+                        .HasForeignKey("TenantId", "CompanyId", "SalesCreditNoteId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("JournalEntry");
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.ExchangeRate", b =>
@@ -2709,6 +3335,74 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId")
                         .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.FixedAsset", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.Company", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.ChartOfAccount", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AccumulatedDepreciationAccountId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.JournalEntry", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AcquisitionJournalEntryId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.ChartOfAccount", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AssetAccountId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.ChartOfAccount", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "DepreciationExpenseAccountId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.JournalEntry", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "DisposalJournalEntryId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.FixedAssetDepreciation", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.AccountingPeriod", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AccountingPeriodId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.FixedAsset", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "FixedAssetId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.JournalEntry", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "JournalEntryId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -3024,6 +3718,68 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.SalesCreditNote", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.Company", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.JournalEntry", "JournalEntry")
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "JournalEntryId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Gasoft.Domain.Entities.ChartOfAccount", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "ReceivableAccountId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Gasoft.Domain.Entities.SalesInvoice", "SalesInvoice")
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "SalesInvoiceId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("JournalEntry");
+
+                    b.Navigation("SalesInvoice");
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.SalesCreditNoteLine", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.TaxCode", null)
+                        .WithMany()
+                        .HasForeignKey("TaxCodeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Gasoft.Domain.Entities.ChartOfAccount", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AccountId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.SalesCreditNote", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("TenantId", "CompanyId", "SalesCreditNoteId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.SalesInvoiceLine", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "SalesInvoiceLineId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.SalesInvoice", b =>
                 {
                     b.HasOne("Gasoft.Domain.Entities.Currency", null)
@@ -3293,6 +4049,11 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.Budget", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.JournalEntry", b =>
                 {
                     b.Navigation("Lines");
@@ -3306,6 +4067,13 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Gasoft.Domain.Entities.PurchaseOrder", b =>
                 {
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.SalesCreditNote", b =>
+                {
+                    b.Navigation("Lines");
+
+                    b.Navigation("Refunds");
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.SalesInvoice", b =>

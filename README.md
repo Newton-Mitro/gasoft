@@ -39,46 +39,23 @@ The key-generation command requires `openssl`. If you already initialized User S
 
 In the connection-string command above, replace the password placeholder with the exact password entered for the PostgreSQL `gasoft` user. If you already have User Secrets configured, set or update the connection string explicitly:
 
-### 3. Apply migrations to a fresh database
+### 3. Apply the baseline migration
 
-Install the EF Core command-line tool if needed, then create the database schema and seed migration-managed reference data (currencies, units of measure, and ISO country tax jurisdictions):
-
-### Reset database (keep existing migrations)
+The schema is managed by one consolidated `InitialCreate` migration. Install the EF Core command-line tool if needed, then create the database schema and seed reference data:
 
 ```sh
 dotnet tool install --global dotnet-ef --version 10.0.14
-# Drop existing database
-dotnet ef database drop --force \
-    --project src/Gasoft.Infrastructure \
-    --startup-project src/Gasoft.Api
-
-# Recreate database and apply all migrations
 dotnet ef database update \
     --project src/Gasoft.Infrastructure \
     --startup-project src/Gasoft.Api
 ```
 
-### Reset all migrations (create a fresh InitialCreate)
+This consolidated history is for a fresh database. If you have a database created with the previous migrations, back it up if needed, remove it, recreate it, then apply the baseline migration:
 
 ```sh
-dotnet add src/Gasoft.Api package Microsoft.EntityFrameworkCore.Design --version 10.0.14
-dotnet tool install --global dotnet-ef --version 10.0.14
-# Remove existing migrations one by one
-dotnet ef migrations remove \
-    --project src/Gasoft.Infrastructure \
-    --startup-project src/Gasoft.Api
-
-# Create new initial migration
-dotnet ef migrations add InitialCreate \
-    --project src/Gasoft.Infrastructure \
-    --startup-project src/Gasoft.Api
-
-# Drop existing database
 dotnet ef database drop --force \
     --project src/Gasoft.Infrastructure \
     --startup-project src/Gasoft.Api
-
-# Create fresh database
 dotnet ef database update \
     --project src/Gasoft.Infrastructure \
     --startup-project src/Gasoft.Api
