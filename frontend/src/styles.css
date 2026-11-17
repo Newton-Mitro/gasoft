@@ -2865,3 +2865,258 @@ html[data-accent] :is(.content-area, .auth-page) :is(.alert.error, .alert.succes
   color: #fff;
   font-size: 10px;
 }
+
+:root .content-area :is(.table-scroll, .detail-table) {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--text);
+  font-size: 11px;
+  text-align: left;
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) thead th {
+  padding: 11px 15px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-muted) 88%, var(--accent-soft)),
+    var(--surface-muted)
+  );
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.065em;
+  line-height: 1.35;
+  text-align: inherit;
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody td,
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) tfoot th,
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) tfoot td {
+  padding: 11px 15px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  color: var(--text);
+  line-height: 1.45;
+  vertical-align: middle;
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr {
+  transition: background-color 140ms ease;
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface-muted) 32%, transparent);
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr:hover {
+  background: color-mix(in srgb, var(--accent-soft) 64%, var(--surface));
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) :is(th, td) {
+  border-color: var(--border);
+  overflow-wrap: anywhere;
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) td :is(strong, a) {
+  color: var(--text-strong);
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) td small {
+  color: var(--text-muted);
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) td :is(.button, .table-action) {
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  :root .content-area :is(.table-scroll, .detail-table) {
+    overflow: visible;
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) table {
+    display: block;
+    width: 100%;
+    table-layout: auto;
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) :is(tbody, tfoot) {
+    display: grid;
+    width: 100%;
+    gap: 10px;
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr {
+    display: grid;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--text-strong) 6%, transparent);
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr:nth-child(even),
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr:hover {
+    background: var(--surface);
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody td {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(5.5rem, 38%) minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    padding: 9px 11px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+    text-align: left;
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody td::before {
+    color: var(--text-muted);
+    content: attr(data-label);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.45;
+    text-transform: uppercase;
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody td[colspan] {
+    display: block;
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody td[colspan]::before {
+    content: none;
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody td :is(input, select, textarea, .searchable-select) {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tfoot tr {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-muted);
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tfoot :is(th, td) {
+    min-width: 0;
+    padding: 10px;
+  }
+
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) :is(thead th, tbody td, tfoot th, tfoot td) {
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr {
+    transition: none;
+  }
+}
+
+@media (max-width: 850px) {
+  :root .app-shell .main-content > .topbar {
+    height: auto;
+    min-height: 62px;
+    gap: 12px;
+    padding: 10px 16px 10px 64px;
+  }
+
+  :root .app-shell > .mobile-menu {
+    top: 19px;
+  }
+
+  :root .app-shell .topbar .breadcrumb {
+    min-width: 0;
+    flex: 1 1 auto;
+    line-height: 1.4;
+  }
+
+  :root .app-shell .topbar .topbar-right {
+    flex: 0 0 auto;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 520px) {
+  :root .app-shell .main-content > .topbar {
+    min-height: 58px;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    padding: 8px 14px 8px 64px;
+  }
+
+  :root .app-shell > .mobile-menu {
+    top: 17px;
+  }
+
+  :root .app-shell .topbar .breadcrumb {
+    display: block;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    font-size: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :root .app-shell .topbar .breadcrumb > span {
+    display: none;
+  }
+
+  :root .app-shell .topbar .breadcrumb strong {
+    display: block;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :root .app-shell .topbar .topbar-right {
+    gap: 0;
+  }
+
+  :root .app-shell .topbar .status-pill {
+    display: none;
+  }
+}
