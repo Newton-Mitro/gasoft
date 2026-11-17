@@ -208,5 +208,32 @@
         </div>
       </dl>
     </section>
+    <section class="panel data-export" aria-labelledby="data-export-title">
+      <div class="data-export-icon" aria-hidden="true">
+        <i class="fa-solid fa-box-archive"></i>
+      </div>
+      <div class="data-export-copy">
+        <p class="eyebrow">YOUR DATA, ON YOUR TERMS</p>
+        <h2 id="data-export-title">Export organization data</h2>
+        <p class="data-export-description">
+          Get a portable ZIP archive of this organization’s records and shared workspace data,
+          ready to keep or review offline.
+        </p>
+        <div class="data-export-meta">
+          <span><i class="fa-solid fa-file-code" aria-hidden="true"></i> JSON files + export manifest</span>
+          <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Credentials, reference catalogs, and uploads aren’t included</span>
+        </div>
+        <p class="data-export-security">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          This archive contains sensitive financial data. Store it securely.
+        </p>
+      </div>
+      <div class="data-export-action">
+        <button class="button primary" type="button" [disabled]="exporting" (click)="exportData()">
+          <i class="fa-solid" [class.fa-download]="!exporting" [class.fa-spinner]="exporting" [class.fa-spin]="exporting" aria-hidden="true"></i>
+          {{ exporting ? 'Preparing download…' : 'Download data' }}
+        </button>
+      </div>
+    </section>
   }
 }

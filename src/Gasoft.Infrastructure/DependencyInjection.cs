@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
         services.AddScoped<ITenantUserService, TenantUserService>();
         services.AddScoped<ICompanyAdministrationService, CompanyAdministrationService>();
+        services.AddScoped<ICompanyDataExportService, CompanyDataExportService>();
         services.AddScoped<ITaxService, TaxService>();
         services.AddScoped<IFixedAssetService, FixedAssetService>();
         services.AddScoped<IReportingService, ReportingService>();

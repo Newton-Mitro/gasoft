@@ -17,6 +17,10 @@ export class ApiService {
     return this.http.get<T>(companyScoped ? this.companyUrl(path) : path, { params });
   }
 
+  getBlob(path: string, companyScoped = true) {
+    return this.http.get(companyScoped ? this.companyUrl(path) : path, { responseType: 'blob' });
+  }
+
   post<T>(path: string, body: unknown, companyScoped = true) {
     return this.http.post<T>(companyScoped ? this.companyUrl(path) : path, body);
   }

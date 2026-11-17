@@ -11,6 +11,10 @@ export class CompanyService {
     return this.api.get<unknown>(`/api/v1/companies/${id}`, false).pipe(map(toCompany));
   }
 
+  exportData(companyId: number): Observable<Blob> {
+    return this.api.getBlob(`/api/v1/companies/${companyId}/export`, false);
+  }
+
   create(payload: CreateCompanyPayload): Observable<Company> {
     return this.api.post<unknown>('/api/v1/tenant/companies', payload, false).pipe(map(toCompany));
   }

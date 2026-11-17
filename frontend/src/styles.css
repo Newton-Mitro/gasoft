@@ -1339,6 +1339,88 @@ html[data-accent] body .content-area .form-panel .field-grid .checkbox-label inp
   color: var(--text-strong);
   font-size: 12px;
 }
+.data-export {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  margin-top: 16px;
+  padding: 22px;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+  background:
+    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 52%),
+    var(--surface);
+}
+.data-export-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+  border-radius: 15px;
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  font-size: 21px;
+}
+.data-export-copy {
+  min-width: 0;
+}
+.data-export-copy .eyebrow {
+  margin: 0 0 5px;
+  color: var(--accent-text);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .11em;
+}
+.data-export-copy h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 17px;
+  letter-spacing: -.025em;
+}
+.data-export-description {
+  max-width: 660px;
+  margin: 6px 0 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.data-export-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 16px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+.data-export-meta span,
+.data-export-security {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.data-export-meta i,
+.data-export-security i {
+  color: var(--accent-text);
+}
+.data-export-security {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.data-export-action {
+  display: flex;
+  justify-content: flex-end;
+}
+.data-export-action .button {
+  min-width: 150px;
+  min-height: 40px;
+  justify-content: center;
+  gap: 9px;
+  white-space: nowrap;
+}
 .sidebar .company-avatar img,
 .sidebar .profile-avatar img,
 .topbar .avatar-small img {
@@ -1369,6 +1451,26 @@ html[data-accent] .account-page .image-hint {
     width: 64px;
     height: 64px;
     flex-basis: 64px;
+  }
+  .data-export {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 13px;
+    padding: 16px;
+  }
+  .data-export-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 18px;
+  }
+  .data-export-copy h2 {
+    font-size: 15px;
+  }
+  .data-export-action {
+    grid-column: 1 / -1;
+  }
+  .data-export-action .button {
+    width: 100%;
   }
 }
 @media (max-width: 420px) {

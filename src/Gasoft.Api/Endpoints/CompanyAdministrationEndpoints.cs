@@ -138,6 +138,25 @@ public static class CompanyAdministrationEndpoints
         .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create)
         .WithName("UpdateCompany");
 
+        app.MapGet("/api/v1/companies/{companyId:long}/export", async (
+            long companyId,
+            ICompanyDataExportService service,
+            HttpContext httpContext,
+            CancellationToken cancellationToken) =>
+        {
+            var export = await service.ExportAsync(companyId, cancellationToken);
+            if (export is null)
+            {
+                return Results.NotFound(new { error = "Company was not found in this tenant." });
+            }
+
+            httpContext.Response.Headers.CacheControl = "no-store";
+            httpContext.Response.Headers.Pragma = "no-cache";
+            return Results.File(export.Content, "application/zip", export.FileName);
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"))
+        .WithName("ExportCompanyData");
+
         return app;
     }
 }

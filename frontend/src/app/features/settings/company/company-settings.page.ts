@@ -47,6 +47,7 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
   creating = false;
   loading = false;
   saving = false;
+  exporting = false;
   logoUploading = false;
   logoError = '';
   logoPreview: string | null = null;
@@ -197,6 +198,40 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
         this.error = '';
         this.notifications.error(errorMessage(error, 'Could not create the organization.'));
         this.saving = false;
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  async exportData(): Promise<void> {
+    const companyId = this.auth.companyId();
+    const companyCode = this.company?.code;
+    if (!companyId || !companyCode || this.exporting) return;
+
+    const confirmed = await this.notifications.confirm({
+      title: 'Download organization data?',
+      text: 'The ZIP archive contains sensitive organization and financial data. Store it securely.',
+      confirmButtonText: 'Download data',
+      icon: 'warning',
+    });
+    if (!confirmed) return;
+
+    this.exporting = true;
+    this.companies.exportData(companyId).subscribe({
+      next: archive => {
+        const url = URL.createObjectURL(archive);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `organization-data-${companyCode}-${new Date().toISOString().slice(0, 10)}.zip`;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        this.exporting = false;
+        this.notifications.success('Organization data downloaded.');
+        this.changeDetector.markForCheck();
+      },
+      error: error => {
+        this.exporting = false;
+        this.notifications.error(errorMessage(error, 'Could not download organization data.'));
         this.changeDetector.markForCheck();
       },
     });
