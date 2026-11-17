@@ -41,7 +41,9 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   view: 'index' | 'create' | 'edit' = 'index';
   draggedAccountId: number | null = null;
   dropTargetAccountId: number | null = null;
+  dropBlockedAccountId: number | null = null;
   dropTargetGroupId: number | null = null;
+  dragStatus = '';
   reparentingAccountId: number | null = null;
   readonly collapsedGroupIds = new Set<number>();
   readonly collapsedAccountIds = new Set<number>();
@@ -227,6 +229,8 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
       return;
     }
     this.draggedAccountId = account.id;
+    this.dropBlockedAccountId = null;
+    this.dragStatus = `Dragging ${account.code}. Drop it on an account in the same group to make it a child, or on a group heading to make it top-level. A parent account will no longer allow postings.`;
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', String(account.id));
@@ -236,25 +240,46 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   onDragEnd(): void {
     this.draggedAccountId = null;
     this.dropTargetAccountId = null;
+    this.dropBlockedAccountId = null;
     this.dropTargetGroupId = null;
+    this.dragStatus = '';
   }
 
   canDropOnAccount(target: Account): boolean {
     const dragged = this.rows.find(account => account.id === this.draggedAccountId);
-    if (!dragged || dragged.id === target.id || target.allowPosting ||
-      dragged.accountGroupId !== target.accountGroupId) {
-      return false;
+    return !!dragged && !this.accountDropBlockReason(dragged, target);
+  }
+
+  private accountDropBlockReason(dragged: Account, target: Account): string {
+    if (dragged.id === target.id) return 'An account cannot be its own parent.';
+    if (dragged.accountGroupId !== target.accountGroupId) {
+      return 'To change account groups, drop the account on the destination group heading.';
     }
-    return !accountDescendantIds(this.rows, dragged.id).has(target.id);
+    if (accountDescendantIds(this.rows, dragged.id).has(target.id)) {
+      return 'An account cannot be moved beneath one of its descendants.';
+    }
+    return '';
   }
 
   onAccountDragOver(event: DragEvent, target: Account): void {
-    if (!this.canDropOnAccount(target)) return;
+    const dragged = this.rows.find(account => account.id === this.draggedAccountId);
+    if (!dragged) return;
+    const blockedReason = this.accountDropBlockReason(dragged, target);
+    if (blockedReason) {
+      this.dropTargetAccountId = null;
+      this.dropBlockedAccountId = target.id;
+      this.dragStatus = blockedReason;
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
     this.dropTargetAccountId = target.id;
+    this.dropBlockedAccountId = null;
     this.dropTargetGroupId = null;
+    this.dragStatus = target.allowPosting
+      ? `Drop to make ${dragged.code} a child of ${target.code}. Allow postings will be turned off for ${target.code}.`
+      : `Drop to make ${dragged.code} a child of ${target.code}.`;
   }
 
   onAccountDrop(event: DragEvent, target: Account): void {
@@ -276,6 +301,9 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
     this.dropTargetGroupId = groupId;
     this.dropTargetAccountId = null;
+    const dragged = this.rows.find(account => account.id === this.draggedAccountId);
+    const group = this.options['groups']?.find(option => Number(option.value) === groupId);
+    if (dragged && group) this.dragStatus = `Drop to move ${dragged.code} to ${group.label} as a top-level account.`;
   }
 
   onGroupDrop(event: DragEvent, groupId: number): void {
@@ -292,6 +320,7 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
     }
     this.reparentingAccountId = accountId;
     this.error = '';
+    const newParent = parentId === null ? undefined : this.rows.find(item => item.id === parentId);
     this.accounts.update(account.id, {
       accountGroupId,
       code: account.code,
@@ -299,8 +328,16 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
       parentId,
       allowPosting: account.allowPosting,
       isActive: account.isActive,
+      disableParentPosting: newParent?.allowPosting ?? false,
     }).subscribe({
       next: updated => {
+        if (updated.parentId !== parentId || updated.accountGroupId !== accountGroupId) {
+          this.notifications.error('The server did not save the requested account parent.');
+          this.reparentingAccountId = null;
+          this.onDragEnd();
+          this.changeDetector.markForCheck();
+          return;
+        }
         this.accounts.getAll().subscribe({
           next: rows => {
             this.rows = rows;

@@ -1138,6 +1138,7 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             throw Validation("accountGroupId", "The account group does not belong to this company.");
         }
 
+        ChartOfAccount? parentToDemote = null;
         if (request.ParentId is not null)
         {
             if (request.ParentId == accountId)
@@ -1148,10 +1149,15 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             var parent = await db.ChartOfAccounts.SingleOrDefaultAsync(
                 item => item.CompanyId == companyId && item.Id == request.ParentId,
                 cancellationToken);
-            if (parent is null || parent.AllowPosting || parent.AccountGroupId != request.AccountGroupId)
+            if (parent is null || parent.AccountGroupId != request.AccountGroupId)
             {
-                throw Validation("parentId", "A parent must be a non-posting account in the same account group.");
+                throw Validation("parentId", "A parent must belong to the same account group.");
             }
+            if (parent.AllowPosting && !request.DisableParentPosting)
+            {
+                throw Validation("parentId", "A parent must be a non-posting account.");
+            }
+            parentToDemote = parent;
 
             var descendantIds = new HashSet<long>();
             var parentIds = new[] { accountId };
@@ -1200,6 +1206,10 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             }
         }
 
+        if (parentToDemote is not null && request.DisableParentPosting)
+        {
+            parentToDemote.AllowPosting = false;
+        }
         account.AccountGroupId = request.AccountGroupId;
         account.ParentId = request.ParentId;
         account.Code = code;

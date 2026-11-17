@@ -25,4 +25,5 @@ export interface AccountPayload {
   parentId: number | null;
   allowPosting: boolean;
   isActive?: boolean;
+  disableParentPosting?: boolean;
 }

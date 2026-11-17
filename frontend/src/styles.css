@@ -1548,6 +1548,21 @@ html[data-accent] body .content-area .form-panel .field-grid .checkbox-label inp
   background: color-mix(in srgb, var(--accent-soft) 84%, var(--surface));
   box-shadow: inset 0 0 0 2px var(--accent);
 }
+.account-group-heading.root-drop-available {
+  outline: 1px dashed var(--accent);
+  outline-offset: -4px;
+  cursor: copy;
+}
+.account-drag-status {
+  margin: 8px 0 16px;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--text-strong);
+  font-size: 11px;
+  line-height: 1.5;
+}
 .account-group-title {
   display: flex;
   min-width: 0;
@@ -1640,7 +1655,9 @@ html[data-accent] body .content-area .form-panel .field-grid .checkbox-label inp
   background: color-mix(in srgb, var(--surface) 96%, var(--accent-soft));
   box-shadow: 0 1px 2px color-mix(in srgb, var(--text-strong) 5%, transparent);
   transition: border-color 140ms ease, background-color 140ms ease, opacity 140ms ease, box-shadow 140ms ease;
+  cursor: grab;
 }
+.account-tree-row:active { cursor: grabbing; }
 .account-tree-row:hover {
   border-color: var(--border);
   box-shadow: 0 3px 9px color-mix(in srgb, var(--text-strong) 8%, transparent);
@@ -1653,6 +1670,16 @@ html[data-accent] body .content-area .form-panel .field-grid .checkbox-label inp
   border-color: var(--accent);
   background: var(--accent-soft);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.account-tree-row.account-drop-available {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+.account-tree-row.account-drop-blocked {
+  border-color: var(--error-text);
+  background: color-mix(in srgb, var(--error-text) 7%, var(--surface));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--error-text) 12%, transparent);
+  cursor: not-allowed;
 }
 .account-drag-handle {
   width: 26px;

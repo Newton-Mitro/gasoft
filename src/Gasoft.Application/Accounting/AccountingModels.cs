@@ -14,7 +14,8 @@ public sealed record UpdateAccountRequest(
     string Name,
     long? ParentId,
     bool AllowPosting,
-    bool IsActive);
+    bool IsActive,
+    bool DisableParentPosting = false);
 public sealed record CreateFiscalYearRequest(DateOnly StartsOn, DateOnly EndsOn);
 public sealed record UpdateFiscalYearRequest(DateOnly StartsOn, DateOnly EndsOn);
 public sealed record CreateAccountingPeriodRequest(

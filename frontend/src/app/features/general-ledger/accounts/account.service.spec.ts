@@ -1,6 +1,6 @@
 import { of } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
-import { Account, AccountPage } from './account.model';
+import { Account, AccountPage, AccountPayload } from './account.model';
 import { AccountService } from './account.service';
 
 describe('AccountService', () => {
@@ -59,6 +59,38 @@ describe('AccountService', () => {
 
     expect(calls).toEqual([['accounts/page', true, 'page=1&pageSize=25&search=cash']]);
     expect(response?.items[0]?.code).toBe('1000');
+  });
+
+  it('sends the parent posting change with the reparent request', () => {
+    const calls: unknown[][] = [];
+    const api = {
+      put: (endpoint: string, payload: AccountPayload, companyScoped: boolean) => {
+        calls.push([endpoint, payload, companyScoped]);
+        return of({
+          id: 2,
+          companyId: 3,
+          accountGroupId: 4,
+          parentId: 1,
+          code: '1010',
+          name: 'Bank',
+          allowPosting: true,
+          isActive: true,
+        });
+      },
+    } as unknown as ApiService;
+    const payload: AccountPayload = {
+      accountGroupId: 4,
+      code: '1010',
+      name: 'Bank',
+      parentId: 1,
+      allowPosting: true,
+      isActive: true,
+      disableParentPosting: true,
+    };
+
+    new AccountService(api).update(2, payload).subscribe();
+
+    expect(calls).toEqual([['accounts/2', payload, true]]);
   });
 
   it('rejects malformed account results', () => {

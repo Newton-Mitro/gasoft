@@ -96,7 +96,7 @@
           <span class="account-tree-heading-icon"><i class="fa-solid fa-folder-tree" aria-hidden="true"></i></span>
           <div>
             <h2>Account structure</h2>
-            <span>Browse accounts by group, or drag an account to reorganize your chart.</span>
+            <span>Drag an account row onto another account in the same group to make it a child. If the target allows postings, that setting will be turned off automatically. Drop onto a group heading to make it top-level in that group.</span>
           </div>
         </div>
         <span class="account-total-pill">{{ rows.length }} {{ rows.length === 1 ? 'account' : 'accounts' }}</span>
@@ -126,6 +126,7 @@
                 <header
                   class="account-group-heading"
                   [class.root-drop-target]="dropTargetGroupId === group.id"
+                  [class.root-drop-available]="draggedAccountId !== null && canDropToGroupRoot(group.id)"
                   (dragover)="onGroupDragOver($event, group.id)"
                   (dragleave)="dropTargetGroupId = null"
                   (drop)="onGroupDrop($event, group.id)"
@@ -174,6 +175,9 @@
       }
     </section>
   }
+  @if (dragStatus) {
+    <p class="account-drag-status" role="status">{{ dragStatus }}</p>
+  }
 }
 
 <ng-template #accountTree let-nodes let-level="level">
@@ -181,26 +185,22 @@
     <div class="account-tree-item" [style.padding-left.px]="level * 24">
       <article
         class="account-tree-row"
+        [attr.draggable]="reparentingAccountId === null"
         [class.account-dragging]="draggedAccountId === node.account.id"
         [class.account-drop-target]="dropTargetAccountId === node.account.id"
+        [class.account-drop-available]="draggedAccountId !== null && canDropOnAccount(node.account)"
+        [class.account-drop-blocked]="dropBlockedAccountId === node.account.id"
         [class.account-moving]="reparentingAccountId === node.account.id"
         [attr.aria-label]="node.account.code + ' ' + node.account.name"
+        (dragstart)="onDragStart($event, node.account)"
+        (dragend)="onDragEnd()"
         (dragover)="onAccountDragOver($event, node.account)"
         (dragleave)="dropTargetAccountId = null"
         (drop)="onAccountDrop($event, node.account)"
       >
-        <button
-          type="button"
-          class="account-drag-handle"
-          draggable="true"
-          [disabled]="reparentingAccountId !== null"
-          [attr.aria-label]="'Drag ' + node.account.code + ' to change its parent'"
-          title="Drag to change parent"
-          (dragstart)="onDragStart($event, node.account)"
-          (dragend)="onDragEnd()"
-        >
+        <span class="account-drag-handle" aria-hidden="true" title="Drag this account to change its parent">
           <i class="fa-solid fa-grip-vertical" aria-hidden="true"></i>
-        </button>
+        </span>
         @if (node.children.length) {
           <button
             type="button"
@@ -228,6 +228,7 @@
         </div>
         <a
           class="button secondary table-action account-edit-action"
+          draggable="false"
           [routerLink]="[indexPath, node.account.id, 'edit']"
           [attr.aria-label]="'Edit ' + node.account.code + ' ' + node.account.name"
         >Edit</a>
