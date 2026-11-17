@@ -3021,7 +3021,12 @@ html[data-accent] :is(.content-area, .auth-page) :is(.alert.error, .alert.succes
     content: none;
   }
 
-  :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody td :is(input, select, textarea, .searchable-select) {
+  :root
+    .content-area
+    :is(.table-scroll, .detail-table, .table-panel)
+    tbody
+    td
+    :is(input, select, textarea, .searchable-select) {
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -3041,7 +3046,10 @@ html[data-accent] :is(.content-area, .auth-page) :is(.alert.error, .alert.succes
     padding: 10px;
   }
 
-  :root .content-area :is(.table-scroll, .detail-table, .table-panel) :is(thead th, tbody td, tfoot th, tfoot td) {
+  :root
+    .content-area
+    :is(.table-scroll, .detail-table, .table-panel)
+    :is(thead th, tbody td, tfoot th, tfoot td) {
     white-space: normal;
   }
 }

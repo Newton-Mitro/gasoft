@@ -56,7 +56,6 @@ Accounting periods can be closed or reopened by workspace Owners and Admins. A r
 
 Fiscal years can be closed after they contain accounting periods, all periods are closed, and no draft journal entries remain. If posted revenue or expense balances remain, prepare a year-end closing journal from the fiscal-year close checklist, select a postable Equity account (3100 · Retained earnings is the default when available), review the balanced draft, and post it. The generated closing journal is dated on year-end in the final closed period and can be posted only through the authorized closing workflow. The fiscal year cannot be locked until that journal is posted. Close and reopen actions require a reason and are audited; reopening a fiscal year does not reopen its accounting periods. For the next fiscal year, open the year and prepare a draft opening-balance journal to carry forward the prior year’s posted balance-sheet balances. Review and post that opening draft before using the new period as a live operating year. For year-end reporting, the retained-earnings roll-forward can summarize the opening balance, yearly net income, and ending equity position for the selected fiscal year.
 
-
 ### 4. Start the API
 
 ```sh
@@ -70,9 +69,3 @@ cd frontend
 npm ci
 npm start
 ```
-
-The Angular frontend uses `@ngxpert/hot-toast` for transient success and error messages and SweetAlert2 for confirmations and required accounting-period/fiscal-year reasons.
-
-API write endpoints validate request shape, required values, positive identifiers, and nested inputs, then return field-keyed `400 ValidationProblem` responses; malformed JSON types and invalid dates are also returned as field-keyed validation errors instead of unhandled exceptions. Domain-specific rules are enforced by the application services. Across the frontend, shared forms validate required fields and numeric bounds before submission; matching server errors appear below their inputs with an invalid border and clear when edited. Unmatched validation errors appear in a summary and are never shown in toast popups. Non-validation failures continue to use page alerts and toast notifications.
-
-Organization Owners and Admins can download an organization data archive from **Settings → Company settings → Download all data**. The ZIP contains JSON files for company-scoped and shared tenant-level business records plus a manifest. It excludes authentication credentials, global reference catalogs, and uploaded files.
