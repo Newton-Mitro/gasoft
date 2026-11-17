@@ -126,7 +126,8 @@ public sealed class TenantRegistrationService(
                 Role = "Owner"
             });
             await dbContext.SaveChangesAsync(cancellationToken);
-            await CompanySetupSeeder.SeedAsync(dbContext, tenant.Id, company, cancellationToken);
+            await CompanySetupSeeder.SeedLedgerDefaultsAsync(
+                dbContext, tenant.Id, company, cancellationToken);
 
             var accessToken = tokenService.CreateToken(user.Id, user.Email!, tenant.Id, "Owner");
             await transaction.CommitAsync(cancellationToken);

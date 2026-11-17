@@ -29,15 +29,6 @@ public sealed record CompanyDto(
     string? TaxId,
     string? LogoUrl);
 
-public sealed record CompanySetupResultDto(
-    int AccountGroupsAdded,
-    int AccountsAdded,
-    int JournalsAdded,
-    bool FiscalYearAdded,
-    int AccountingPeriodsAdded,
-    int ItemCategoriesAdded,
-    int WarehousesAdded);
-
 public sealed class CompanyValidationException(IReadOnlyDictionary<string, string[]> errors)
     : Exception("The company request is invalid.")
 {

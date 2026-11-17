@@ -41,19 +41,6 @@ public static class CompanyAdministrationEndpoints
         .RequireAuthorization(policy => policy.RequireRole("Owner"))
         .WithName("CreateTenantCompany");
 
-        app.MapPost("/api/v1/companies/{companyId:long}/setup/defaults", async (
-            long companyId,
-            ICompanyAdministrationService service,
-            CancellationToken cancellationToken) =>
-        {
-            var seeded = await service.SeedDefaultsAsync(companyId, cancellationToken);
-            return seeded is null
-                ? Results.NotFound(new { error = "Company was not found in this tenant." })
-                : Results.Ok(seeded);
-        })
-        .RequireAuthorization(policy => policy.RequireRole("Owner"))
-        .WithName("SeedCompanyDefaults");
-
         app.MapGet("/api/v1/companies/{companyId:long}/logo/{fileName}", async (
             long companyId,
             string fileName,

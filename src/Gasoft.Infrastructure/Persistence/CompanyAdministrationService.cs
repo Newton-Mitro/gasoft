@@ -76,7 +76,8 @@ public sealed class CompanyAdministrationService(
         try
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CompanySetupSeeder.SeedAsync(db, tenantId.Value, company, cancellationToken);
+            await CompanySetupSeeder.SeedLedgerDefaultsAsync(
+                db, tenantId.Value, company, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }
         catch (DbUpdateException exception) when (IsCompanyCodeConflict(exception))
@@ -84,25 +85,6 @@ public sealed class CompanyAdministrationService(
             throw CompanyCodeConflict(code);
         }
         return ToDto(company);
-    }
-
-    public async Task<CompanySetupResultDto?> SeedDefaultsAsync(
-        long companyId,
-        CancellationToken cancellationToken)
-    {
-        var company = await db.Companies.SingleOrDefaultAsync(item => item.Id == companyId, cancellationToken);
-        if (company is null) return null;
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var result = await CompanySetupSeeder.SeedAsync(db, company.TenantId, company, cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        return new CompanySetupResultDto(
-            result.AccountGroupsAdded,
-            result.AccountsAdded,
-            result.JournalsAdded,
-            result.FiscalYearAdded,
-            result.AccountingPeriodsAdded,
-            result.ItemCategoriesAdded,
-            result.WarehousesAdded);
     }
 
     public async Task<CompanyDto?> SetCompanyLogoUrlAsync(

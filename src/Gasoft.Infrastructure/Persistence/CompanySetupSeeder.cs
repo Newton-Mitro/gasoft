@@ -51,10 +51,7 @@ public static class CompanySetupSeeder
         ("7000", "Income tax expense", "Expense", "Operating")
     ];
 
-    private const string DefaultItemCategoryCode = "GENERAL";
-    private const string DefaultWarehouseCode = "MAIN";
-
-    public static async Task<CompanySetupSeedResult> SeedAsync(
+    public static async Task SeedLedgerDefaultsAsync(
         AppDbContext db,
         long tenantId,
         Company company,
@@ -78,35 +75,14 @@ public static class CompanySetupSeeder
             .ToArray();
         db.AccountGroups.AddRange(groupsToAdd);
 
-        var journals = await db.Journals
+        var existingJournals = await db.Journals
             .IgnoreQueryFilters()
             .Where(item => item.TenantId == tenantId && item.CompanyId == company.Id)
             .ToListAsync(cancellationToken);
         var journalsToAdd = GetDefaultJournals(tenantId, company.Id)
-            .Where(seed => journals.All(existing => existing.Code != seed.Code))
+            .Where(seed => existingJournals.All(existing => existing.Code != seed.Code))
             .ToArray();
         db.Journals.AddRange(journalsToAdd);
-
-        var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
-        var yearStart = new DateOnly(currentDate.Year, 1, 1);
-        var fiscalYear = await db.FiscalYears
-            .IgnoreQueryFilters()
-            .SingleOrDefaultAsync(
-                item => item.TenantId == tenantId && item.CompanyId == company.Id && item.StartsOn == yearStart,
-                cancellationToken);
-        var fiscalYearCreated = fiscalYear is null;
-        if (fiscalYear is null)
-        {
-            fiscalYear = new FiscalYear
-            {
-                TenantId = tenantId,
-                CompanyId = company.Id,
-                StartsOn = yearStart,
-                EndsOn = new DateOnly(currentDate.Year, 12, 31),
-                Status = "Open"
-            };
-            db.FiscalYears.Add(fiscalYear);
-        }
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -115,13 +91,13 @@ public static class CompanySetupSeeder
         var groupsByType = AccountGroups.ToDictionary(
             group => group.AccountType,
             group => groupsByCode[group.Code]);
-        var accounts = await db.ChartOfAccounts
+        var existingAccountCodes = await db.ChartOfAccounts
             .IgnoreQueryFilters()
             .Where(item => item.TenantId == tenantId && item.CompanyId == company.Id)
             .Select(item => item.Code)
             .ToListAsync(cancellationToken);
         var accountsToAdd = Accounts
-            .Where(seed => !accounts.Contains(seed.Code, StringComparer.Ordinal))
+            .Where(seed => !existingAccountCodes.Contains(seed.Code, StringComparer.Ordinal))
             .Select(account => new ChartOfAccount
             {
                 TenantId = tenantId,
@@ -135,77 +111,12 @@ public static class CompanySetupSeeder
             })
             .ToArray();
         db.ChartOfAccounts.AddRange(accountsToAdd);
-
-        var existingItemCategory = await db.ItemCategories
-            .IgnoreQueryFilters()
-            .AnyAsync(
-                item => item.TenantId == tenantId && item.Code == DefaultItemCategoryCode,
-                cancellationToken);
-        if (!existingItemCategory)
-        {
-            db.ItemCategories.Add(new ItemCategory
-            {
-                TenantId = tenantId,
-                Code = DefaultItemCategoryCode,
-                Name = "General"
-            });
-        }
-
-        var existingWarehouse = await db.Warehouses
-            .IgnoreQueryFilters()
-            .AnyAsync(
-                item => item.TenantId == tenantId &&
-                        item.CompanyId == company.Id &&
-                        item.Code == DefaultWarehouseCode,
-                cancellationToken);
-        if (!existingWarehouse)
-        {
-            db.Warehouses.Add(new Warehouse
-            {
-                TenantId = tenantId,
-                CompanyId = company.Id,
-                Code = DefaultWarehouseCode,
-                Name = "Main warehouse"
-            });
-        }
-
-        var existingPeriods = await db.AccountingPeriods
-            .IgnoreQueryFilters()
-            .Where(item =>
-                item.TenantId == tenantId &&
-                item.CompanyId == company.Id &&
-                item.FiscalYearId == fiscalYear.Id)
-            .ToListAsync(cancellationToken);
-        var periodsToAdd = Enumerable.Range(1, 12)
-            .Select(month => new DateOnly(currentDate.Year, month, 1))
-            .Select(start => new AccountingPeriod
-            {
-                TenantId = tenantId,
-                CompanyId = company.Id,
-                FiscalYearId = fiscalYear.Id,
-                StartsOn = start,
-                EndsOn = start.AddMonths(1).AddDays(-1),
-                Status = "Open"
-            })
-            .Where(candidate => existingPeriods.All(existing =>
-                candidate.EndsOn < existing.StartsOn || candidate.StartsOn > existing.EndsOn))
-            .ToArray();
-        db.AccountingPeriods.AddRange(periodsToAdd);
         await db.SaveChangesAsync(cancellationToken);
-
-        return new CompanySetupSeedResult(
-            groupsToAdd.Length,
-            accountsToAdd.Length,
-            journalsToAdd.Length,
-            fiscalYearCreated,
-            periodsToAdd.Length,
-            existingItemCategory ? 0 : 1,
-            existingWarehouse ? 0 : 1);
     }
 
     private static Journal[] GetDefaultJournals(long tenantId, long companyId) =>
     [
-        new Journal
+        new()
         {
             TenantId = tenantId,
             CompanyId = companyId,
@@ -213,7 +124,7 @@ public static class CompanySetupSeeder
             Name = "General journal",
             JournalType = "General"
         },
-        new Journal
+        new()
         {
             TenantId = tenantId,
             CompanyId = companyId,
@@ -221,7 +132,7 @@ public static class CompanySetupSeeder
             Name = "Sales journal",
             JournalType = "Sales"
         },
-        new Journal
+        new()
         {
             TenantId = tenantId,
             CompanyId = companyId,
@@ -229,7 +140,7 @@ public static class CompanySetupSeeder
             Name = "Purchase journal",
             JournalType = "Purchase"
         },
-        new Journal
+        new()
         {
             TenantId = tenantId,
             CompanyId = companyId,
@@ -239,12 +150,3 @@ public static class CompanySetupSeeder
         }
     ];
 }
-
-public sealed record CompanySetupSeedResult(
-    int AccountGroupsAdded,
-    int AccountsAdded,
-    int JournalsAdded,
-    bool FiscalYearAdded,
-    int AccountingPeriodsAdded,
-    int ItemCategoriesAdded,
-    int WarehousesAdded);

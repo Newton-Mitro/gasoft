@@ -23,7 +23,7 @@ interface Currency {
         <div class="brand-copy">
           <p class="eyebrow">A BETTER WAY TO BALANCE</p>
           <h1>Your business,<br />beautifully organized.</h1>
-          <p>Set up a secure finance workspace and get started with a ready-to-use ledger.</p>
+          <p>Set up a secure finance workspace with starter ledger accounts and journals.</p>
         </div>
         <span class="brand-foot">Your records stay yours</span>
       </section>
@@ -31,7 +31,7 @@ interface Currency {
         <form class="auth-card register-card" (ngSubmit)="submit()">
           <p class="eyebrow">GET STARTED</p>
           <h2>Create your workspace</h2>
-          <p class="muted">Your starter accounts and accounting periods will be created automatically.</p>
+          <p class="muted">Starter account groups, accounts, and journals are created automatically. Create your fiscal years and accounting periods after registration.</p>
           @if (error()) { <div class="alert error" role="alert" aria-live="polite">{{ error() }}</div> }
           @if (showSignIn()) { <p class="auth-switch">Already have an account? <a routerLink="/login">Sign in to your workspace</a>.</p> }
           <div class="form-row">
