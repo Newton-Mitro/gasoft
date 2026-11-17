@@ -1,8 +1,9 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { TaxJurisdiction } from './tax-jurisdiction.model';
 import { TaxJurisdictionService } from './tax-jurisdiction.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-tax-jurisdictions-page',
@@ -11,6 +12,7 @@ import { TaxJurisdictionService } from './tax-jurisdiction.service';
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class TaxJurisdictionsPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   readonly title = 'Supported tax jurisdictions';
   readonly description = 'Country-level ISO jurisdictions available for company registrations and tax setup. Configure tax codes and rates separately.';
   rows: TaxJurisdiction[] = [];
@@ -50,7 +52,8 @@ export class TaxJurisdictionsPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load supported tax jurisdictions.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load supported tax jurisdictions.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/api.service';
@@ -12,6 +12,7 @@ import {
   ConsolidationRunSummary,
 } from './consolidation.model';
 import { ConsolidationService } from './consolidation.service';
+import { NotificationService } from '../../shared/services/notification.service';
 
 @Component({
   selector: 'app-consolidation-page',
@@ -20,6 +21,7 @@ import { ConsolidationService } from './consolidation.service';
   styleUrls: ['../../shared/styles/feature-page.css', './consolidation.page.css'],
 })
 export class ConsolidationPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   groups: ConsolidationGroup[] = [];
   companies: ConsolidationCompany[] = [];
   runs: ConsolidationRunSummary[] = [];
@@ -64,7 +66,8 @@ export class ConsolidationPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load consolidation setup.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load consolidation setup.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -138,6 +141,7 @@ export class ConsolidationPageComponent implements OnInit {
     const request = this.selectedGroupId
       ? this.service.updateGroup(this.selectedGroupId, payload)
       : this.service.createGroup(payload);
+    const action = this.selectedGroupId ? 'updated' : 'created';
     request.subscribe({
       next: group => {
         this.groups = [
@@ -146,11 +150,13 @@ export class ConsolidationPageComponent implements OnInit {
         ].sort((a, b) => a.name.localeCompare(b.name));
         this.saving = false;
         this.editing = false;
+        this.notifications.success(`Consolidation group ${group.name} ${action} successfully.`);
         this.selectGroup(group.id);
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this consolidation group.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this consolidation group.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -180,7 +186,8 @@ export class ConsolidationPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load consolidation runs.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load consolidation runs.'));
         this.changeDetector.markForCheck();
       },
     });
@@ -217,10 +224,12 @@ export class ConsolidationPageComponent implements OnInit {
           ...this.runs.filter(item => item.id !== run.id),
         ].sort((a, b) => b.periodEnd.localeCompare(a.periodEnd));
         this.saving = false;
+        this.notifications.success(`Consolidation run for ${run.periodStart}–${run.periodEnd} created.`);
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not create the consolidation run.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not create the consolidation run.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -242,7 +251,8 @@ export class ConsolidationPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load the consolidation run.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load the consolidation run.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -282,9 +292,13 @@ export class ConsolidationPageComponent implements OnInit {
     this.saving = true;
     this.error = '';
     this.service.saveEliminations(this.selectedGroupId, this.currentRun.id, lines).subscribe({
-      next: () => this.selectRun(this.currentRun!.id),
+      next: () => {
+        this.notifications.success('Intercompany eliminations saved.');
+        this.selectRun(this.currentRun!.id);
+      },
       error: error => {
-        this.error = errorMessage(error, 'Could not save intercompany eliminations.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save intercompany eliminations.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -296,9 +310,13 @@ export class ConsolidationPageComponent implements OnInit {
     this.saving = true;
     this.error = '';
     this.service.finalizeRun(this.selectedGroupId, this.currentRun.id).subscribe({
-      next: () => this.selectRun(this.currentRun!.id),
+      next: () => {
+        this.notifications.success('Consolidation run finalized.');
+        this.selectRun(this.currentRun!.id);
+      },
       error: error => {
-        this.error = errorMessage(error, 'Could not finalize the consolidation run.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not finalize the consolidation run.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },

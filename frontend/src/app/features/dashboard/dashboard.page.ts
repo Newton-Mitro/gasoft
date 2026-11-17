@@ -1,10 +1,11 @@
 import { HttpParams } from '@angular/common/http';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { errorMessage } from '../../shared/utils/page-utils';
 import { DataRow } from '../../shared/models/shared.models';
+import { NotificationService } from '../../shared/services/notification.service';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -13,6 +14,7 @@ import { DataRow } from '../../shared/models/shared.models';
   templateUrl: './dashboard.page.html',
 })
 export class DashboardPage implements OnInit {
+  readonly notifications = inject(NotificationService);
   readonly loading = signal(true);
   readonly error = signal('');
   readonly summary = signal<DataRow>({});
@@ -41,7 +43,8 @@ export class DashboardPage implements OnInit {
         this.loading.set(false);
       },
       error: error => {
-        this.error.set(errorMessage(error, 'Could not load your workspace overview.'));
+        this.error.set('');
+        this.notifications.error(errorMessage(error, 'Could not load your workspace overview.'));
         this.loading.set(false);
       },
     });

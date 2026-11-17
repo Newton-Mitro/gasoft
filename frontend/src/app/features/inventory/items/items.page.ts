@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
@@ -8,6 +8,7 @@ import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.mod
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { CostingMethod, Item, ItemPayload } from './item.model';
 import { ItemService } from './item.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 const COSTING_METHODS: Choice[] = ['FIFO', 'AVCO'].map(value => ({ label: value, value }));
 
@@ -18,6 +19,7 @@ const COSTING_METHODS: Choice[] = ['FIFO', 'AVCO'].map(value => ({ label: value,
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class ItemsPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'items';
   readonly title = 'Inventory items';
   readonly description = 'Maintain products and services tracked in the inventory ledger.';
@@ -115,10 +117,12 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this inventory item.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this inventory item.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -144,7 +148,8 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
           this.changeDetector.markForCheck();
         },
         error: error => {
-          this.error = errorMessage(error, `Could not load ${source} options.`);
+          this.error = '';
+          this.notifications.error(errorMessage(error, `Could not load ${source} options.`));
           this.changeDetector.markForCheck();
         },
       });
@@ -164,7 +169,8 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load inventory items.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load inventory items.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -190,7 +196,8 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this inventory item.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this inventory item.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

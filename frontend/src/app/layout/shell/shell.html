@@ -19,7 +19,9 @@
   }
   <aside class="sidebar" [class.mobile-open]="mobileNavOpen">
     <a class="brand sidebar-brand" routerLink="/dashboard" (click)="mobileNavOpen = false"
-      ><span class="brand-mark">G</span><span class="brand-name">gasoft</span></a
+      ><img class="brand-logo" src="/logo.png" alt="gasoft logo" /><span class="brand-name"
+        >gasoft</span
+      ></a
     >
     <div class="company-switcher">
       @if (currentCompany; as company) {
@@ -27,7 +29,11 @@
         <div class="company-select">
           <span class="company-avatar" aria-hidden="true">
             @if (auth.companyLogoUrl() ?? company.logoUrl; as logoUrl) {
-              <app-authenticated-image [src]="logoUrl" [fallback]="company.legalName.charAt(0).toUpperCase()" [alt]="company.legalName + ' logo'" />
+              <app-authenticated-image
+                [src]="logoUrl"
+                [fallback]="company.legalName.charAt(0).toUpperCase()"
+                [alt]="company.legalName + ' logo'"
+              />
             } @else {
               {{ company.legalName.charAt(0).toUpperCase() }}
             }
@@ -107,10 +113,7 @@
           </select>
         </label>
       </div>
-      <div class="secure-note">
-        <span class="secure-dot"></span
-        ><span>Secure workspace<br /><small>Your data is protected</small></span>
-      </div>
+
       <a
         class="profile-button"
         routerLink="/account/profile"
@@ -119,7 +122,11 @@
       >
         <span class="profile-avatar">
           @if (auth.profile()?.profileImageUrl; as profileImageUrl) {
-            <app-authenticated-image [src]="profileImageUrl" [fallback]="profileInitial" [alt]="auth.profile()?.displayName + ' profile image'" />
+            <app-authenticated-image
+              [src]="profileImageUrl"
+              [fallback]="profileInitial"
+              [alt]="auth.profile()?.displayName + ' profile image'"
+            />
           } @else {
             {{ profileInitial }}
           }
@@ -145,7 +152,11 @@
         <span class="status-pill"><span></span> All systems ready</span
         ><span class="avatar-small">
           @if (auth.profile()?.profileImageUrl; as profileImageUrl) {
-            <app-authenticated-image [src]="profileImageUrl" [fallback]="profileInitial" [alt]="auth.profile()?.displayName + ' profile image'" />
+            <app-authenticated-image
+              [src]="profileImageUrl"
+              [fallback]="profileInitial"
+              [alt]="auth.profile()?.displayName + ' profile image'"
+            />
           } @else {
             {{ profileInitial }}
           }

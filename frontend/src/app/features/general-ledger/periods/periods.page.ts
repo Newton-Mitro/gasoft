@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
@@ -6,8 +6,14 @@ import { RecordFormComponent } from '../../../shared/components/record-form/reco
 import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
-import { AccountingPeriod, AccountingPeriodPayload } from './period.model';
+import {
+  AccountingPeriod,
+  AccountingPeriodCloseChecklist,
+  AccountingPeriodPayload,
+  AccountingPeriodStatusChange,
+} from './period.model';
 import { AccountingPeriodService } from './period.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-periods-page',
@@ -16,6 +22,7 @@ import { AccountingPeriodService } from './period.service';
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class PeriodsPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'periods';
   readonly title = 'Accounting periods';
   readonly description = 'Manage the posting windows within each fiscal year.';
@@ -34,6 +41,11 @@ export class PeriodsPageComponent implements OnInit, OnDestroy {
   options: Record<string, Choice[]> = {};
   loading = false;
   saving = false;
+  busyPeriodId: number | null = null;
+  historyPeriodId: number | null = null;
+  statusHistory: AccountingPeriodStatusChange[] = [];
+  closeChecklist: AccountingPeriodCloseChecklist | null = null;
+  closeChecklistPeriodId: number | null = null;
   error = '';
   view: 'index' | 'create' | 'edit' = 'index';
   private routeSubscription?: Subscription;
@@ -99,10 +111,12 @@ export class PeriodsPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this accounting period.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this accounting period.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -119,6 +133,132 @@ export class PeriodsPageComponent implements OnInit, OnDestroy {
     this.loadRows();
   }
 
+  async changeStatus(period: AccountingPeriod, action: 'close' | 'reopen'): Promise<void> {
+    if (action === 'close') {
+      this.loadCloseChecklist(period);
+      return;
+    }
+
+    const confirmed = await this.notifications.confirm({
+      title: 'Reopen this accounting period?',
+      text: 'Posting will be allowed again.',
+      confirmButtonText: 'Reopen period',
+    });
+    if (!confirmed) return;
+    const reason = await this.notifications.prompt({
+      title: 'Reason for reopening',
+      text: `Enter a reason to ${action} this period.`,
+      requiredMessage: 'A reason is required to change an accounting period status.',
+    });
+    if (reason === null) return;
+    this.submitStatusChange(period, action, reason);
+  }
+
+  private loadCloseChecklist(period: AccountingPeriod): void {
+    this.error = '';
+    this.busyPeriodId = period.id;
+    this.closeChecklistPeriodId = period.id;
+    this.closeChecklist = null;
+    this.periods.getCloseChecklist(period.id).subscribe({
+      next: async checklist => {
+        this.closeChecklist = checklist;
+        this.busyPeriodId = null;
+        if (!checklist.canClose) {
+          this.error = this.closeChecklistMessage(checklist);
+          this.changeDetector.markForCheck();
+          return;
+        }
+        const confirmed = await this.notifications.confirm({
+          title: 'Close this accounting period?',
+          text: 'The period close checklist is clear.',
+          confirmButtonText: 'Close period',
+        });
+        if (!confirmed) {
+          this.changeDetector.markForCheck();
+          return;
+        }
+        const reason = await this.notifications.prompt({
+          title: 'Reason for closing',
+          text: 'Enter a reason to close this accounting period.',
+          requiredMessage: 'A reason is required to close an accounting period.',
+        });
+        if (reason === null) {
+          this.changeDetector.markForCheck();
+          return;
+        }
+        this.submitStatusChange(period, 'close', reason);
+      },
+      error: error => {
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load the period close checklist.'));
+        this.busyPeriodId = null;
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  private submitStatusChange(period: AccountingPeriod, action: 'close' | 'reopen', reason: string): void {
+    this.error = '';
+    this.busyPeriodId = period.id;
+    const request = action === 'close'
+      ? this.periods.close(period.id, reason)
+      : this.periods.reopen(period.id, reason);
+    request.subscribe({
+      next: () => {
+        this.busyPeriodId = null;
+        this.notifications.success(`Accounting period ${action === 'close' ? 'closed' : 'reopened'} successfully.`);
+        this.historyPeriodId = null;
+        this.statusHistory = [];
+        this.closeChecklistPeriodId = null;
+        this.closeChecklist = null;
+        this.loadRows();
+      },
+      error: error => {
+        this.error = '';
+        this.notifications.error(errorMessage(error, `Could not ${action} this accounting period.`));
+        this.busyPeriodId = null;
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  private closeChecklistMessage(checklist: AccountingPeriodCloseChecklist): string {
+    const blockers = [];
+    if (checklist.draftJournalEntryCount > 0)
+      blockers.push(`${checklist.draftJournalEntryCount} draft journal entries`);
+    if (checklist.unreconciledBankTransactionCount > 0)
+      blockers.push(`${checklist.unreconciledBankTransactionCount} unreconciled bank statement transactions`);
+    return `Resolve the period close checklist before closing: ${blockers.join(' and ')}.`;
+  }
+
+  toggleStatusHistory(periodId: number): void {
+    if (this.historyPeriodId === periodId) {
+      this.historyPeriodId = null;
+      this.statusHistory = [];
+      return;
+    }
+    this.historyPeriodId = periodId;
+    this.statusHistory = [];
+    this.periods.getStatusHistory(periodId).subscribe({
+      next: history => {
+        this.statusHistory = history;
+        this.changeDetector.markForCheck();
+      },
+      error: error => {
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load accounting period status history.'));
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  formatStatusChangeDate(value: string): string {
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(value));
+  }
+
   private loadYearOptions(): void {
     this.optionData.getOptions('years').subscribe({
       next: options => {
@@ -126,7 +266,8 @@ export class PeriodsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load fiscal year options.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load fiscal year options.'));
         this.changeDetector.markForCheck();
       },
     });
@@ -145,7 +286,8 @@ export class PeriodsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load accounting periods.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load accounting periods.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -169,7 +311,8 @@ export class PeriodsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this accounting period.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this accounting period.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

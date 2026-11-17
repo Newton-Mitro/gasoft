@@ -103,6 +103,53 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.AccountingPeriodStatusChange", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AccountingPeriodId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("ChangedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FromStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedByUserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountingPeriodId", "ChangedAt");
+
+                    b.ToTable("AccountingPeriodStatusChanges");
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.BankAccount", b =>
                 {
                     b.Property<long>("Id")
@@ -927,6 +974,96 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_FiscalYears_DateRange", "\"EndsOn\" >= \"StartsOn\"");
                         });
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.FiscalYearClosing", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("CreatedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("JournalEntryId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RetainedEarningsAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "FiscalYearId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CompanyId", "JournalEntryId");
+
+                    b.HasIndex("TenantId", "CompanyId", "RetainedEarningsAccountId");
+
+                    b.ToTable("FiscalYearClosings");
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.FiscalYearStatusChange", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("ChangedByUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FromStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ToStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedByUserId");
+
+                    b.HasIndex("TenantId", "CompanyId", "FiscalYearId", "ChangedAt");
+
+                    b.ToTable("FiscalYearStatusChanges");
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.FixedAsset", b =>
@@ -3057,6 +3194,22 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.AccountingPeriodStatusChange", b =>
+                {
+                    b.HasOne("Gasoft.Infrastructure.Authentication.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("ChangedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.AccountingPeriod", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "AccountingPeriodId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.BankAccount", b =>
                 {
                     b.HasOne("Gasoft.Domain.Entities.Currency", null)
@@ -3332,6 +3485,52 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId", "CompanyId")
                         .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.FiscalYearClosing", b =>
+                {
+                    b.HasOne("Gasoft.Infrastructure.Authentication.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.FiscalYear", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "FiscalYearId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.JournalEntry", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "JournalEntryId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.ChartOfAccount", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "RetainedEarningsAccountId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.FiscalYearStatusChange", b =>
+                {
+                    b.HasOne("Gasoft.Infrastructure.Authentication.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("ChangedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.FiscalYear", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "FiscalYearId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -69,6 +69,21 @@ public sealed record CashFlowReportDto(
     decimal ClosingBalance,
     decimal ActualCashMovement);
 
+public sealed record RetainedEarningsRollForwardDto(
+    long CompanyId,
+    string CurrencyCode,
+    long FiscalYearId,
+    DateOnly FiscalYearStart,
+    DateOnly FiscalYearEnd,
+    long RetainedEarningsAccountId,
+    string RetainedEarningsAccountCode,
+    string RetainedEarningsAccountName,
+    decimal BeginningRetainedEarnings,
+    decimal NetIncomeForYear,
+    decimal OwnerDrawsOrDividends,
+    decimal EndingRetainedEarnings,
+    decimal ClosingBalanceVariance);
+
 public sealed record TrialBalanceAccountDto(
     long AccountId,
     string AccountCode,

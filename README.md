@@ -37,9 +37,9 @@ The key-generation command requires `openssl`. If you already initialized User S
 
 In the connection-string command above, replace the password placeholder with the exact password entered for the PostgreSQL `gasoft` user. If you already have User Secrets configured, set or update the connection string explicitly:
 
-### 3. Apply the baseline migration
+### 3. Apply database migrations
 
-The schema is managed by one consolidated `InitialCreate` migration. Install the EF Core command-line tool if needed, then create the database schema and seed reference data:
+Install the EF Core command-line tool if needed, then apply all pending migrations and seed reference data:
 
 ```sh
 dotnet tool install --global dotnet-ef --version 10.0.14
@@ -48,16 +48,14 @@ dotnet ef database update \
     --startup-project src/Gasoft.Api
 ```
 
-This consolidated history is for a fresh database. If you have a database created with the previous migrations, back it up if needed, remove it, recreate it, then apply the baseline migration:
+If you are starting with a fresh database, this creates the schema. Existing databases are updated without deleting their data.
 
-```sh
-dotnet ef database drop --force \
-    --project src/Gasoft.Infrastructure \
-    --startup-project src/Gasoft.Api
-dotnet ef database update \
-    --project src/Gasoft.Infrastructure \
-    --startup-project src/Gasoft.Api
-```
+### Accounting period controls
+
+Accounting periods can be closed or reopened by workspace Owners and Admins. A reason is required and each change is recorded in the period status history. The close checklist blocks periods with draft journal entries or unreconciled imported bank statement transactions; closed periods reject postings until an authorized user reopens them.
+
+Fiscal years can be closed after they contain accounting periods, all periods are closed, and no draft journal entries remain. If posted revenue or expense balances remain, prepare a year-end closing journal from the fiscal-year close checklist, select a postable Equity account (3100 · Retained earnings is the default when available), review the balanced draft, and post it. The generated closing journal is dated on year-end in the final closed period and can be posted only through the authorized closing workflow. The fiscal year cannot be locked until that journal is posted. Close and reopen actions require a reason and are audited; reopening a fiscal year does not reopen its accounting periods. For the next fiscal year, open the year and prepare a draft opening-balance journal to carry forward the prior year’s posted balance-sheet balances. Review and post that opening draft before using the new period as a live operating year. For year-end reporting, the retained-earnings roll-forward can summarize the opening balance, yearly net income, and ending equity position for the selected fiscal year.
+
 
 ### 4. Start the API
 
@@ -72,3 +70,5 @@ cd frontend
 npm ci
 npm start
 ```
+
+The Angular frontend uses `@ngxpert/hot-toast` for transient success and error messages and SweetAlert2 for confirmations and required accounting-period/fiscal-year reasons.

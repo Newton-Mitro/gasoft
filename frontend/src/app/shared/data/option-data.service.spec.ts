@@ -66,6 +66,27 @@ describe('OptionDataService', () => {
     expect(options).toEqual([{ label: '1000 · Cash', value: 3 }]);
   });
 
+  it('limits year-end retained earnings options to active posting equity accounts', () => {
+    const api = {
+      get: (endpoint: string) => of(endpoint === 'accounts'
+        ? [
+            { id: 3, accountGroupId: 10, code: '3100', name: 'Retained earnings', allowPosting: true, isActive: true },
+            { id: 4, accountGroupId: 20, code: '2100', name: 'Payables', allowPosting: true, isActive: true },
+            { id: 5, accountGroupId: 10, code: '3200', name: 'Owner capital', allowPosting: false, isActive: true },
+          ]
+        : [
+            { id: 10, accountType: 'Equity' },
+            { id: 20, accountType: 'Liability' },
+          ]),
+    } as unknown as ApiService;
+    const service = new OptionDataService(api, new OptionDataCacheService());
+    let options: { label: string; value: string | number }[] = [];
+
+    service.getEquityAccountOptions().subscribe(result => options = result);
+
+    expect(options).toEqual([{ label: '3100 · Retained earnings', value: 3 }]);
+  });
+
   it('reuses loaded option data until the cache is cleared', () => {
     let requestCount = 0;
     const api = {

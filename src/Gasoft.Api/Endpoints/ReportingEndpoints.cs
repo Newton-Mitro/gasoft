@@ -55,6 +55,32 @@ public static class ReportingEndpoints
         })
         .WithName("GetCashFlow");
 
+        companies.MapGet("/retained-earnings", async (
+            long companyId,
+            long fiscalYearId,
+            IReportingService service,
+            CancellationToken cancellationToken) =>
+        {
+            var report = await service.GetRetainedEarningsRollForwardAsync(companyId, fiscalYearId, cancellationToken);
+            return report is null
+                ? Results.NotFound(new { error = "Company or fiscal year was not found in this tenant." })
+                : Results.Ok(report);
+        })
+        .WithName("GetRetainedEarningsRollForward");
+
+        companies.MapGet("/retained-earnings-roll-forward", async (
+            long companyId,
+            long fiscalYearId,
+            IReportingService service,
+            CancellationToken cancellationToken) =>
+        {
+            var report = await service.GetRetainedEarningsRollForwardAsync(companyId, fiscalYearId, cancellationToken);
+            return report is null
+                ? Results.NotFound(new { error = "Company or fiscal year was not found in this tenant." })
+                : Results.Ok(report);
+        })
+        .WithName("GetRetainedEarningsRollForwardAlias");
+
         companies.MapGet("/trial-balance", async (
             long companyId,
             DateOnly? fromDate,

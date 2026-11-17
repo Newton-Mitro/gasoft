@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { errorMessage } from '../../shared/utils/page-utils';
 import {
@@ -11,6 +11,7 @@ import {
   BudgetVsActualReport,
 } from './budget.model';
 import { BudgetService } from './budget.service';
+import { NotificationService } from '../../shared/services/notification.service';
 
 interface EditableBudgetAccount extends BudgetAccount {
   amounts: Record<number, number>;
@@ -23,6 +24,7 @@ interface EditableBudgetAccount extends BudgetAccount {
   styleUrls: ['../../shared/styles/feature-page.css', './budget.page.css'],
 })
 export class BudgetPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   fiscalYears: BudgetSetup['fiscalYears'] = [];
   budgets: BudgetChoice[] = [];
   periods: BudgetPeriod[] = [];
@@ -53,7 +55,6 @@ export class BudgetPageComponent implements OnInit {
 
   onBudgetChange(): void {
     this.report = null;
-    this.accounts = [];
     if (this.selectedBudgetId === null) return;
     this.loadReport(this.selectedBudgetId);
   }
@@ -70,11 +71,13 @@ export class BudgetPageComponent implements OnInit {
     this.budgetsService.create(name, this.selectedFiscalYearId).subscribe({
       next: budget => {
         this.newBudgetName = '';
-        this.success = `Budget “${budget.name}” created.`;
+        this.notifications.success(`Budget “${budget.name}” created.`);
+        this.success = '';
         this.loadSetup(budget.fiscalYearId, budget.id);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not create the budget.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not create the budget.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -97,31 +100,41 @@ export class BudgetPageComponent implements OnInit {
     this.success = '';
     this.budgetsService.saveLines(this.selectedBudgetId, lines).subscribe({
       next: () => {
-        this.success = 'Budget amounts saved.';
+        this.notifications.success('Budget amounts saved.');
+        this.success = '';
         this.loadReport(this.selectedBudgetId!);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save budget amounts.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save budget amounts.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
     });
   }
 
-  deleteBudget(): void {
+  async deleteBudget(): Promise<void> {
     if (this.selectedBudgetId === null) return;
     const selected = this.budgets.find(budget => budget.id === this.selectedBudgetId);
-    if (!selected || !window.confirm(`Delete “${selected.name}” and all of its budget amounts?`)) return;
+    if (!selected) return;
+    const confirmed = await this.notifications.confirm({
+      title: `Delete “${selected.name}”?`,
+      text: 'This will also delete all of its budget amounts.',
+      confirmButtonText: 'Delete budget',
+    });
+    if (!confirmed) return;
     this.saving = true;
     this.error = '';
     this.success = '';
     this.budgetsService.delete(selected.id).subscribe({
       next: () => {
-        this.success = `Budget “${selected.name}” deleted.`;
+        this.notifications.success(`Budget “${selected.name}” deleted.`);
+        this.success = '';
         this.loadSetup(this.selectedFiscalYearId ?? undefined);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not delete the budget.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not delete the budget.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -180,7 +193,8 @@ export class BudgetPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load budgets.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load budgets.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -209,7 +223,8 @@ export class BudgetPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load the budget-vs-actual report.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load the budget-vs-actual report.'));
         this.loading = false;
         this.saving = false;
         this.changeDetector.markForCheck();

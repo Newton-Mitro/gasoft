@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
@@ -9,6 +9,7 @@ import { WarehouseLocationPayload } from '../inventory.models';
 import { InventoryService } from '../inventory.service';
 import { Warehouse, WarehousePayload } from './warehouse.model';
 import { WarehouseService } from './warehouse.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-warehouses-page',
@@ -17,6 +18,7 @@ import { WarehouseService } from './warehouse.service';
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class WarehousesPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'warehouses';
   readonly title = 'Warehouses';
   readonly description = 'Manage the company locations that hold stock.';
@@ -117,10 +119,12 @@ export class WarehousesPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this warehouse.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this warehouse.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -150,7 +154,8 @@ export class WarehousesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load warehouses.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load warehouses.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -170,7 +175,8 @@ export class WarehousesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this warehouse.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this warehouse.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -195,10 +201,12 @@ export class WarehousesPageComponent implements OnInit, OnDestroy {
     this.inventory.createLocation(this.currentRecordId, payload).subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success('Warehouse location saved successfully.');
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not create this warehouse location.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not create this warehouse location.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },

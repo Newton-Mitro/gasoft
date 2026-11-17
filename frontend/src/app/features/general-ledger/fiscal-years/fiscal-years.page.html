@@ -81,13 +81,95 @@
                   <td>{{ year.endsOn }}</td>
                   <td>{{ year.status }}</td>
                   <td>
-                    <a
-                      class="button secondary table-action"
-                      [routerLink]="[indexPath, year.id, 'edit']"
-                      >Edit</a
-                    >
+                    @if (year.status === 'Open') {
+                      <button class="button secondary table-action" type="button"
+                        [disabled]="busyYearId === year.id" (click)="prepareOpeningBalances(year)">
+                        {{ busyYearId === year.id ? 'Preparing…' : 'Opening balances' }}
+                      </button>
+                      <button class="button secondary table-action" type="button"
+                        [disabled]="busyYearId === year.id" (click)="changeStatus(year, 'close')">
+                        {{ busyYearId === year.id ? 'Checking…' : 'Close' }}
+                      </button>
+                      <a class="button secondary table-action" [routerLink]="[indexPath, year.id, 'edit']">Edit</a>
+                    } @else {
+                      <button class="button secondary table-action" type="button"
+                        [disabled]="busyYearId === year.id" (click)="changeStatus(year, 'reopen')">
+                        {{ busyYearId === year.id ? 'Reopening…' : 'Reopen' }}
+                      </button>
+                    }
+                    <button class="button secondary table-action" type="button"
+                      (click)="toggleStatusHistory(year.id)">
+                      {{ historyYearId === year.id ? 'Hide history' : 'History' }}
+                    </button>
                   </td>
                 </tr>
+                @if (checklistYearId === year.id && closeChecklist) {
+                  <tr class="fiscal-year-history">
+                    <td colspan="4">
+                      <strong>Close checklist</strong>
+                      <span>{{ closeChecklist.accountingPeriodCount }} total periods</span>
+                      <span>{{ closeChecklist.openAccountingPeriodCount }} open periods</span>
+                      <span>{{ closeChecklist.draftJournalEntryCount }} draft journals</span>
+                      @if (closeChecklist.closingJournalRequired) {
+                        <span>Closing journal: {{ closeChecklist.closingJournalStatus ?? 'Not prepared' }}</span>
+                      } @else {
+                        <span>No income or expense balances require closing</span>
+                      }
+                      <span>{{ closeChecklist.canClose ? 'Ready to close' : 'Resolve blockers before closing' }}</span>
+                      @if (closeChecklist.closingJournalRequired && !closeChecklist.closingJournalEntryId && closeChecklist.openAccountingPeriodCount === 0) {
+                        <label>
+                          Retained earnings account
+                          <select name="retainedEarningsAccount" [(ngModel)]="retainedEarningsAccountId">
+                            @for (account of equityAccountOptions; track account.value) {
+                              <option [ngValue]="account.value">{{ account.label }}</option>
+                            }
+                          </select>
+                        </label>
+                        <button class="button secondary table-action" type="button"
+                          [disabled]="busyYearId === year.id || !equityAccountOptions.length"
+                          (click)="prepareClosingJournal(year)">
+                          {{ busyYearId === year.id ? 'Preparing…' : 'Prepare closing journal' }}
+                        </button>
+                      }
+                      @if (closeChecklist.closingJournalEntryId) {
+                        <strong>Closing journal #{{ closeChecklist.closingJournalEntryId }}</strong>
+                      }
+                      @if (closeChecklist.closingJournalLines.length > 0) {
+                        <div class="closing-journal-preview">
+                          <strong>Closing journal preview</strong>
+                          @for (line of closeChecklist.closingJournalLines; track $index) {
+                            <p>{{ line.accountCode }} · {{ line.accountName }}
+                              — Debit {{ formatClosingAmount(line.debit) }}
+                              / Credit {{ formatClosingAmount(line.credit) }}</p>
+                          }
+                        </div>
+                      }
+                      @if (closeChecklist.closingJournalStatus === 'Draft' && closeChecklist.closingJournalEntryId) {
+                        <button class="button secondary table-action" type="button"
+                          [disabled]="busyYearId === year.id"
+                          (click)="postClosingJournal(year, closeChecklist.closingJournalEntryId)">
+                          {{ busyYearId === year.id ? 'Posting…' : 'Post reviewed closing journal' }}
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+                @if (historyYearId === year.id) {
+                  <tr class="fiscal-year-history">
+                    <td colspan="4">
+                      @if (statusHistory.length === 0) {
+                        <span>No status changes recorded.</span>
+                      } @else {
+                        @for (change of statusHistory; track change.id) {
+                          <p><strong>{{ change.fromStatus }} → {{ change.toStatus }}</strong>
+                            · {{ formatStatusChangeDate(change.changedAt) }}
+                            · {{ change.changedByDisplayName }}
+                            · {{ change.reason }}</p>
+                        }
+                      }
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>

@@ -152,6 +152,22 @@ export interface AgingReport {
   totalsByCurrency: AgingCurrencyTotal[];
 }
 
+export interface RetainedEarningsRollForwardReport {
+  companyId: number;
+  currencyCode: string;
+  fiscalYearId: number;
+  fiscalYearStart: string;
+  fiscalYearEnd: string;
+  retainedEarningsAccountId: number;
+  retainedEarningsAccountCode: string;
+  retainedEarningsAccountName: string;
+  beginningRetainedEarnings: number;
+  netIncomeForYear: number;
+  ownerDrawsOrDividends: number;
+  endingRetainedEarnings: number;
+  closingBalanceVariance: number;
+}
+
 export type ReportType =
   | 'trial-balance'
   | 'income-statement'

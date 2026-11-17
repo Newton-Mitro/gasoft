@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
@@ -12,6 +12,7 @@ import {
   PagedFixedAssetSetup,
 } from './fixed-assets.model';
 import { FixedAssetsService } from './fixed-assets.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-fixed-assets-page',
@@ -20,6 +21,7 @@ import { FixedAssetsService } from './fixed-assets.service';
   styleUrls: ['../../../shared/styles/feature-page.css', './fixed-assets.page.css'],
 })
 export class FixedAssetsPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   assets: FixedAsset[] = [];
   periods: FixedAssetPeriod[] = [];
   journals: FixedAssetSetup['journals'] = [];
@@ -243,12 +245,14 @@ export class FixedAssetsPageComponent implements OnInit {
     request().subscribe({
       next: () => {
         this.saving = false;
-        this.success = message;
+        this.notifications.success(message);
+        this.success = '';
         onSuccess();
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not complete the fixed-asset operation.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not complete the fixed-asset operation.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -264,7 +268,8 @@ export class FixedAssetsPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load fixed assets.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load fixed assets.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

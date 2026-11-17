@@ -1,9 +1,10 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { errorMessage } from '../../shared/utils/page-utils';
 import { CashFlowClassification, CashFlowReport } from './report.model';
 import { FinancialReportService } from './report.service';
+import { NotificationService } from '../../shared/services/notification.service';
 
 @Component({
   selector: 'app-cash-flow-page',
@@ -12,6 +13,7 @@ import { FinancialReportService } from './report.service';
   styleUrls: ['../../shared/styles/feature-page.css', './cash-flow.page.css'],
 })
 export class CashFlowPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   fromDate = `${new Date().getUTCFullYear()}-01-01`;
   toDate = new Date().toISOString().slice(0, 10);
   report: CashFlowReport | null = null;
@@ -52,11 +54,13 @@ export class CashFlowPageComponent implements OnInit {
         this.classifications = this.classifications.map(item =>
           item.accountId === account.accountId ? { ...item, cashFlowCategory: selectedCategory } : item);
         this.classificationsLoading = false;
+        this.notifications.success(`Cash flow classification updated for ${account.name}.`);
         this.loadReport();
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this account classification.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this account classification.'));
         this.classificationsLoading = false;
         this.changeDetector.markForCheck();
       },
@@ -83,7 +87,8 @@ export class CashFlowPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load the cash flow report.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load the cash flow report.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

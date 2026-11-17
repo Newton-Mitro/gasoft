@@ -1,8 +1,9 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AccountProfile, AuthService } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { AuthenticatedImageComponent } from '../../../shared/components/authenticated-image/authenticated-image.component';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-account-profile-page',
@@ -11,6 +12,7 @@ import { AuthenticatedImageComponent } from '../../../shared/components/authenti
   styleUrl: './account-profile.page.css',
 })
 export class AccountProfilePage implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly profile = signal<AccountProfile | null>(null);
   readonly loading = signal(true);
   readonly profileSaving = signal(false);
@@ -36,7 +38,8 @@ export class AccountProfilePage implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: error => {
-        this.error.set(errorMessage(error, 'Could not load your profile.'));
+        this.error.set('');
+        this.notifications.error(errorMessage(error, 'Could not load your profile.'));
         this.loading.set(false);
       },
     });
@@ -78,11 +81,13 @@ export class AccountProfilePage implements OnInit, OnDestroy {
         this.profile.set(profile);
         this.selectedImage = null;
         this.revokeImagePreview();
-        this.success.set('Your profile image has been updated.');
+        this.notifications.success('Your profile image has been updated.');
+        this.success.set('');
         this.imageUploading.set(false);
       },
       error: error => {
-        this.error.set(errorMessage(error, 'Could not upload your profile image.'));
+        this.error.set('');
+        this.notifications.error(errorMessage(error, 'Could not upload your profile image.'));
         this.imageUploading.set(false);
       },
     });
@@ -96,11 +101,13 @@ export class AccountProfilePage implements OnInit, OnDestroy {
       next: profile => {
         this.profile.set(profile);
         this.displayName = profile.displayName;
-        this.success.set('Your profile has been updated.');
+        this.notifications.success('Your profile has been updated.');
+        this.success.set('');
         this.profileSaving.set(false);
       },
       error: error => {
-        this.error.set(errorMessage(error, 'Could not update your profile.'));
+        this.error.set('');
+        this.notifications.error(errorMessage(error, 'Could not update your profile.'));
         this.profileSaving.set(false);
       },
     });
@@ -120,11 +127,13 @@ export class AccountProfilePage implements OnInit, OnDestroy {
         this.currentPassword = '';
         this.newPassword = '';
         this.confirmPassword = '';
-        this.success.set('Your password has been changed.');
+        this.notifications.success('Your password has been changed.');
+        this.success.set('');
         this.passwordSaving.set(false);
       },
       error: error => {
-        this.error.set(errorMessage(error, 'Could not change your password.'));
+        this.error.set('');
+        this.notifications.error(errorMessage(error, 'Could not change your password.'));
         this.passwordSaving.set(false);
       },
     });

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { BusinessService } from '../business.service';
@@ -10,6 +10,7 @@ import { PageChange, PaginationComponent } from '../../../shared/components/pagi
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { Payment, PaymentPayload } from './payment.model';
 import { PaymentService } from './payment.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 const PAYMENT_OPTIONS = ['parties', 'currencies'];
 const POSTING_OPTIONS = ['journals', 'periods', 'accounts'];
@@ -21,6 +22,7 @@ const POSTING_OPTIONS = ['journals', 'periods', 'accounts'];
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class PaymentsPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'payments';
   readonly title = 'Payments';
   readonly description = 'Record incoming and outgoing payments for your customers and suppliers.';
@@ -132,10 +134,12 @@ export class PaymentsPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this payment.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this payment.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -194,7 +198,11 @@ export class PaymentsPageComponent implements OnInit, OnDestroy {
       return;
     }
     const payload: PaymentPostingPayload = { journalId, accountingPeriodId, cashAccountId, controlAccountId };
-    this.runAction(this.business.postPayment(this.postingPaymentId, payload), 'Could not post this payment.');
+    this.runAction(
+      this.business.postPayment(this.postingPaymentId, payload),
+      'Payment posted successfully.',
+      'Could not post this payment.',
+    );
   }
 
   submitAllocation(): void {
@@ -212,10 +220,18 @@ export class PaymentsPageComponent implements OnInit, OnDestroy {
       salesInvoiceId: documentType === 'sales' ? documentId : null,
       purchaseBillId: documentType === 'purchase' ? documentId : null,
     };
-    this.runAction(this.business.allocatePayment(this.allocatingPaymentId, payload), 'Could not save this payment allocation.');
+    this.runAction(
+      this.business.allocatePayment(this.allocatingPaymentId, payload),
+      'Payment allocated successfully.',
+      'Could not save this payment allocation.',
+    );
   }
 
-  private runAction(request: ReturnType<BusinessService['postPayment']>, failureMessage: string): void {
+  private runAction(
+    request: ReturnType<BusinessService['postPayment']>,
+    successMessage: string,
+    failureMessage: string,
+  ): void {
     this.saving = true;
     this.error = '';
     request.subscribe({
@@ -223,10 +239,12 @@ export class PaymentsPageComponent implements OnInit, OnDestroy {
         this.postingPaymentId = null;
         this.allocatingPaymentId = null;
         this.saving = false;
+        this.notifications.success(successMessage);
         this.loadRows();
       },
       error: error => {
-        this.error = errorMessage(error, failureMessage);
+        this.error = '';
+        this.notifications.error(errorMessage(error, failureMessage));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -246,7 +264,8 @@ export class PaymentsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load payments.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load payments.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -279,7 +298,8 @@ export class PaymentsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this payment.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this payment.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -295,7 +315,8 @@ export class PaymentsPageComponent implements OnInit, OnDestroy {
           this.changeDetector.markForCheck();
         },
         error: error => {
-          this.error = errorMessage(error, `Could not load ${source} options.`);
+          this.error = '';
+          this.notifications.error(errorMessage(error, `Could not load ${source} options.`));
           this.changeDetector.markForCheck();
         },
       });

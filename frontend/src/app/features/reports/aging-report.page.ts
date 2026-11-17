@@ -1,10 +1,11 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { errorMessage } from '../../shared/utils/page-utils';
 import { AgingReport } from './report.model';
 import { FinancialReportService } from './report.service';
+import { NotificationService } from '../../shared/services/notification.service';
 
 type AgingReportKind = 'receivables' | 'payables';
 
@@ -15,6 +16,7 @@ type AgingReportKind = 'receivables' | 'payables';
   styleUrls: ['../../shared/styles/feature-page.css', './aging-report.page.css'],
 })
 export class AgingReportPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   kind: AgingReportKind = 'receivables';
   asOfDate = '';
   report: AgingReport | null = null;
@@ -73,7 +75,8 @@ export class AgingReportPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, `Could not load the ${this.title.toLowerCase()}.`);
+        this.error = '';
+        this.notifications.error(errorMessage(error, `Could not load the ${this.title.toLowerCase()}.`));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

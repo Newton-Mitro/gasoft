@@ -27,7 +27,10 @@ public sealed class AppDbContext(
     public DbSet<AccountGroup> AccountGroups => Set<AccountGroup>();
     public DbSet<ChartOfAccount> ChartOfAccounts => Set<ChartOfAccount>();
     public DbSet<FiscalYear> FiscalYears => Set<FiscalYear>();
+    public DbSet<FiscalYearStatusChange> FiscalYearStatusChanges => Set<FiscalYearStatusChange>();
+    public DbSet<FiscalYearClosing> FiscalYearClosings => Set<FiscalYearClosing>();
     public DbSet<AccountingPeriod> AccountingPeriods => Set<AccountingPeriod>();
+    public DbSet<AccountingPeriodStatusChange> AccountingPeriodStatusChanges => Set<AccountingPeriodStatusChange>();
     public DbSet<Journal> Journals => Set<Journal>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<JournalLine> JournalLines => Set<JournalLine>();
@@ -311,6 +314,70 @@ public sealed class AppDbContext(
                 .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
                 .OnDelete(DeleteBehavior.Restrict);
             entity.ToTable(table => table.HasCheckConstraint("CK_AccountingPeriods_DateRange", "\"EndsOn\" >= \"StartsOn\""));
+            entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
+        });
+
+        builder.Entity<FiscalYearStatusChange>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FromStatus).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.ToStatus).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.Reason).HasMaxLength(500).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.FiscalYearId, x.ChangedAt });
+            entity.HasOne<FiscalYear>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.FiscalYearId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(x => x.ChangedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
+        });
+
+        builder.Entity<FiscalYearClosing>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.FiscalYearId }).IsUnique();
+            entity.HasOne<FiscalYear>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.FiscalYearId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<JournalEntry>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.JournalEntryId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ChartOfAccount>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.RetainedEarningsAccountId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(x => x.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
+        });
+
+        builder.Entity<AccountingPeriodStatusChange>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FromStatus).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.ToStatus).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.Reason).HasMaxLength(500).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.AccountingPeriodId, x.ChangedAt });
+            entity.HasOne<AccountingPeriod>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.AccountingPeriodId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(x => x.ChangedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
             entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
         });
 

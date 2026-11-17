@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, timeout } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
@@ -8,6 +8,7 @@ import { Choice, DocumentLineForm } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { SalesQuote, SalesQuotePayload } from './sales-quote.model';
 import { SalesQuotesService } from './sales-quotes.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 interface CustomerOption {
   id: number;
@@ -24,6 +25,7 @@ interface CustomerOption {
   styleUrls: ['../../../shared/styles/feature-page.css', './sales-quotes.page.css'],
 })
 export class SalesQuotesPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   quotes: SalesQuote[] = [];
   totalCount = 0;
   page = 1;
@@ -80,7 +82,8 @@ export class SalesQuotesPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.supportDataError = errorMessage(error, 'Could not load sales quote form options.');
+        this.supportDataError = '';
+        this.notifications.error(errorMessage(error, 'Could not load sales quote form options.'));
         this.supportDataLoading = false;
         this.changeDetector.markForCheck();
       },
@@ -163,10 +166,12 @@ export class SalesQuotesPageComponent implements OnInit {
       next: () => {
         this.editing = false;
         this.saving = false;
+        this.notifications.success(`Quote ${this.quoteNumber} ${this.quoteId === null ? 'created' : 'updated'} successfully.`);
         this.refresh();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this sales quote.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this sales quote.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -179,11 +184,13 @@ export class SalesQuotesPageComponent implements OnInit {
     this.service.transition(quote.id, action).subscribe({
       next: () => {
         const statusText = action === 'accept' ? 'accepted' : action === 'decline' ? 'declined' : 'cancelled';
-        this.success = `Quote ${quote.quoteNumber} ${statusText}.`;
+        this.notifications.success(`Quote ${quote.quoteNumber} ${statusText}.`);
+        this.success = '';
         this.refresh();
       },
       error: error => {
-        this.error = errorMessage(error, `Could not ${action} this quote.`);
+        this.error = '';
+        this.notifications.error(errorMessage(error, `Could not ${action} this quote.`));
         this.changeDetector.markForCheck();
       },
     });
@@ -196,11 +203,13 @@ export class SalesQuotesPageComponent implements OnInit {
     this.service.sendQuote(quote.id).subscribe({
       next: result => {
         this.sendingQuoteId = null;
-        this.success = `Quote ${quote.quoteNumber} emailed to ${result.sentTo}.`;
+        this.notifications.success(`Quote ${quote.quoteNumber} emailed to ${result.sentTo}.`);
+        this.success = '';
         this.refresh();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not email this quote.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not email this quote.'));
         this.sendingQuoteId = null;
         this.changeDetector.markForCheck();
       },
@@ -228,11 +237,13 @@ export class SalesQuotesPageComponent implements OnInit {
       next: () => {
         this.convertingQuote = null;
         this.saving = false;
-        this.success = `Quote ${quote.quoteNumber} converted to invoice ${this.invoiceNumber}.`;
+        this.notifications.success(`Quote ${quote.quoteNumber} converted to invoice ${this.invoiceNumber}.`);
+        this.success = '';
         this.refresh();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not convert this quote to an invoice.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not convert this quote to an invoice.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -268,7 +279,8 @@ export class SalesQuotesPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, failureMessage);
+        this.error = '';
+        this.notifications.error(errorMessage(error, failureMessage));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

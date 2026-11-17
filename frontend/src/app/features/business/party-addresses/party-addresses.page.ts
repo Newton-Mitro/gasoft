@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
@@ -7,6 +7,7 @@ import { PageChange, PaginationComponent } from '../../../shared/components/pagi
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { PartyAddress, PartyAddressPayload, PartyAddressType } from './party-address.model';
 import { PartyAddressService } from './party-address.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 const ADDRESS_TYPES: Choice[] = [
   { label: 'Billing', value: 'Billing' },
@@ -21,6 +22,7 @@ const ADDRESS_TYPES: Choice[] = [
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class PartyAddressesPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'party-addresses';
   readonly title = 'Party addresses';
   readonly description = 'Manage billing, shipping, and other addresses for this customer or supplier.';
@@ -130,10 +132,12 @@ export class PartyAddressesPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this party address.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this party address.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -164,7 +168,8 @@ export class PartyAddressesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load party addresses.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load party addresses.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -193,7 +198,8 @@ export class PartyAddressesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this party address.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this party address.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

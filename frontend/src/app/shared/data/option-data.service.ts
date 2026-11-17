@@ -63,6 +63,30 @@ export class OptionDataService {
     }));
   }
 
+  getEquityAccountOptions(): Observable<Choice[]> {
+    return forkJoin({
+      accounts: this.getRawOptions(OPTION_REQUESTS['accounts']),
+      groups: this.getRawOptions(OPTION_REQUESTS['groups']),
+    }).pipe(map(({ accounts, groups }) => {
+      const equityGroupIds = new Set(this.toRows(groups)
+        .filter(group => group['accountType'] === 'Equity')
+        .map(group => Number(group['id']))
+        .filter(id => Number.isSafeInteger(id) && id > 0));
+      return this.toRows(accounts)
+        .filter(account =>
+          account['isActive'] === true &&
+          account['allowPosting'] === true &&
+          equityGroupIds.has(Number(account['accountGroupId'])) &&
+          typeof account['code'] === 'string' &&
+          typeof account['name'] === 'string')
+        .map(account => ({
+          label: `${account['code']} · ${account['name']}`,
+          value: Number(account['id']),
+        }))
+        .filter(option => Number.isSafeInteger(option.value) && option.value > 0);
+    }));
+  }
+
   getTaxReferenceRows(): Observable<DataRow[]> {
     const endpoint = this.api.companyUrl('tax-reference');
     return this.cache.get(this.cacheKey(endpoint), () =>

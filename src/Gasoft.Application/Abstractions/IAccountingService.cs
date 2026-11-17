@@ -41,6 +41,33 @@ public interface IAccountingService
         CancellationToken cancellationToken);
     Task<FiscalYearDto?> GetFiscalYearAsync(long companyId, long fiscalYearId, CancellationToken cancellationToken);
     Task<FiscalYearDto?> UpdateFiscalYearAsync(long companyId, long fiscalYearId, UpdateFiscalYearRequest request, CancellationToken cancellationToken);
+    Task<FiscalYearCloseChecklistDto?> GetFiscalYearCloseChecklistAsync(
+        long companyId,
+        long fiscalYearId,
+        CancellationToken cancellationToken);
+    Task<JournalEntryDto?> PrepareFiscalYearClosingJournalAsync(
+        long companyId,
+        long fiscalYearId,
+        PrepareFiscalYearClosingRequest request,
+        CancellationToken cancellationToken);
+    Task<JournalEntryDto?> PrepareFiscalYearOpeningBalancesAsync(
+        long companyId,
+        long fiscalYearId,
+        CancellationToken cancellationToken);
+    Task<FiscalYearDto?> CloseFiscalYearAsync(
+        long companyId,
+        long fiscalYearId,
+        ChangeAccountingPeriodStatusRequest request,
+        CancellationToken cancellationToken);
+    Task<FiscalYearDto?> ReopenFiscalYearAsync(
+        long companyId,
+        long fiscalYearId,
+        ChangeAccountingPeriodStatusRequest request,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<FiscalYearStatusChangeDto>?> GetFiscalYearStatusHistoryAsync(
+        long companyId,
+        long fiscalYearId,
+        CancellationToken cancellationToken);
     Task<IReadOnlyList<AccountingPeriodDto>> GetPeriodsAsync(long companyId, CancellationToken cancellationToken);
     Task<PagedResultDto<AccountingPeriodDto>> GetPeriodsPageAsync(
         long companyId,
@@ -49,6 +76,24 @@ public interface IAccountingService
         CancellationToken cancellationToken);
     Task<AccountingPeriodDto?> GetPeriodAsync(long companyId, long periodId, CancellationToken cancellationToken);
     Task<AccountingPeriodDto?> UpdatePeriodAsync(long companyId, long periodId, UpdateAccountingPeriodRequest request, CancellationToken cancellationToken);
+    Task<AccountingPeriodDto?> ClosePeriodAsync(
+        long companyId,
+        long periodId,
+        ChangeAccountingPeriodStatusRequest request,
+        CancellationToken cancellationToken);
+    Task<AccountingPeriodCloseChecklistDto?> GetPeriodCloseChecklistAsync(
+        long companyId,
+        long periodId,
+        CancellationToken cancellationToken);
+    Task<AccountingPeriodDto?> ReopenPeriodAsync(
+        long companyId,
+        long periodId,
+        ChangeAccountingPeriodStatusRequest request,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<AccountingPeriodStatusChangeDto>?> GetPeriodStatusHistoryAsync(
+        long companyId,
+        long periodId,
+        CancellationToken cancellationToken);
     Task<IReadOnlyList<JournalDto>> GetJournalsAsync(long companyId, CancellationToken cancellationToken);
     Task<PagedResultDto<JournalDto>> GetJournalsPageAsync(
         long companyId,

@@ -79,13 +79,50 @@
                   <td>{{ period.endsOn }}</td>
                   <td>{{ period.status }}</td>
                   <td>
-                    <a
-                      class="button secondary table-action"
-                      [routerLink]="[indexPath, period.id, 'edit']"
-                      >Edit</a
-                    >
+                    @if (period.status === 'Open') {
+                      <button class="button secondary table-action" type="button"
+                        [disabled]="busyPeriodId === period.id" (click)="changeStatus(period, 'close')">
+                        {{ busyPeriodId === period.id ? 'Checking…' : 'Close' }}
+                      </button>
+                      <a class="button secondary table-action" [routerLink]="[indexPath, period.id, 'edit']">Edit</a>
+                    } @else {
+                      <button class="button secondary table-action" type="button"
+                        [disabled]="busyPeriodId === period.id" (click)="changeStatus(period, 'reopen')">
+                        {{ busyPeriodId === period.id ? 'Reopening…' : 'Reopen' }}
+                      </button>
+                    }
+                    <button class="button secondary table-action" type="button"
+                      (click)="toggleStatusHistory(period.id)">
+                      {{ historyPeriodId === period.id ? 'Hide history' : 'History' }}
+                    </button>
                   </td>
                 </tr>
+                @if (historyPeriodId === period.id) {
+                  <tr class="period-history">
+                    <td colspan="5">
+                      @if (statusHistory.length === 0) {
+                        <span>No status changes recorded.</span>
+                      } @else {
+                        @for (change of statusHistory; track change.id) {
+                          <p><strong>{{ change.fromStatus }} → {{ change.toStatus }}</strong>
+                            · {{ formatStatusChangeDate(change.changedAt) }}
+                            · {{ change.changedByDisplayName }}
+                            · {{ change.reason }}</p>
+                        }
+                      }
+                    </td>
+                  </tr>
+                }
+                @if (closeChecklistPeriodId === period.id && closeChecklist) {
+                  <tr class="period-history">
+                    <td colspan="5">
+                      <strong>Close checklist</strong>
+                      <span>{{ closeChecklist.draftJournalEntryCount }} draft journal entries</span>
+                      <span>{{ closeChecklist.unreconciledBankTransactionCount }} unreconciled bank transactions</span>
+                      <span>{{ closeChecklist.canClose ? 'Ready to close' : 'Resolve blockers before closing' }}</span>
+                    </td>
+                  </tr>
+                }
               }
             </tbody>
           </table>

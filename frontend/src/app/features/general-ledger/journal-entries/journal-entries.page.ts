@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { JournalEntryPostingService } from './journal-entry-posting.service';
@@ -18,6 +18,7 @@ import {
   JournalEntryPayload,
 } from './journal-entry.model';
 import { JournalEntryService } from './journal-entry.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 const JOURNAL_ENTRY_OPTIONS = ['journals', 'periods', 'currencies', 'accounts'];
 
@@ -28,6 +29,7 @@ const JOURNAL_ENTRY_OPTIONS = ['journals', 'periods', 'currencies', 'accounts'];
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class JournalEntriesPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'journal-entries';
   readonly title = 'Journal entries';
   readonly description = 'Create a balanced journal draft and post it to the general ledger.';
@@ -159,10 +161,12 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this journal entry.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this journal entry.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -183,10 +187,12 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
           ? { ...row, status: posted.status }
           : row);
         this.saving = false;
+        this.notifications.success(`Journal entry ${posted.id} posted successfully.`);
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not post this journal entry.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not post this journal entry.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -222,7 +228,8 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load journal entries.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load journal entries.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -262,7 +269,8 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this journal entry.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this journal entry.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -285,7 +293,8 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
         error: error => {
           this.finishOptionLoad(source);
           this.optionsFailed = [...this.optionsFailed, source];
-          this.error = errorMessage(error, `Could not load ${source} options.`);
+          this.error = '';
+          this.notifications.error(errorMessage(error, `Could not load ${source} options.`));
           this.changeDetector.markForCheck();
         },
       });

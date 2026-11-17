@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
@@ -8,6 +8,7 @@ import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.mod
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { Party, PartyPayload } from './party.model';
 import { PartyService } from './party.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-parties-page',
@@ -16,6 +17,7 @@ import { PartyService } from './party.service';
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class PartiesPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'parties';
   readonly title = 'Customers & suppliers';
   readonly description = 'Maintain the customer and supplier directory for your tenant.';
@@ -113,10 +115,12 @@ export class PartiesPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this customer or supplier.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this customer or supplier.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -140,7 +144,8 @@ export class PartiesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load currency options.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load currency options.'));
         this.changeDetector.markForCheck();
       },
     });
@@ -159,7 +164,8 @@ export class PartiesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load customers and suppliers.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load customers and suppliers.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -187,7 +193,8 @@ export class PartiesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this customer or supplier.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this customer or supplier.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

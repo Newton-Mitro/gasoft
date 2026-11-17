@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
@@ -13,6 +13,7 @@ import {
   UpdateTenantUserPayload,
 } from './user.model';
 import { TenantUserService } from './user.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 const ROLE_OPTIONS: Choice[] = [
   { label: 'Admin', value: 'Admin' },
@@ -27,6 +28,7 @@ const ROLE_OPTIONS: Choice[] = [
   styleUrls: ['../../../shared/styles/feature-page.css', './users.page.css'],
 })
 export class UsersPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'users';
   readonly title = 'Team members';
   readonly description = 'Manage tenant membership and access roles. Add new accounts or invite an existing Gasoft user.';
@@ -130,12 +132,14 @@ export class UsersPageComponent implements OnInit, OnDestroy {
     this.users.update(user.id, payload).subscribe({
       next: updated => {
         this.rows = this.rows.map(row => row.id === updated.id ? updated : row);
-        this.success = `${updated.displayName} ${updated.isActive ? 'reactivated' : 'deactivated'}.`;
+        this.notifications.success(`${updated.displayName} ${updated.isActive ? 'reactivated' : 'deactivated'}.`);
+        this.success = '';
         this.saving = false;
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not update team member access.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not update team member access.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -177,10 +181,12 @@ export class UsersPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, failureMessage);
+        this.error = '';
+        this.notifications.error(errorMessage(error, failureMessage));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -200,7 +206,8 @@ export class UsersPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load team members.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load team members.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -227,7 +234,8 @@ export class UsersPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this team member.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this team member.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

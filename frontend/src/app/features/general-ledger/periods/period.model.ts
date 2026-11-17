@@ -11,3 +11,20 @@ export interface AccountingPeriodPayload {
   startsOn: string;
   endsOn: string;
 }
+
+export interface AccountingPeriodStatusChange {
+  id: number;
+  fromStatus: string;
+  toStatus: string;
+  reason: string;
+  changedAt: string;
+  changedByUserId: number;
+  changedByDisplayName: string;
+}
+
+export interface AccountingPeriodCloseChecklist {
+  periodId: number;
+  draftJournalEntryCount: number;
+  unreconciledBankTransactionCount: number;
+  canClose: boolean;
+}

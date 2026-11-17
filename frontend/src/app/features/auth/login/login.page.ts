@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService, WorkspaceOption } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-login-page',
@@ -161,7 +162,7 @@ import { errorMessage } from '../../../shared/utils/page-utils';
   template: `
     <main class="auth-page">
       <section class="auth-brand">
-        <a class="brand" routerLink="/login"><span class="brand-mark">G</span> gasoft</a>
+        <a class="brand" routerLink="/login"><img class="brand-logo" src="/logo.png" alt="gasoft logo" /> gasoft</a>
         <div class="brand-copy">
           <p class="eyebrow">FINANCE, IN FOCUS</p>
           <h1>Good decisions<br />start with clear books.</h1>
@@ -221,6 +222,7 @@ import { errorMessage } from '../../../shared/utils/page-utils';
   `,
 })
 export class LoginPage {
+  readonly notifications = inject(NotificationService);
   email = '';
   password = '';
   availableWorkspaces: WorkspaceOption[] | null = null;
@@ -258,7 +260,8 @@ export class LoginPage {
         else this.busy = false;
       },
       error: error => {
-        this.error = errorMessage(error, 'Sign-in failed. Check your email and password.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Sign-in failed. Check your email and password.'));
         this.busy = false;
       },
     });
@@ -275,9 +278,13 @@ export class LoginPage {
     this.busy = true;
     this.error = '';
     this.auth.login(this.email.trim(), this.password, tenantId).subscribe({
-      next: () => void this.router.navigate(['/dashboard']),
+      next: () => {
+        this.notifications.success('Signed in successfully.');
+        void this.router.navigate(['/dashboard']);
+      },
       error: error => {
-        this.error = errorMessage(error, 'Could not open that workspace. Please sign in again.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not open that workspace. Please sign in again.'));
         this.busy = false;
         this.availableWorkspaces = null;
         this.selectedTenantId = null;

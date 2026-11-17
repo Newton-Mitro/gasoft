@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { BusinessService } from '../business.service';
@@ -10,6 +10,7 @@ import { PageChange, PaginationComponent } from '../../../shared/components/pagi
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { SalesInvoice, SalesInvoicePayload } from './sales-invoice.model';
 import { SalesInvoiceService } from './sales-invoice.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 const DOCUMENT_OPTIONS = ['parties', 'currencies', 'accounts', 'taxCodes'];
 const POSTING_OPTIONS = ['journals', 'periods', 'accounts'];
@@ -21,6 +22,7 @@ const POSTING_OPTIONS = ['journals', 'periods', 'accounts'];
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'sales-invoices';
   readonly title = 'Sales invoices';
   readonly description = 'Create customer invoices and track their accounting status.';
@@ -145,10 +147,12 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this sales invoice.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this sales invoice.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -187,7 +191,8 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load sales invoice posting details.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load sales invoice posting details.'));
         this.postingInvoiceId = null;
         this.postingLoading = false;
         this.changeDetector.markForCheck();
@@ -218,10 +223,12 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
       next: () => {
         this.postingInvoiceId = null;
         this.saving = false;
+        this.notifications.success('Sales invoice posted successfully.');
         this.loadRows();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not post this sales invoice.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not post this sales invoice.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -237,7 +244,8 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
           this.changeDetector.markForCheck();
         },
         error: error => {
-          this.error = errorMessage(error, `Could not load ${source} options.`);
+          this.error = '';
+          this.notifications.error(errorMessage(error, `Could not load ${source} options.`));
           this.changeDetector.markForCheck();
         },
       });
@@ -257,7 +265,8 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load sales invoices.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load sales invoices.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -309,7 +318,8 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this sales invoice.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this sales invoice.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

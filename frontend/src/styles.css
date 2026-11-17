@@ -2,6 +2,8 @@
 @import "tailwindcss/utilities" layer(utilities);
 @import "@fortawesome/fontawesome-free/css/fontawesome.min.css";
 @import "@fortawesome/fontawesome-free/css/solid.min.css";
+@import "@ngxpert/hot-toast/styles.css";
+@import "sweetalert2/dist/sweetalert2.min.css";
 
 :root {
   color-scheme: light;
@@ -323,9 +325,59 @@ html[data-theme="dark"] .form-panel::before {
 
 .auth-page { min-height: 100vh; display: grid; grid-template-columns: minmax(340px, .87fr) 1.13fr; background: #fff; }
 .auth-brand { min-height: 100vh; display: flex; flex-direction: column; padding: 38px 9%; color: #fff; background: var(--accent-dark); }
-.brand { display: inline-flex; align-items: center; gap: 9px; color: var(--accent-text); font-size: 19px; font-weight: 750; letter-spacing: -.7px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--accent-text); font-size: 21px; font-weight: 800; letter-spacing: -.11em; line-height: 1; }
 .brand:hover { color: var(--accent-text); }
+.brand-logo { width: 32px; height: 32px; display: block; border-radius: 10px; object-fit: cover; box-shadow: 0 8px 18px rgba(12, 28, 22, 0.18); border: none; background: transparent; }
 .brand-mark { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 8px; color: var(--accent-text); background: var(--accent-soft); font-size: 15px; font-weight: 800; }
+.brand, .brand-name { text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12), 0 8px 18px rgba(0, 0, 0, 0.14); }
+.brand { background: linear-gradient(180deg, #ffffff 0%, #dff6e7 32%, #bfe6d0 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.app-swal-popup { color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.app-swal-title { color: var(--text-strong); }
+.app-swal-confirm, .app-swal-cancel { min-height: 38px; padding: 0 16px; border: 0; border-radius: 7px; font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+.app-swal-confirm { color: #fff; background: var(--accent); }
+.app-swal-confirm:hover { background: var(--accent-hover); }
+.app-swal-cancel { margin-right: 8px; color: var(--text); background: var(--surface-muted); }
+.app-swal-cancel:hover { background: var(--surface-raised); }
+
+.app-toast {
+  max-width: min(420px, calc(100vw - 32px)) !important;
+  padding: 13px 15px !important;
+  border: 1px solid var(--border) !important;
+  border-left: 3px solid var(--accent) !important;
+  border-radius: 12px !important;
+  background: var(--surface) !important;
+  color: var(--text-strong) !important;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--text-strong) 14%, transparent),
+    0 2px 6px color-mix(in srgb, var(--text-strong) 8%, transparent) !important;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.5;
+}
+.app-toast-success { border-left-color: var(--success-text) !important; }
+.app-toast-error { border-left-color: var(--error-text) !important; }
+.app-toast-info { border-left-color: var(--focus-color) !important; }
+.app-toast .hot-toast-message {
+  justify-content: flex-start;
+  margin: 0 10px;
+}
+.app-toast .hot-toast-icon {
+  align-self: center;
+  padding-top: 0;
+}
+.app-toast-success .hot-toast-checkmark-icon { background-color: var(--success-text); }
+.app-toast-error .hot-toast-error-icon { background: var(--error-text); }
+.app-toast .hot-toast-close-btn {
+  align-self: center;
+  flex: 0 0 auto;
+  margin: 0 0 0 4px;
+  border-radius: 5px;
+}
+.app-toast .hot-toast-close-btn:focus-visible {
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+}
+html[data-theme="dark"] .app-toast .hot-toast-close-btn { filter: invert(1); }
 .auth-brand .brand { color: #fff; }
 .auth-brand .brand-mark { color: var(--accent-text); }
 .brand-copy { max-width: 430px; margin: auto 0; padding: 45px 0; }

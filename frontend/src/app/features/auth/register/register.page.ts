@@ -1,9 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { errorMessage, registrationError } from '../../../shared/utils/page-utils';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 interface Currency {
   code: string;
@@ -16,7 +17,7 @@ interface Currency {
   template: `
     <main class="auth-page">
       <section class="auth-brand">
-        <a class="brand" routerLink="/login"><span class="brand-mark">G</span> gasoft</a>
+        <a class="brand" routerLink="/login"><img class="brand-logo" src="/logo.png" alt="gasoft logo" /> gasoft</a>
         <div class="brand-copy">
           <p class="eyebrow">A BETTER WAY TO BALANCE</p>
           <h1>Your business,<br />beautifully organized.</h1>
@@ -65,6 +66,7 @@ interface Currency {
   `,
 })
 export class RegisterPage implements OnInit {
+  readonly notifications = inject(NotificationService);
   readonly currencies = signal<Currency[]>([]);
   readonly currencyLoading = signal(true);
   readonly currencyLoadFailed = signal(false);
@@ -100,7 +102,8 @@ export class RegisterPage implements OnInit {
         this.currencyLoading.set(false);
       },
       error: error => {
-        this.error.set(errorMessage(error, 'Could not load supported currencies.'));
+        this.error.set('');
+        this.notifications.error(errorMessage(error, 'Could not load supported currencies.'));
         this.currencyLoading.set(false);
         this.currencyLoadFailed.set(true);
       },
@@ -127,10 +130,14 @@ export class RegisterPage implements OnInit {
       email: this.email.trim(),
       password: this.password,
     }).subscribe({
-      next: () => void this.router.navigate(['/dashboard']),
+      next: () => {
+        this.notifications.success('Your workspace was created successfully.');
+        void this.router.navigate(['/dashboard']);
+      },
       error: error => {
         const result = registrationError(error);
-        this.error.set(result.message);
+        this.error.set('');
+        this.notifications.error(result.message);
         this.showSignIn.set(result.showSignIn);
         this.busy.set(false);
       },

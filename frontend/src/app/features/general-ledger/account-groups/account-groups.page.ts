@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
@@ -8,6 +8,7 @@ import { PaginationComponent, PageChange } from '../../../shared/components/pagi
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { AccountGroup, AccountGroupPayload, AccountType } from './account-group.model';
 import { AccountGroupService } from './account-group.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 const ACCOUNT_TYPES: Choice[] = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense']
   .map(value => ({ label: value, value }));
@@ -19,6 +20,7 @@ const ACCOUNT_TYPES: Choice[] = ['Asset', 'Liability', 'Equity', 'Revenue', 'Exp
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class AccountGroupsPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'account-groups';
   readonly title = 'Account groups';
   readonly description = 'Group accounts by their financial statement classification.';
@@ -120,10 +122,12 @@ export class AccountGroupsPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this account group.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this account group.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -147,7 +151,8 @@ export class AccountGroupsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load account groups.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load account groups.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -171,7 +176,8 @@ export class AccountGroupsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this account group.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this account group.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

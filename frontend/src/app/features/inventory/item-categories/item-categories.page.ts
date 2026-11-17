@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
@@ -7,6 +7,7 @@ import { PageChange, PaginationComponent } from '../../../shared/components/pagi
 import { Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { ItemCategory, ItemCategoryPayload } from './item-category.model';
 import { ItemCategoryService } from './item-category.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-item-categories-page',
@@ -15,6 +16,7 @@ import { ItemCategoryService } from './item-category.service';
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class ItemCategoriesPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'item-categories';
   readonly title = 'Item categories';
   readonly description = 'Classify inventory items for easier management.';
@@ -98,10 +100,12 @@ export class ItemCategoriesPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this item category.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this item category.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -131,7 +135,8 @@ export class ItemCategoriesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load item categories.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load item categories.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -151,7 +156,8 @@ export class ItemCategoriesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this item category.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this item category.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

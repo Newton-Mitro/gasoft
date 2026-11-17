@@ -236,6 +236,130 @@ public static class AccountingEndpoints
             var year = await service.GetFiscalYearAsync(companyId, fiscalYearId, cancellationToken);
             return year is null ? Results.NotFound(new { error = "Fiscal year was not found in this company." }) : Results.Ok(year);
         });
+        companies.MapGet("/fiscal-years/{fiscalYearId:long}/close-checklist", async (
+            long companyId,
+            long fiscalYearId,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            var checklist = await service.GetFiscalYearCloseChecklistAsync(
+                companyId, fiscalYearId, cancellationToken);
+            return checklist is null
+                ? Results.NotFound(new { error = "Fiscal year was not found in this company." })
+                : Results.Ok(checklist);
+        });
+        companies.MapGet("/fiscal-years/{fiscalYearId:long}/status-history", async (
+            long companyId,
+            long fiscalYearId,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            var history = await service.GetFiscalYearStatusHistoryAsync(
+                companyId, fiscalYearId, cancellationToken);
+            return history is null
+                ? Results.NotFound(new { error = "Fiscal year was not found in this company." })
+                : Results.Ok(history);
+        });
+        companies.MapPost("/fiscal-years/{fiscalYearId:long}/closing-journal", async (
+            long companyId,
+            long fiscalYearId,
+            PrepareFiscalYearClosingRequest request,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var entry = await service.PrepareFiscalYearClosingJournalAsync(
+                    companyId, fiscalYearId, request, cancellationToken);
+                return entry is null
+                    ? Results.NotFound(new { error = "Fiscal year was not found in this company." })
+                    : Results.Created(
+                        $"/api/v1/companies/{companyId}/journal-entries/{entry.Id}",
+                        entry);
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (AccountingConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"));
+        companies.MapPost("/fiscal-years/{fiscalYearId:long}/opening-balances", async (
+            long companyId,
+            long fiscalYearId,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var entry = await service.PrepareFiscalYearOpeningBalancesAsync(companyId, fiscalYearId, cancellationToken);
+                return entry is null
+                    ? Results.NotFound(new { error = "Fiscal year was not found in this company." })
+                    : Results.Created(
+                        $"/api/v1/companies/{companyId}/journal-entries/{entry.Id}",
+                        entry);
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (AccountingConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"));
+        companies.MapPost("/fiscal-years/{fiscalYearId:long}/close", async (
+            long companyId,
+            long fiscalYearId,
+            ChangeAccountingPeriodStatusRequest request,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var year = await service.CloseFiscalYearAsync(companyId, fiscalYearId, request, cancellationToken);
+                return year is null
+                    ? Results.NotFound(new { error = "Fiscal year was not found in this company." })
+                    : Results.Ok(year);
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (AccountingConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"));
+        companies.MapPost("/fiscal-years/{fiscalYearId:long}/reopen", async (
+            long companyId,
+            long fiscalYearId,
+            ChangeAccountingPeriodStatusRequest request,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var year = await service.ReopenFiscalYearAsync(companyId, fiscalYearId, request, cancellationToken);
+                return year is null
+                    ? Results.NotFound(new { error = "Fiscal year was not found in this company." })
+                    : Results.Ok(year);
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (AccountingConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"));
 
         companies.MapGet("/accounting-periods", async (
             long companyId,
@@ -285,6 +409,76 @@ public static class AccountingEndpoints
             var period = await service.GetPeriodAsync(companyId, periodId, cancellationToken);
             return period is null ? Results.NotFound(new { error = "Accounting period was not found in this company." }) : Results.Ok(period);
         });
+        companies.MapGet("/accounting-periods/{periodId:long}/status-history", async (
+            long companyId,
+            long periodId,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            var history = await service.GetPeriodStatusHistoryAsync(companyId, periodId, cancellationToken);
+            return history is null
+                ? Results.NotFound(new { error = "Accounting period was not found in this company." })
+                : Results.Ok(history);
+        });
+        companies.MapGet("/accounting-periods/{periodId:long}/close-checklist", async (
+            long companyId,
+            long periodId,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            var checklist = await service.GetPeriodCloseChecklistAsync(companyId, periodId, cancellationToken);
+            return checklist is null
+                ? Results.NotFound(new { error = "Accounting period was not found in this company." })
+                : Results.Ok(checklist);
+        });
+        companies.MapPost("/accounting-periods/{periodId:long}/close", async (
+            long companyId,
+            long periodId,
+            ChangeAccountingPeriodStatusRequest request,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var period = await service.ClosePeriodAsync(companyId, periodId, request, cancellationToken);
+                return period is null
+                    ? Results.NotFound(new { error = "Accounting period was not found in this company." })
+                    : Results.Ok(period);
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (AccountingConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"));
+        companies.MapPost("/accounting-periods/{periodId:long}/reopen", async (
+            long companyId,
+            long periodId,
+            ChangeAccountingPeriodStatusRequest request,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var period = await service.ReopenPeriodAsync(companyId, periodId, request, cancellationToken);
+                return period is null
+                    ? Results.NotFound(new { error = "Accounting period was not found in this company." })
+                    : Results.Ok(period);
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (AccountingConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"));
 
         companies.MapGet("/journals", async (
             long companyId,

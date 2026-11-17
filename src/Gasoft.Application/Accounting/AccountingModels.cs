@@ -25,6 +25,7 @@ public sealed record UpdateAccountingPeriodRequest(
     long FiscalYearId,
     DateOnly StartsOn,
     DateOnly EndsOn);
+public sealed record ChangeAccountingPeriodStatusRequest(string? Reason);
 public sealed record CreateJournalRequest(string Code, string Name, string JournalType);
 public sealed record UpdateJournalRequest(string Code, string Name, string JournalType, bool IsActive);
 public sealed record CreateJournalEntryRequest(
@@ -77,6 +78,51 @@ public sealed record AccountingPeriodDto(
     DateOnly StartsOn,
     DateOnly EndsOn,
     string Status);
+public sealed record AccountingPeriodStatusChangeDto(
+    long Id,
+    string FromStatus,
+    string ToStatus,
+    string Reason,
+    DateTimeOffset ChangedAt,
+    long ChangedByUserId,
+    string ChangedByDisplayName);
+public sealed record AccountingPeriodCloseChecklistDto(
+    long PeriodId,
+    int DraftJournalEntryCount,
+    int UnreconciledBankTransactionCount)
+{
+    public bool CanClose => DraftJournalEntryCount == 0 && UnreconciledBankTransactionCount == 0;
+}
+public sealed record FiscalYearCloseChecklistDto(
+    long FiscalYearId,
+    int AccountingPeriodCount,
+    int OpenAccountingPeriodCount,
+    int DraftJournalEntryCount,
+    bool ClosingJournalRequired,
+    long? ClosingJournalEntryId,
+    string? ClosingJournalStatus,
+    IReadOnlyList<FiscalYearClosingLineDto> ClosingJournalLines)
+{
+    public bool CanClose =>
+        AccountingPeriodCount > 0 &&
+        OpenAccountingPeriodCount == 0 &&
+        DraftJournalEntryCount == 0 &&
+        (!ClosingJournalRequired || ClosingJournalStatus == "Posted");
+}
+public sealed record FiscalYearClosingLineDto(
+    string AccountCode,
+    string AccountName,
+    decimal Debit,
+    decimal Credit);
+public sealed record PrepareFiscalYearClosingRequest(long RetainedEarningsAccountId);
+public sealed record FiscalYearStatusChangeDto(
+    long Id,
+    string FromStatus,
+    string ToStatus,
+    string Reason,
+    DateTimeOffset ChangedAt,
+    long ChangedByUserId,
+    string ChangedByDisplayName);
 public sealed record JournalDto(long Id, long CompanyId, string Code, string Name, string JournalType, bool IsActive);
 public sealed record JournalEntryDto(
     long Id,

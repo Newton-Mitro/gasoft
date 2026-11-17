@@ -1,8 +1,9 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { InventoryBalance } from './inventory-balance.model';
 import { InventoryBalanceService } from './inventory-balance.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-inventory-balances-page',
@@ -11,6 +12,7 @@ import { InventoryBalanceService } from './inventory-balance.service';
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class InventoryBalancesPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   readonly title = 'Stock balances';
   readonly description = 'Review current quantity and inventory value by item and warehouse.';
   rows: InventoryBalance[] = [];
@@ -49,7 +51,8 @@ export class InventoryBalancesPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load stock balances.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load stock balances.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

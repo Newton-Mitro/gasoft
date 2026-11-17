@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
@@ -9,6 +9,7 @@ import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.mod
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { Account, AccountPayload } from './account.model';
 import { AccountService } from './account.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-accounts-page',
@@ -17,6 +18,7 @@ import { AccountService } from './account.service';
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class AccountsPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'accounts';
   readonly title = 'Chart of accounts';
   readonly description = 'Organize your ledger accounts and control where transactions can be posted.';
@@ -140,10 +142,12 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this account.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this account.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -161,7 +165,8 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load account group options.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load account group options.'));
         this.changeDetector.markForCheck();
       },
     });
@@ -180,7 +185,8 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load accounts.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load accounts.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -207,7 +213,8 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this account.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this account.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

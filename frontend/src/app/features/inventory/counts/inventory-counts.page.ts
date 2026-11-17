@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
@@ -10,6 +10,7 @@ import { InventoryCountPostingPayload } from '../inventory.models';
 import { InventoryService } from '../inventory.service';
 import { InventoryCount, InventoryCountItem, InventoryCountPayload } from './inventory-count.model';
 import { InventoryCountService } from './inventory-count.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-inventory-counts-page',
@@ -18,6 +19,7 @@ import { InventoryCountService } from './inventory-count.service';
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class InventoryCountsPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'inventory-counts';
   readonly title = 'Inventory counts';
   readonly description = 'Capture a physical stock count, compare it with system quantities, and post adjustments.';
@@ -132,10 +134,12 @@ export class InventoryCountsPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this inventory count.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this inventory count.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -184,10 +188,12 @@ export class InventoryCountsPageComponent implements OnInit, OnDestroy {
       next: () => {
         this.saving = false;
         this.postingCountId = null;
+        this.notifications.success('Inventory count posted and adjusted successfully.');
         this.loadRows();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not post this inventory count.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not post this inventory count.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -203,7 +209,8 @@ export class InventoryCountsPageComponent implements OnInit, OnDestroy {
           this.changeDetector.markForCheck();
         },
         error: error => {
-          this.error = errorMessage(error, `Could not load ${source} options.`);
+          this.error = '';
+          this.notifications.error(errorMessage(error, `Could not load ${source} options.`));
           this.changeDetector.markForCheck();
         },
       });
@@ -223,7 +230,8 @@ export class InventoryCountsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load inventory counts.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load inventory counts.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -259,7 +267,8 @@ export class InventoryCountsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this inventory count.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this inventory count.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

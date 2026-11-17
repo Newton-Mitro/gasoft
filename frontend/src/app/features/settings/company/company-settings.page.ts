@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
@@ -9,6 +9,7 @@ import { OptionDataService } from '../../../shared/data/option-data.service';
 import { Company, CreateCompanyPayload, UpdateCompanyPayload } from './company.model';
 import { CompanyService } from './company.service';
 import { AuthenticatedImageComponent } from '../../../shared/components/authenticated-image/authenticated-image.component';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-company-settings-page',
@@ -17,6 +18,7 @@ import { AuthenticatedImageComponent } from '../../../shared/components/authenti
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class CompanySettingsPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'company';
   readonly title = 'Company settings';
   readonly description = 'Manage your organization identity, contact details, tax information, and functional currency.';
@@ -111,10 +113,12 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
         this.selectedLogo = null;
         this.logoUploading = false;
         this.revokeLogoPreview();
+        this.notifications.success('Organization logo updated.');
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.logoError = errorMessage(error, 'Could not upload the company logo.');
+        this.logoError = '';
+        this.notifications.error(errorMessage(error, 'Could not upload the company logo.'));
         this.logoUploading = false;
         this.changeDetector.markForCheck();
       },
@@ -154,10 +158,12 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
         this.company = company;
         this.form = this.toForm(company);
         this.saving = false;
+        this.notifications.success('Company settings updated successfully.');
         void this.router.navigateByUrl('/settings/company');
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save company settings.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save company settings.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -179,13 +185,16 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
     this.saving = true;
     this.error = '';
     this.companies.create(payload).subscribe({
-      next: company => {
+      next: async company => {
         this.auth.updateCompanyId(company.id);
         this.saving = false;
-        void this.router.navigateByUrl('/settings/company').then(() => window.location.reload());
+        await this.notifications.successDialog(`${company.legalName} was created successfully.`);
+        await this.router.navigateByUrl('/settings/company');
+        window.location.reload();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not create the organization.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not create the organization.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -215,7 +224,8 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load company settings.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load company settings.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -229,7 +239,8 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load currency options.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load currency options.'));
         this.changeDetector.markForCheck();
       },
     });

@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-forgot-password-page',
@@ -10,7 +11,7 @@ import { errorMessage } from '../../../shared/utils/page-utils';
   template: `
     <main class="auth-page">
       <section class="auth-brand">
-        <a class="brand" routerLink="/login"><span class="brand-mark">G</span> gasoft</a>
+        <a class="brand" routerLink="/login"><img class="brand-logo" src="/logo.png" alt="gasoft logo" /> gasoft</a>
         <div class="brand-copy">
           <p class="eyebrow">ACCOUNT RECOVERY</p>
           <h1>Back to business,<br />securely.</h1>
@@ -41,6 +42,7 @@ import { errorMessage } from '../../../shared/utils/page-utils';
   `,
 })
 export class ForgotPasswordPage {
+  readonly notifications = inject(NotificationService);
   readonly busy = signal(false);
   readonly sent = signal(false);
   readonly error = signal('');
@@ -54,10 +56,12 @@ export class ForgotPasswordPage {
     this.auth.requestPasswordReset(this.email.trim()).subscribe({
       next: () => {
         this.sent.set(true);
+        this.notifications.success('If an account matches those details, a reset link will be sent shortly.');
         this.busy.set(false);
       },
       error: error => {
-        this.error.set(errorMessage(error, 'Could not request a password reset. Please try again.'));
+        this.error.set('');
+        this.notifications.error(errorMessage(error, 'Could not request a password reset. Please try again.'));
         this.busy.set(false);
       },
     });

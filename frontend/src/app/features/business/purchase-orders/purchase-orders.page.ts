@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
@@ -15,6 +15,7 @@ import {
   ReceivePurchaseOrderLinePayload,
 } from './purchase-orders.model';
 import { PurchaseOrdersService } from './purchase-orders.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 interface PartyOption {
   id: number;
@@ -44,6 +45,7 @@ interface EditableLine {
   styleUrls: ['../../../shared/styles/feature-page.css', './purchase-orders.page.css'],
 })
 export class PurchaseOrdersPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   orders: PurchaseOrder[] = [];
   totalCount = 0;
   page = 1;
@@ -129,7 +131,8 @@ export class PurchaseOrdersPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load purchase order data.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load purchase order data.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -260,11 +263,13 @@ export class PurchaseOrdersPageComponent implements OnInit {
         this.selectedOrderId = order.id;
         this.editing = false;
         this.saving = false;
-        this.success = `Purchase order ${order.orderNumber} saved as a draft.`;
+        this.notifications.success(`Purchase order ${order.orderNumber} saved as a draft.`);
+        this.success = '';
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save the purchase order.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save the purchase order.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -277,12 +282,14 @@ export class PurchaseOrdersPageComponent implements OnInit {
     this.service.place(order.id, order.revision).subscribe({
       next: updated => {
         this.upsertOrder(updated);
-        this.success = `Purchase order ${updated.orderNumber} is now open for receiving.`;
+        this.notifications.success(`Purchase order ${updated.orderNumber} is now open for receiving.`);
+        this.success = '';
         this.saving = false;
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not place this purchase order.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not place this purchase order.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -297,19 +304,22 @@ export class PurchaseOrdersPageComponent implements OnInit {
         this.service.getOrder(order.id).subscribe({
           next: updated => {
             this.upsertOrder(updated);
-            this.success = `Purchase order ${updated.orderNumber} cancelled.`;
+            this.notifications.success(`Purchase order ${updated.orderNumber} cancelled.`);
+            this.success = '';
             this.saving = false;
             this.changeDetector.markForCheck();
           },
           error: error => {
-            this.error = errorMessage(error, 'The order was cancelled, but its updated details could not be loaded.');
+            this.error = '';
+            this.notifications.error(errorMessage(error, 'The order was cancelled, but its updated details could not be loaded.'));
             this.saving = false;
             this.changeDetector.markForCheck();
           },
         });
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not cancel this purchase order.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not cancel this purchase order.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -352,12 +362,14 @@ export class PurchaseOrdersPageComponent implements OnInit {
     this.error = '';
     this.service.receive(order.id, this.receiveLineId, payload).subscribe({
       next: result => {
-        this.success = `Received ${result.movement.quantityIn} units. Inventory movement ${result.movement.movementNumber} was posted.`;
+        this.notifications.success(`Received ${result.movement.quantityIn} units. Inventory movement ${result.movement.movementNumber} was posted.`);
+        this.success = '';
         this.receiveLineId = null;
         this.reloadOrder(order.id);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not receive this purchase order line.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not receive this purchase order line.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -377,7 +389,8 @@ export class PurchaseOrdersPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'The receipt posted, but the updated purchase order could not be loaded.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'The receipt posted, but the updated purchase order could not be loaded.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -406,7 +419,8 @@ export class PurchaseOrdersPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this page of purchase orders.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this page of purchase orders.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

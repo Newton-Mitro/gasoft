@@ -294,6 +294,66 @@ public sealed class ReportingService(AppDbContext db) : IReportingService
         return new CashFlowCategoryDto(accountId, category);
     }
 
+    public async Task<RetainedEarningsRollForwardDto?> GetRetainedEarningsRollForwardAsync(
+        long companyId,
+        long fiscalYearId,
+        CancellationToken cancellationToken)
+    {
+        var currency = await GetCompanyCurrencyAsync(companyId, cancellationToken);
+        if (currency is null) return null;
+
+        var year = await db.FiscalYears.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.CompanyId == companyId && item.Id == fiscalYearId, cancellationToken);
+        if (year is null) return null;
+
+        var closing = await db.FiscalYearClosings.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.CompanyId == companyId && item.FiscalYearId == fiscalYearId, cancellationToken);
+
+        var retainedAccount = closing is not null
+            ? await (
+                from account in db.ChartOfAccounts.AsNoTracking()
+                join accountGroup in db.AccountGroups.AsNoTracking()
+                    on new { account.TenantId, account.CompanyId, account.AccountGroupId }
+                    equals new { accountGroup.TenantId, accountGroup.CompanyId, AccountGroupId = accountGroup.Id }
+                where account.CompanyId == companyId && account.Id == closing.RetainedEarningsAccountId
+                select new { account.Id, account.Code, account.Name, accountGroup.AccountType })
+                .SingleOrDefaultAsync(cancellationToken)
+            : await (
+                from account in db.ChartOfAccounts.AsNoTracking()
+                join accountGroup in db.AccountGroups.AsNoTracking()
+                    on new { account.TenantId, account.CompanyId, account.AccountGroupId }
+                    equals new { accountGroup.TenantId, accountGroup.CompanyId, AccountGroupId = accountGroup.Id }
+                where account.CompanyId == companyId && account.IsActive && account.AllowPosting &&
+                      accountGroup.AccountType == "Equity" &&
+                      (account.Code == "3100" || account.Name.Contains("Retained"))
+                orderby account.Code
+                select new { account.Id, account.Code, account.Name, accountGroup.AccountType })
+                .FirstOrDefaultAsync(cancellationToken);
+
+        if (retainedAccount is null) return null;
+
+        var beginningBalance = await GetAccountBalanceAsync(companyId, retainedAccount.Id, year.StartsOn.AddDays(-1), cancellationToken);
+        var netIncomeForYear = await GetFiscalYearNetIncomeAsync(companyId, year.StartsOn, year.EndsOn, cancellationToken);
+        var endingBalance = await GetAccountBalanceAsync(companyId, retainedAccount.Id, year.EndsOn, cancellationToken);
+        var ownerDrawsOrDividends = 0m;
+        var endingRetainedEarnings = beginningBalance + netIncomeForYear - ownerDrawsOrDividends;
+
+        return new RetainedEarningsRollForwardDto(
+            companyId,
+            currency,
+            fiscalYearId,
+            year.StartsOn,
+            year.EndsOn,
+            retainedAccount.Id,
+            retainedAccount.Code,
+            retainedAccount.Name,
+            beginningBalance,
+            netIncomeForYear,
+            ownerDrawsOrDividends,
+            endingRetainedEarnings,
+            endingBalance - endingRetainedEarnings);
+    }
+
     public async Task<TrialBalanceReportDto?> GetTrialBalanceAsync(
         long companyId,
         DateOnly? fromDate,
@@ -640,6 +700,56 @@ public sealed class ReportingService(AppDbContext db) : IReportingService
         DateOnly DueDate,
         string CurrencyCode,
         decimal OriginalAmount);
+
+    private async Task<decimal> GetAccountBalanceAsync(
+        long companyId,
+        long accountId,
+        DateOnly asOfDate,
+        CancellationToken cancellationToken)
+    {
+        return await (
+            from line in db.JournalLines.AsNoTracking()
+            join entry in db.JournalEntries.AsNoTracking()
+                on new { line.TenantId, line.CompanyId, EntryId = line.JournalEntryId }
+                equals new { entry.TenantId, entry.CompanyId, EntryId = entry.Id }
+            where line.CompanyId == companyId && line.AccountId == accountId &&
+                  entry.Status == "Posted" && entry.EntryDate <= asOfDate
+            select line.FunctionalDebit - line.FunctionalCredit)
+            .SumAsync(cancellationToken);
+    }
+
+    private async Task<decimal> GetFiscalYearNetIncomeAsync(
+        long companyId,
+        DateOnly fromDate,
+        DateOnly toDate,
+        CancellationToken cancellationToken)
+    {
+        var rows = await (
+            from line in db.JournalLines.AsNoTracking()
+            join entry in db.JournalEntries.AsNoTracking()
+                on new { line.TenantId, line.CompanyId, EntryId = line.JournalEntryId }
+                equals new { entry.TenantId, entry.CompanyId, EntryId = entry.Id }
+            join account in db.ChartOfAccounts.AsNoTracking()
+                on new { line.TenantId, line.CompanyId, AccountId = line.AccountId }
+                equals new { account.TenantId, account.CompanyId, AccountId = account.Id }
+            join accountGroup in db.AccountGroups.AsNoTracking()
+                on new { account.TenantId, account.CompanyId, account.AccountGroupId }
+                equals new { accountGroup.TenantId, accountGroup.CompanyId, AccountGroupId = accountGroup.Id }
+            where line.CompanyId == companyId && entry.Status == "Posted" &&
+                  entry.EntryDate >= fromDate && entry.EntryDate <= toDate &&
+                  (accountGroup.AccountType == "Revenue" || accountGroup.AccountType == "Expense")
+            group new { accountGroup.AccountType, line.FunctionalDebit, line.FunctionalCredit } by accountGroup.AccountType into grouped
+            select new
+            {
+                AccountType = grouped.Key,
+                Amount = grouped.Sum(item => item.AccountType == "Revenue"
+                    ? item.FunctionalCredit - item.FunctionalDebit
+                    : item.FunctionalDebit - item.FunctionalCredit)
+            }).ToListAsync(cancellationToken);
+
+        return rows.Where(row => row.AccountType == "Revenue").Sum(row => row.Amount) -
+               rows.Where(row => row.AccountType == "Expense").Sum(row => row.Amount);
+    }
 
     private async Task<string?> GetCompanyCurrencyAsync(long companyId, CancellationToken cancellationToken) =>
         await db.Companies.AsNoTracking()

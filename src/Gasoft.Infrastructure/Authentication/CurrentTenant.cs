@@ -14,4 +14,13 @@ public sealed class CurrentTenant(IHttpContextAccessor httpContextAccessor) : IC
             return long.TryParse(value, out var tenantId) ? tenantId : null;
         }
     }
+
+    public long? UserId
+    {
+        get
+        {
+            var value = httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return long.TryParse(value, out var userId) ? userId : null;
+        }
+    }
 }

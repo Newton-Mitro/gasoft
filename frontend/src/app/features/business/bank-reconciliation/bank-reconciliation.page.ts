@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PaginationComponent, PageChange } from '../../../shared/components/pagination/pagination.component';
 import { errorMessage } from '../../../shared/utils/page-utils';
@@ -14,6 +14,7 @@ import {
   BankTransaction,
 } from './bank-reconciliation.model';
 import { BankReconciliationService } from './bank-reconciliation.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-bank-reconciliation-page',
@@ -22,6 +23,7 @@ import { BankReconciliationService } from './bank-reconciliation.service';
   styleUrls: ['../../../shared/styles/feature-page.css', './bank-reconciliation.page.css'],
 })
 export class BankReconciliationPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   accounts: BankAccount[] = [];
   transactions: BankTransaction[] = [];
   page = 1;
@@ -76,7 +78,8 @@ export class BankReconciliationPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load company currency.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load company currency.'));
         this.changeDetector.markForCheck();
       },
     });
@@ -131,11 +134,13 @@ export class BankReconciliationPageComponent implements OnInit {
         this.accountNumberLastFour = '';
         this.chartOfAccountId = null;
         this.saving = false;
+        this.notifications.success('Bank account created successfully.');
         this.loadTransactions();
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not create this bank account.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not create this bank account.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -180,6 +185,7 @@ export class BankReconciliationPageComponent implements OnInit {
       next: result => {
         this.importing = false;
         this.importMessage = `Imported ${result.imported} transaction${result.imported === 1 ? '' : 's'}; skipped ${result.duplicates} duplicate${result.duplicates === 1 ? '' : 's'}.`;
+        this.notifications.success(this.importMessage);
         this.selectedFile = null;
         this.page = 1;
         this.optionCache.clear();
@@ -187,7 +193,8 @@ export class BankReconciliationPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not import the bank statement.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not import the bank statement.'));
         this.importing = false;
         this.changeDetector.markForCheck();
       },
@@ -211,7 +218,8 @@ export class BankReconciliationPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.matchError = errorMessage(error, 'Could not load matching ledger entries.');
+        this.matchError = '';
+        this.notifications.error(errorMessage(error, 'Could not load matching ledger entries.'));
         this.changeDetector.markForCheck();
       },
     });
@@ -236,11 +244,13 @@ export class BankReconciliationPageComponent implements OnInit {
     ).subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success('Bank transaction matched successfully.');
         this.loadTransactions(transaction.id);
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.matchError = errorMessage(error, 'Could not match this transaction.');
+        this.matchError = '';
+        this.notifications.error(errorMessage(error, 'Could not match this transaction.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -255,11 +265,13 @@ export class BankReconciliationPageComponent implements OnInit {
     this.bankService.unmatch(accountId, transaction.id, matchId).subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success('Bank transaction match removed.');
         this.loadTransactions(transaction.id);
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.matchError = errorMessage(error, 'Could not remove this match.');
+        this.matchError = '';
+        this.notifications.error(errorMessage(error, 'Could not remove this match.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -291,11 +303,13 @@ export class BankReconciliationPageComponent implements OnInit {
         this.saving = false;
         this.adjustmentTransactionId = null;
         this.importMessage = 'A posted journal adjustment was created and matched to the statement transaction.';
+        this.notifications.success(this.importMessage);
         this.loadTransactions(transaction.id);
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.matchError = errorMessage(error, 'Could not create the reconciliation adjustment.');
+        this.matchError = '';
+        this.notifications.error(errorMessage(error, 'Could not create the reconciliation adjustment.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -328,7 +342,8 @@ export class BankReconciliationPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load bank accounts.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load bank accounts.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -342,7 +357,8 @@ export class BankReconciliationPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load asset accounts.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load asset accounts.'));
         this.changeDetector.markForCheck();
       },
     });
@@ -355,7 +371,8 @@ export class BankReconciliationPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load offset accounts.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load offset accounts.'));
         this.changeDetector.markForCheck();
       },
     });
@@ -383,7 +400,8 @@ export class BankReconciliationPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load bank statement transactions.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load bank statement transactions.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

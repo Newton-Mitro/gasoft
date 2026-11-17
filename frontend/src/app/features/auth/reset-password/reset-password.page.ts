@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-reset-password-page',
@@ -10,7 +11,7 @@ import { errorMessage } from '../../../shared/utils/page-utils';
   template: `
     <main class="auth-page">
       <section class="auth-brand">
-        <a class="brand" routerLink="/login"><span class="brand-mark">G</span> gasoft</a>
+        <a class="brand" routerLink="/login"><img class="brand-logo" src="/logo.png" alt="gasoft logo" /> gasoft</a>
         <div class="brand-copy">
           <p class="eyebrow">ACCOUNT RECOVERY</p>
           <h1>A fresh start,<br />with peace of mind.</h1>
@@ -48,6 +49,7 @@ import { errorMessage } from '../../../shared/utils/page-utils';
   `,
 })
 export class ResetPasswordPage {
+  readonly notifications = inject(NotificationService);
   readonly busy = signal(false);
   readonly error = signal('');
   readonly success = signal('');
@@ -71,13 +73,15 @@ export class ResetPasswordPage {
     this.busy.set(true);
     this.auth.resetPassword(this.email, this.token, this.newPassword).subscribe({
       next: () => {
-        this.success.set('Your password has been updated. You can now sign in with your new password.');
+        this.notifications.success('Your password has been updated. You can now sign in with your new password.');
+        this.success.set('');
         this.newPassword = '';
         this.confirmPassword = '';
         this.busy.set(false);
       },
       error: error => {
-        this.error.set(errorMessage(error, 'Could not reset your password. Request a new link and try again.'));
+        this.error.set('');
+        this.notifications.error(errorMessage(error, 'Could not reset your password. Request a new link and try again.'));
         this.busy.set(false);
       },
     });

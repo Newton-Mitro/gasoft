@@ -9,6 +9,7 @@ import {
   CashFlowClassification,
   IncomeStatementReport,
   ReportFilters,
+  RetainedEarningsRollForwardReport,
   TrialBalanceReport,
 } from './report.model';
 
@@ -34,6 +35,12 @@ export class FinancialReportService {
     let params = new HttpParams();
     if (filters.asOfDate) params = params.set('asOfDate', filters.asOfDate);
     return this.api.get<unknown>('reports/balance-sheet', true, params).pipe(map(toBalanceSheetReport));
+  }
+
+  getRetainedEarningsRollForward(fiscalYearId: number): Observable<RetainedEarningsRollForwardReport> {
+    const params = new HttpParams().set('fiscalYearId', fiscalYearId.toString());
+    return this.api.get<unknown>('reports/retained-earnings', true, params)
+      .pipe(map(toRetainedEarningsRollForwardReport));
   }
 
   getCashFlow(filters: ReportFilters): Observable<CashFlowReport> {
@@ -112,6 +119,26 @@ function toBalanceSheetReport(value: unknown): BalanceSheetReport {
     throw new Error('The balance sheet response contains invalid report data.');
   }
   return value as unknown as BalanceSheetReport;
+}
+
+function toRetainedEarningsRollForwardReport(value: unknown): RetainedEarningsRollForwardReport {
+  if (!isRecord(value) ||
+    !isPositiveId(value['companyId']) ||
+    !isCurrencyCode(value['currencyCode']) ||
+    !isPositiveId(value['fiscalYearId']) ||
+    !isDate(value['fiscalYearStart']) ||
+    !isDate(value['fiscalYearEnd']) ||
+    !isPositiveId(value['retainedEarningsAccountId']) ||
+    typeof value['retainedEarningsAccountCode'] !== 'string' ||
+    typeof value['retainedEarningsAccountName'] !== 'string' ||
+    !isNumeric(value['beginningRetainedEarnings']) ||
+    !isNumeric(value['netIncomeForYear']) ||
+    !isNumeric(value['ownerDrawsOrDividends']) ||
+    !isNumeric(value['endingRetainedEarnings']) ||
+    !isNumeric(value['closingBalanceVariance'])) {
+    throw new Error('The retained earnings roll-forward response contains invalid report data.');
+  }
+  return value as unknown as RetainedEarningsRollForwardReport;
 }
 
 function toCashFlowReport(value: unknown): CashFlowReport {

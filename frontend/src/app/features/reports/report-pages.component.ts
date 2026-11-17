@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
 import { errorMessage } from '../../shared/utils/page-utils';
@@ -11,6 +11,7 @@ import {
   ReportType,
   TrialBalanceReport,
 } from './report.model';
+import { NotificationService } from '../../shared/services/notification.service';
 
 interface SummaryCard {
   label: string;
@@ -33,6 +34,8 @@ interface ReportRow {
   styleUrl: '../../shared/styles/feature-page.css',
 })
 export class FinancialReportPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
+
   @Input({ required: true }) reportType!: ReportType;
   title = '';
   description = '';
@@ -115,7 +118,8 @@ export class FinancialReportPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, `Could not load the ${this.title.toLowerCase()}.`);
+        this.error = '';
+        this.notifications.error(errorMessage(error, `Could not load the ${this.title.toLowerCase()}.`));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

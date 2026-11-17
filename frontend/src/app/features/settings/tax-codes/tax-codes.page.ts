@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, map, Subscription } from 'rxjs';
@@ -10,6 +10,7 @@ import { OptionDataCacheService } from '../../../shared/data/option-data-cache.s
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { TaxCode, TaxCodePayload, TaxRate, TaxRatePayload } from './tax-code.model';
 import { TaxCodeService } from './tax-code.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 const TAX_CODE_OPTIONS = ['jurisdictions', 'taxCategories'];
 
@@ -20,6 +21,7 @@ const TAX_CODE_OPTIONS = ['jurisdictions', 'taxCategories'];
   styleUrls: ['../../../shared/styles/feature-page.css', './tax-codes.page.css'],
 })
 export class TaxCodesPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'tax-codes';
   readonly title = 'Tax codes and rates';
   readonly description = 'Configure company-specific tax codes and effective-dated rates. Confirm tax treatment and rates with an authoritative source.';
@@ -113,19 +115,26 @@ export class TaxCodesPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`Tax code ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         this.optionCache.clear();
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this tax code.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this tax code.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
     });
   }
 
-  deleteCode(code: TaxCode): void {
-    if (!window.confirm(`Delete tax code ${code.code} and its rate history?`)) return;
+  async deleteCode(code: TaxCode): Promise<void> {
+    const confirmed = await this.notifications.confirm({
+      title: `Delete tax code ${code.code}?`,
+      text: 'Its rate history will also be deleted.',
+      confirmButtonText: 'Delete tax code',
+    });
+    if (!confirmed) return;
     this.saving = true;
     this.error = '';
     this.taxCodes.delete(code.id).subscribe({
@@ -133,11 +142,13 @@ export class TaxCodesPageComponent implements OnInit, OnDestroy {
         this.rows = this.rows.filter(row => row.id !== code.id);
         this.activeTaxCodeId = this.activeTaxCodeId === code.id ? null : this.activeTaxCodeId;
         this.saving = false;
+        this.notifications.success(`Tax code ${code.code} deleted.`);
         this.optionCache.clear();
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not delete this tax code.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not delete this tax code.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -186,6 +197,7 @@ export class TaxCodesPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`Tax rate ${this.editingRateId === null ? 'created' : 'updated'} successfully.`);
         this.optionCache.clear();
         this.loadRows();
         this.activeTaxCodeId = code.id;
@@ -193,27 +205,35 @@ export class TaxCodesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.rateError = errorMessage(error, 'Could not save this tax rate.');
+        this.rateError = '';
+        this.notifications.error(errorMessage(error, 'Could not save this tax rate.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
     });
   }
 
-  deleteRate(code: TaxCode, rate: TaxRate): void {
-    if (!window.confirm(`Delete the ${rate.ratePercent}% rate effective ${rate.validFrom}?`)) return;
+  async deleteRate(code: TaxCode, rate: TaxRate): Promise<void> {
+    const confirmed = await this.notifications.confirm({
+      title: 'Delete this tax rate?',
+      text: `This removes the ${rate.ratePercent}% rate effective ${rate.validFrom}.`,
+      confirmButtonText: 'Delete rate',
+    });
+    if (!confirmed) return;
     this.saving = true;
     this.rateError = '';
     this.taxCodes.deleteRate(code.id, rate.id).subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success('Tax rate deleted.');
         this.optionCache.clear();
         this.loadRows();
         this.activeTaxCodeId = code.id;
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.rateError = errorMessage(error, 'Could not delete this tax rate.');
+        this.rateError = '';
+        this.notifications.error(errorMessage(error, 'Could not delete this tax rate.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -269,7 +289,8 @@ export class TaxCodesPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load tax codes.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load tax codes.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -290,7 +311,8 @@ export class TaxCodesPageComponent implements OnInit, OnDestroy {
         error: error => {
           this.optionsFailed = [...this.optionsFailed, source];
           this.optionsLoading = this.optionsLoading.filter(item => item !== source);
-          this.error = errorMessage(error, `Could not load ${source} options.`);
+          this.error = '';
+          this.notifications.error(errorMessage(error, `Could not load ${source} options.`));
           this.changeDetector.markForCheck();
         },
       });

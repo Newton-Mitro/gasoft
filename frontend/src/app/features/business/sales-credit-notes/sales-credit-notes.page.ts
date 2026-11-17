@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, timeout } from 'rxjs';
 import { SalesInvoice } from '../sales-invoices/sales-invoice.model';
@@ -13,6 +13,7 @@ import {
   SalesCreditNotePostingPayload,
 } from './sales-credit-note.model';
 import { SalesCreditNotesService } from './sales-credit-notes.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 interface CreditLineInput {
   invoiceLineId: number;
@@ -28,6 +29,7 @@ interface CreditLineInput {
   styleUrls: ['../../../shared/styles/feature-page.css', './sales-credit-notes.page.css'],
 })
 export class SalesCreditNotesPageComponent implements OnInit {
+  readonly notifications = inject(NotificationService);
   notes: SalesCreditNote[] = [];
   totalCount = 0;
   page = 1;
@@ -90,7 +92,8 @@ export class SalesCreditNotesPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.supportDataError = errorMessage(error, 'Could not load credit note form options.');
+        this.supportDataError = '';
+        this.notifications.error(errorMessage(error, 'Could not load credit note form options.'));
         this.supportDataLoading = false;
         this.changeDetector.markForCheck();
       },
@@ -165,10 +168,12 @@ export class SalesCreditNotesPageComponent implements OnInit {
       next: () => {
         this.creating = false;
         this.saving = false;
+        this.notifications.success('Sales credit note created as a draft.');
         this.refresh();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not create this credit note.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not create this credit note.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -214,10 +219,12 @@ export class SalesCreditNotesPageComponent implements OnInit {
       next: () => {
         this.postingNote = null;
         this.saving = false;
+        this.notifications.success('Sales credit note posted successfully.');
         this.refresh();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not post this credit note.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not post this credit note.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -262,10 +269,12 @@ export class SalesCreditNotesPageComponent implements OnInit {
       next: () => {
         this.refundingNote = null;
         this.saving = false;
+        this.notifications.success(`Refund ${payload.refundNumber} posted successfully.`);
         this.refresh();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not post this customer refund.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not post this customer refund.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -291,7 +300,8 @@ export class SalesCreditNotesPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'The operation succeeded, but credit notes could not be refreshed.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'The operation succeeded, but credit notes could not be refreshed.'));
         this.changeDetector.markForCheck();
       },
     });
@@ -316,7 +326,8 @@ export class SalesCreditNotesPageComponent implements OnInit {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load sales credit notes.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load sales credit notes.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

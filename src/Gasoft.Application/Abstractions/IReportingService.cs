@@ -17,6 +17,10 @@ public interface IReportingService
         long accountId,
         CashFlowCategoryRequest request,
         CancellationToken cancellationToken);
+    Task<RetainedEarningsRollForwardDto?> GetRetainedEarningsRollForwardAsync(
+        long companyId,
+        long fiscalYearId,
+        CancellationToken cancellationToken);
     Task<TrialBalanceReportDto?> GetTrialBalanceAsync(
         long companyId,
         DateOnly? fromDate,

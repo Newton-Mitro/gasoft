@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
@@ -8,6 +8,7 @@ import { PageChange, PaginationComponent } from '../../../shared/components/pagi
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { TaxRegistration, TaxRegistrationPayload } from './tax-registration.model';
 import { TaxRegistrationService } from './tax-registration.service';
+import { NotificationService } from '../../../shared/services/notification.service';
 
 const TAX_REGISTRATION_OPTIONS = ['jurisdictions'];
 
@@ -18,6 +19,7 @@ const TAX_REGISTRATION_OPTIONS = ['jurisdictions'];
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class TaxRegistrationsPageComponent implements OnInit, OnDestroy {
+  readonly notifications = inject(NotificationService);
   readonly pageKey = 'tax-registrations';
   readonly title = 'Tax registrations';
   readonly description = 'Review configured tax references and register your company in a jurisdiction.';
@@ -100,10 +102,12 @@ export class TaxRegistrationsPageComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.saving = false;
+        this.notifications.success(`${this.title} ${this.view === 'edit' ? 'updated' : 'created'} successfully.`);
         void this.router.navigateByUrl(this.indexPath);
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not save this tax registration.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not save this tax registration.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -138,7 +142,8 @@ export class TaxRegistrationsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load tax registrations.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load tax registrations.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -164,7 +169,8 @@ export class TaxRegistrationsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load this tax registration.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load this tax registration.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -180,7 +186,8 @@ export class TaxRegistrationsPageComponent implements OnInit, OnDestroy {
           this.changeDetector.markForCheck();
         },
         error: error => {
-          this.error = errorMessage(error, `Could not load ${source} options.`);
+          this.error = '';
+          this.notifications.error(errorMessage(error, `Could not load ${source} options.`));
           this.changeDetector.markForCheck();
         },
       });
@@ -194,7 +201,8 @@ export class TaxRegistrationsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: error => {
-        this.error = errorMessage(error, 'Could not load tax reference data.');
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not load tax reference data.'));
         this.changeDetector.markForCheck();
       },
     });

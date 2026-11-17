@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, HostListener, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ApiService } from '../../core/api.service';
@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth.service';
 import { errorMessage } from '../../shared/utils/page-utils';
 import { ThemeService } from '../../shared/theme/theme.service';
 import { AuthenticatedImageComponent } from '../../shared/components/authenticated-image/authenticated-image.component';
+import { NotificationService } from '../../shared/services/notification.service';
 
 interface CompanyOption {
   id: number;
@@ -33,6 +34,8 @@ interface NavSection {
   templateUrl: './shell.html',
 })
 export class Shell {
+  readonly notifications = inject(NotificationService);
+
   mobileNavOpen = false;
   readonly companies = signal<CompanyOption[]>([]);
   readonly companyLoadError = signal('');
@@ -42,7 +45,6 @@ export class Shell {
       label: 'GENERAL LEDGER',
       links: [
         { label: 'Chart of accounts', path: '/general-ledger/accounts', icon: 'fa-book-open' },
-        { label: 'Account groups', path: '/general-ledger/account-groups', icon: 'fa-layer-group' },
         { label: 'Fiscal years', path: '/general-ledger/fiscal-years', icon: 'fa-calendar-days' },
         { label: 'Accounting periods', path: '/general-ledger/periods', icon: 'fa-calendar' },
         { label: 'Journals', path: '/general-ledger/journals', icon: 'fa-book' },
@@ -86,7 +88,6 @@ export class Shell {
       label: 'ADMINISTRATION',
       links: [
         { label: 'Company settings', path: '/settings/company', icon: 'fa-gears' },
-        { label: 'Supported tax jurisdictions', path: '/settings/tax-jurisdictions', icon: 'fa-earth-americas' },
         { label: 'Tax codes & rates', path: '/settings/tax-codes', icon: 'fa-percent' },
         { label: 'Tax registrations', path: '/settings/tax-registrations', icon: 'fa-file-circle-check' },
         { label: 'Team members', path: '/users', icon: 'fa-users' },
@@ -104,7 +105,8 @@ export class Shell {
     this.api.get<CompanyOption[]>('/api/v1/tenant/companies', false).subscribe({
       next: companies => this.companies.set(companies),
       error: error => {
-        this.companyLoadError.set(errorMessage(error, 'Could not load your companies.'));
+        this.companyLoadError.set('');
+        this.notifications.error(errorMessage(error, 'Could not load your companies.'));
         this.changeDetector.markForCheck();
       },
     });
