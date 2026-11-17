@@ -21,7 +21,7 @@
     <div class="section-heading"><div><h2>Create credit note</h2><p>Credit quantities are priced and taxed using the source invoice lines.</p></div></div>
     <div class="header-fields">
       <label><span>Posted invoice</span>
-        <select name="invoice" [ngModel]="selectedInvoiceId" (ngModelChange)="selectInvoice($event)">
+        <select appSearchableSelect name="invoice" [ngModel]="selectedInvoiceId" (ngModelChange)="selectInvoice($event)">
           <option [ngValue]="null" disabled>Select invoice</option>
           @for (invoice of creditableInvoices; track invoice.id) {
             <option [ngValue]="invoice.id">{{ invoice.invoiceNumber }} · {{ invoice.currencyCode }} {{ invoice.grandTotal }}</option>
@@ -58,21 +58,21 @@
   <section class="credit-form panel">
     <div class="section-heading"><div><h2>Post {{ postingNote.creditNoteNumber }}</h2><p>Posting debits revenue and tax, credits receivables, and reduces the source invoice balance.</p></div></div>
     <div class="header-fields">
-      <label><span>Journal</span><select name="journal" [(ngModel)]="journalId">
+      <label><span>Journal</span><select appSearchableSelect name="journal" [(ngModel)]="journalId">
         <option [ngValue]="null" disabled>Select journal</option>
         @for (option of journals; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
       </select></label>
-      <label><span>Accounting period</span><select name="period" [(ngModel)]="accountingPeriodId">
+      <label><span>Accounting period</span><select appSearchableSelect name="period" [(ngModel)]="accountingPeriodId">
         <option [ngValue]="null" disabled>Select period</option>
         @for (option of periods; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
       </select></label>
-      <label><span>Receivable account</span><select name="receivable" [(ngModel)]="receivableAccountId">
+      <label><span>Receivable account</span><select appSearchableSelect name="receivable" [(ngModel)]="receivableAccountId">
         <option [ngValue]="null" disabled>Select account</option>
         @for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
       </select></label>
       @for (taxCodeId of taxCodeIds; track taxCodeId; let index = $index) {
         <label><span>Tax account for code {{ taxCodeId }}</span>
-          <select [name]="'taxAccount' + index + 'AccountId'" [(ngModel)]="taxAccountIds[taxCodeId]">
+          <select appSearchableSelect [name]="'taxAccount' + index + 'AccountId'" [(ngModel)]="taxAccountIds[taxCodeId]">
             <option [ngValue]="null" disabled>Select account</option>
             @for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
           </select>
@@ -99,15 +99,15 @@
       <label><span>Amount ({{ refundingNote.currencyCode }})</span>
         <input name="refundAmount" type="number" min="0.000001" [max]="refundingNote.refundableAmount" step="any" [(ngModel)]="refundAmount" />
       </label>
-      <label><span>Journal</span><select name="refundJournal" [(ngModel)]="refundJournalId">
+      <label><span>Journal</span><select appSearchableSelect name="refundJournal" [(ngModel)]="refundJournalId">
         <option [ngValue]="null" disabled>Select journal</option>
         @for (option of journals; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
       </select></label>
-      <label><span>Accounting period</span><select name="refundPeriod" [(ngModel)]="refundPeriodId">
+      <label><span>Accounting period</span><select appSearchableSelect name="refundPeriod" [(ngModel)]="refundPeriodId">
         <option [ngValue]="null" disabled>Select period</option>
         @for (option of periods; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
       </select></label>
-      <label><span>Cash account</span><select name="cashAccount" [(ngModel)]="cashAccountId">
+      <label><span>Cash account</span><select appSearchableSelect name="cashAccount" [(ngModel)]="cashAccountId">
         <option [ngValue]="null" disabled>Select account</option>
         @for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
       </select></label>

@@ -22,7 +22,7 @@
     </div>
     <div class="header-fields">
       <label><span>Customer</span>
-        <select name="customer" [(ngModel)]="customerId">
+        <select appSearchableSelect name="customer" [(ngModel)]="customerId">
           <option [ngValue]="null" disabled>Select customer</option>
           @for (customer of customers; track customer.id) {
             <option [ngValue]="customer.id">{{ customer.partyNo }} · {{ customer.displayName }}</option>
@@ -33,7 +33,7 @@
       <label><span>Quote date</span><input name="quoteDate" type="date" [(ngModel)]="quoteDate" /></label>
       <label><span>Valid until</span><input name="validUntil" type="date" [(ngModel)]="validUntil" /></label>
       <label><span>Currency</span>
-        <select name="currency" [(ngModel)]="currencyCode">
+        <select appSearchableSelect name="currency" [(ngModel)]="currencyCode">
           <option value="" disabled>Select currency</option>
           @for (currency of currencies; track currency.value) { <option [value]="currency.value">{{ currency.label }}</option> }
         </select>
@@ -47,14 +47,14 @@
       @for (line of lines; track $index; let index = $index) {
         <div class="editable-line">
           <label><span>Revenue account</span>
-            <select [(ngModel)]="line.accountId" [name]="'account-' + index">
+            <select appSearchableSelect [(ngModel)]="line.accountId" [name]="'account-' + index">
               <option [ngValue]="null" disabled>Select account</option>
               @for (account of accounts; track account.value) { <option [ngValue]="account.value">{{ account.label }}</option> }
             </select>
           </label>
           <label class="line-description"><span>Description</span><input [(ngModel)]="line.description" [name]="'description-' + index" maxlength="500" /></label>
           <label><span>Tax code</span>
-            <select [(ngModel)]="line.taxCodeId" [name]="'tax-' + index">
+            <select appSearchableSelect [(ngModel)]="line.taxCodeId" [name]="'tax-' + index">
               <option [ngValue]="null">No tax</option>
               @for (taxCode of taxCodes; track taxCode.value) { <option [ngValue]="taxCode.value">{{ taxCode.label }}</option> }
             </select>

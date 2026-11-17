@@ -8,7 +8,7 @@
       <legend>Line {{ i + 1 }}</legend>
       <label>
         {{ accountLabel }}
-        <select [name]="'lineAccount' + i" required [disabled]="accountsLoading || accountsFailed" [value]="line.accountId ?? ''" (change)="updateLine(i, 'accountId', $any($event.target).value)">
+        <select appSearchableSelect [name]="'lineAccount' + i" required [disabled]="accountsLoading || accountsFailed" [value]="line.accountId ?? ''" (change)="updateLine(i, 'accountId', $any($event.target).value)">
           <option value="" disabled>
             @if (accountsLoading) { Loading accounts… }
             @else if (accountsFailed) { Could not load accounts }
@@ -33,7 +33,7 @@
       </label>
       <label>
         Tax code (optional)
-        <select [name]="'lineTaxCode' + i" [disabled]="taxCodesLoading || taxCodesFailed" [value]="line.taxCodeId ?? ''" (change)="updateLine(i, 'taxCodeId', $any($event.target).value)">
+        <select appSearchableSelect [name]="'lineTaxCode' + i" [disabled]="taxCodesLoading || taxCodesFailed" [value]="line.taxCodeId ?? ''" (change)="updateLine(i, 'taxCodeId', $any($event.target).value)">
           <option value="">
             @if (taxCodesLoading) { Loading tax codes… }
             @else if (taxCodesFailed) { Could not load tax codes }

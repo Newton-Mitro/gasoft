@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { SearchableSelectDirective } from '../../directives/searchable-select.directive';
 
 export interface PageChange {
   page: number;
@@ -9,6 +10,7 @@ export type PaginationItem = number | 'ellipsis';
 
 @Component({
   selector: 'app-pagination',
+  imports: [SearchableSelectDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (totalCount > 0) {
@@ -21,7 +23,7 @@ export type PaginationItem = number | 'ellipsis';
         <div class="pagination-controls">
           <label class="page-size">
             <span>Rows</span>
-            <select [value]="pageSize" [disabled]="loading" (change)="changePageSize($event)">
+            <select appSearchableSelect [value]="pageSize" [disabled]="loading" (change)="changePageSize($event)">
               @for (size of pageSizes; track size) {
                 <option [value]="size">{{ size }}</option>
               }

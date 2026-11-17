@@ -15,7 +15,7 @@
       <span class="journal-line-number">Line {{ i + 1 }}</span>
       <label>
         <span class="visually-hidden">Account for line {{ i + 1 }}</span>
-        <select [name]="'journalLineAccount' + i" required [disabled]="accountsLoading || accountsFailed" [value]="line.accountId ?? ''" (change)="updateLine(i, 'accountId', $any($event.target).value)">
+        <select appSearchableSelect [name]="'journalLineAccount' + i" required [disabled]="accountsLoading || accountsFailed" [value]="line.accountId ?? ''" (change)="updateLine(i, 'accountId', $any($event.target).value)">
           <option value="" disabled>
             @if (accountsLoading) { Loading accounts... }
             @else if (accountsFailed) { Could not load accounts }

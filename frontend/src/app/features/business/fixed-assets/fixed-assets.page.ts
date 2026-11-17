@@ -14,10 +14,11 @@ import {
 import { FixedAssetsService } from './fixed-assets.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { SearchableSelectDirective } from '../../../shared/directives/searchable-select.directive';
 
 @Component({
   selector: 'app-fixed-assets-page',
-  imports: [FormsModule, PaginationComponent, FieldValidationDirective],
+  imports: [FormsModule, PaginationComponent, FieldValidationDirective, SearchableSelectDirective],
   templateUrl: './fixed-assets.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './fixed-assets.page.css'],
 })

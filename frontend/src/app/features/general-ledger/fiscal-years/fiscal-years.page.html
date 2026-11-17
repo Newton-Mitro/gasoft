@@ -119,7 +119,7 @@
                       @if (closeChecklist.closingJournalRequired && !closeChecklist.closingJournalEntryId && closeChecklist.openAccountingPeriodCount === 0) {
                         <label>
                           Retained earnings account
-                          <select name="retainedEarningsAccount" [(ngModel)]="retainedEarningsAccountId">
+                          <select appSearchableSelect name="retainedEarningsAccount" [(ngModel)]="retainedEarningsAccountId">
                             @for (account of equityAccountOptions; track account.value) {
                               <option [ngValue]="account.value">{{ account.label }}</option>
                             }

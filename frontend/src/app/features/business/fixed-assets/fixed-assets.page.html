@@ -23,27 +23,27 @@
       <label><span>Acquisition cost ({{ currencyCode }})</span><input name="acquisitionCost" type="number" min="0.01" step="0.01" [(ngModel)]="acquisitionCost" /></label>
       <label><span>Residual value ({{ currencyCode }})</span><input name="residualValue" type="number" min="0" step="0.01" [(ngModel)]="residualValue" /></label>
       <label><span>Useful life (months)</span><input name="usefulLifeMonths" type="number" min="1" max="1200" step="1" [(ngModel)]="usefulLifeMonths" /></label>
-      <label><span>Acquisition period</span><select name="acquisitionPeriod" [(ngModel)]="acquisitionPeriodId">
+      <label><span>Acquisition period</span><select appSearchableSelect name="acquisitionPeriod" [(ngModel)]="acquisitionPeriodId">
         <option [ngValue]="null" disabled>Select period</option>
         @for (period of openPeriods; track period.id) { <option [ngValue]="period.id">{{ period.startsOn }} – {{ period.endsOn }}</option> }
       </select></label>
-      <label><span>Journal</span><select name="acquisitionJournal" [(ngModel)]="acquisitionJournalId">
+      <label><span>Journal</span><select appSearchableSelect name="acquisitionJournal" [(ngModel)]="acquisitionJournalId">
         <option [ngValue]="null" disabled>Select journal</option>
         @for (journal of journals; track journal.id) { <option [ngValue]="journal.id">{{ journal.code }} · {{ journal.name }}</option> }
       </select></label>
-      <label><span>Fixed asset account</span><select name="assetAccount" [(ngModel)]="assetAccountId">
+      <label><span>Fixed asset account</span><select appSearchableSelect name="assetAccount" [(ngModel)]="assetAccountId">
         <option [ngValue]="null" disabled>Select account</option>
         @for (account of assetAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
       </select></label>
-      <label><span>Accumulated depreciation account</span><select name="accumulatedAccount" [(ngModel)]="accumulatedDepreciationAccountId">
+      <label><span>Accumulated depreciation account</span><select appSearchableSelect name="accumulatedAccount" [(ngModel)]="accumulatedDepreciationAccountId">
         <option [ngValue]="null" disabled>Select account</option>
         @for (account of assetAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
       </select></label>
-      <label><span>Depreciation expense account</span><select name="depreciationExpenseAccount" [(ngModel)]="depreciationExpenseAccountId">
+      <label><span>Depreciation expense account</span><select appSearchableSelect name="depreciationExpenseAccount" [(ngModel)]="depreciationExpenseAccountId">
         <option [ngValue]="null" disabled>Select account</option>
         @for (account of expenseAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
       </select></label>
-      <label><span>Acquisition credit account</span><select name="creditAccount" [(ngModel)]="acquisitionCreditAccountId">
+      <label><span>Acquisition credit account</span><select appSearchableSelect name="creditAccount" [(ngModel)]="acquisitionCreditAccountId">
         <option [ngValue]="null" disabled>Select cash, bank, or payable account</option>
         @for (account of fundingAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }} ({{ account.accountType }})</option> }
       </select></label>
@@ -61,13 +61,13 @@
     <div class="section-heading"><div><h2>Depreciate {{ depreciatingAsset.assetNumber }} · {{ depreciatingAsset.name }}</h2>
       <p>Straight-line depreciation is calculated by service days, capped at residual value, and posted for each due open accounting period through the selection.</p></div></div>
     <div class="asset-fields">
-      <label><span>Depreciate through period</span><select name="depreciationThroughPeriod" [(ngModel)]="depreciationThroughPeriodId">
+      <label><span>Depreciate through period</span><select appSearchableSelect name="depreciationThroughPeriod" [(ngModel)]="depreciationThroughPeriodId">
         <option [ngValue]="null" disabled>Select period</option>
         @for (period of openPeriods; track period.id) {
           @if (period.endsOn >= depreciatingAsset.inServiceDate) { <option [ngValue]="period.id">{{ period.startsOn }} – {{ period.endsOn }}</option> }
         }
       </select></label>
-      <label><span>Journal</span><select name="depreciationJournal" [(ngModel)]="depreciationJournalId">
+      <label><span>Journal</span><select appSearchableSelect name="depreciationJournal" [(ngModel)]="depreciationJournalId">
         <option [ngValue]="null" disabled>Select journal</option>
         @for (journal of journals; track journal.id) { <option [ngValue]="journal.id">{{ journal.code }} · {{ journal.name }}</option> }
       </select></label>
@@ -84,7 +84,7 @@
     <div class="section-heading"><div><h2>Dispose {{ disposingAsset.assetNumber }} · {{ disposingAsset.name }}</h2>
       <p>Depreciation through the disposal period must be posted first. Disposals are recorded at accounting-period end.</p></div></div>
     <div class="asset-fields">
-      <label><span>Disposal period</span><select name="disposalPeriod" [ngModel]="disposalPeriodId" (ngModelChange)="onDisposalPeriodChange($event)">
+      <label><span>Disposal period</span><select appSearchableSelect name="disposalPeriod" [ngModel]="disposalPeriodId" (ngModelChange)="onDisposalPeriodChange($event)">
         <option [ngValue]="null" disabled>Select open period</option>
         @for (period of openPeriods; track period.id) {
           @if (period.endsOn >= disposingAsset.inServiceDate) { <option [ngValue]="period.id">{{ period.startsOn }} – {{ period.endsOn }}</option> }
@@ -92,19 +92,19 @@
       </select></label>
       <label><span>Disposal date</span><input name="disposalDate" type="date" [value]="disposalDate" readonly /></label>
       <label><span>Proceeds ({{ currencyCode }})</span><input name="disposalProceeds" type="number" min="0" step="0.01" [(ngModel)]="disposalProceeds" /></label>
-      <label><span>Journal</span><select name="disposalJournal" [(ngModel)]="disposalJournalId">
+      <label><span>Journal</span><select appSearchableSelect name="disposalJournal" [(ngModel)]="disposalJournalId">
         <option [ngValue]="null" disabled>Select journal</option>
         @for (journal of journals; track journal.id) { <option [ngValue]="journal.id">{{ journal.code }} · {{ journal.name }}</option> }
       </select></label>
-      <label><span>Proceeds account</span><select name="disposalCashAccount" [(ngModel)]="disposalCashAccountId">
+      <label><span>Proceeds account</span><select appSearchableSelect name="disposalCashAccount" [(ngModel)]="disposalCashAccountId">
         <option [ngValue]="null" disabled>Select asset account</option>
         @for (account of assetAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
       </select></label>
-      <label><span>Gain account</span><select name="disposalGainAccount" [(ngModel)]="disposalGainAccountId">
+      <label><span>Gain account</span><select appSearchableSelect name="disposalGainAccount" [(ngModel)]="disposalGainAccountId">
         <option [ngValue]="null" disabled>Select revenue account</option>
         @for (account of revenueAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
       </select></label>
-      <label><span>Loss account</span><select name="disposalLossAccount" [(ngModel)]="disposalLossAccountId">
+      <label><span>Loss account</span><select appSearchableSelect name="disposalLossAccount" [(ngModel)]="disposalLossAccountId">
         <option [ngValue]="null" disabled>Select expense account</option>
         @for (account of expenseAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }}</option> }
       </select></label>

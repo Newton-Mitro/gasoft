@@ -33,7 +33,7 @@
       </label>
       <label>
         <span>Reporting currency</span>
-        <select name="currency" required [(ngModel)]="reportingCurrencyCode">
+        <select appSearchableSelect name="currency" required [(ngModel)]="reportingCurrencyCode">
           <option value="" disabled>Select currency</option>
           @for (currency of currencies; track currency.code) {
             <option [value]="currency.code">{{ currency.code }} · {{ currency.name }}</option>
@@ -79,7 +79,7 @@
     <div class="group-toolbar">
       <label>
         <span>Consolidation group</span>
-        <select [ngModel]="selectedGroupId" (ngModelChange)="selectGroup($event)">
+        <select appSearchableSelect [ngModel]="selectedGroupId" (ngModelChange)="selectGroup($event)">
           @for (item of groups; track item.id) {
             <option [ngValue]="item.id">{{ item.name }} · {{ item.code }}</option>
           }
@@ -130,7 +130,7 @@
       <div class="run-select">
         <label>
           <span>View saved run</span>
-          <select [ngModel]="selectedRunId" (ngModelChange)="selectRun($event)">
+          <select appSearchableSelect [ngModel]="selectedRunId" (ngModelChange)="selectRun($event)">
             <option [ngValue]="null" disabled>Select a period</option>
             @for (run of runs; track run.id) {
               <option [ngValue]="run.id">{{ run.periodEnd }} · {{ run.status }}</option>

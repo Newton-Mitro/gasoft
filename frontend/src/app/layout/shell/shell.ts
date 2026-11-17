@@ -7,6 +7,7 @@ import { errorMessage } from '../../shared/utils/page-utils';
 import { ThemeService } from '../../shared/theme/theme.service';
 import { AuthenticatedImageComponent } from '../../shared/components/authenticated-image/authenticated-image.component';
 import { NotificationService } from '../../shared/services/notification.service';
+import { SearchableSelectDirective } from '../../shared/directives/searchable-select.directive';
 
 interface CompanyOption {
   id: number;
@@ -29,7 +30,7 @@ interface NavSection {
 
 @Component({
   selector: 'app-shell',
-  imports: [FormsModule, RouterLink, RouterLinkActive, RouterOutlet, AuthenticatedImageComponent],
+  imports: [FormsModule, RouterLink, RouterLinkActive, RouterOutlet, AuthenticatedImageComponent, SearchableSelectDirective],
   styleUrl: './shell.css',
   templateUrl: './shell.html',
 })

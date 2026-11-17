@@ -16,10 +16,11 @@ import {
 import { BankReconciliationService } from './bank-reconciliation.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { SearchableSelectDirective } from '../../../shared/directives/searchable-select.directive';
 
 @Component({
   selector: 'app-bank-reconciliation-page',
-  imports: [FormsModule, PaginationComponent, FieldValidationDirective],
+  imports: [FormsModule, PaginationComponent, FieldValidationDirective, SearchableSelectDirective],
   templateUrl: './bank-reconciliation.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './bank-reconciliation.page.css'],
 })

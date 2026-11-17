@@ -26,7 +26,7 @@
           } @else {
             <span class="field-label">{{ field.label }} @if (field.required) { <span class="required-marker" aria-label="required">*</span> }</span>
             @if (field.type === 'select') {
-              <select [name]="field.key" [required]="!!field.required" [disabled]="isOptionLoading(field.optionSource) || hasOptionFailed(field.optionSource)" [ngModel]="$any(form)[field.key]" (ngModelChange)="clearFieldError(field.key); valueChange.emit({ key: field.key, value: $event })">
+              <select appSearchableSelect [name]="field.key" [required]="!!field.required" [disabled]="isOptionLoading(field.optionSource) || hasOptionFailed(field.optionSource)" [ngModel]="$any(form)[field.key]" (ngModelChange)="clearFieldError(field.key); valueChange.emit({ key: field.key, value: $event })">
                 <option [ngValue]="null" disabled>
                   @if (isOptionLoading(field.optionSource)) { Loading {{ field.label.toLowerCase() }}… }
                   @else if (hasOptionFailed(field.optionSource)) { Could not load {{ field.label.toLowerCase() }} }

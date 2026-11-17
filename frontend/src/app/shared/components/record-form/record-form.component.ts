@@ -7,10 +7,11 @@ import { DocumentLinesEditorComponent } from '../document-lines-editor/document-
 import { JournalEntryLinesEditorComponent } from '../journal-entry-lines-editor/journal-entry-lines-editor.component';
 import { FormValidationService } from '../../services/form-validation.service';
 import { FieldValidationDirective } from '../../directives/field-validation.directive';
+import { SearchableSelectDirective } from '../../directives/searchable-select.directive';
 
 @Component({
   selector: 'app-record-form',
-  imports: [FormsModule, DocumentLinesEditorComponent, JournalEntryLinesEditorComponent, FieldValidationDirective],
+  imports: [FormsModule, DocumentLinesEditorComponent, JournalEntryLinesEditorComponent, FieldValidationDirective, SearchableSelectDirective],
   styleUrl: './record-form.component.css',
   templateUrl: './record-form.component.html',
 })

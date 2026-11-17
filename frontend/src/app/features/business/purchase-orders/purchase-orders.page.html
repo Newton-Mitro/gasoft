@@ -23,7 +23,7 @@
     <div class="header-fields">
       <label>
         <span>Supplier</span>
-        <select name="supplier" required [(ngModel)]="supplierId">
+        <select appSearchableSelect name="supplier" required [(ngModel)]="supplierId">
           <option [ngValue]="null" disabled>Select supplier</option>
           @for (supplier of suppliers; track supplier.id) {
             <option [ngValue]="supplier.id">{{ supplier.partyNo }} · {{ supplier.displayName }}</option>
@@ -32,7 +32,7 @@
       </label>
       <label>
         <span>Warehouse</span>
-        <select name="warehouse" required [(ngModel)]="warehouseId">
+        <select appSearchableSelect name="warehouse" required [(ngModel)]="warehouseId">
           <option [ngValue]="null" disabled>Select warehouse</option>
           @for (warehouse of warehouses; track warehouse.value) {
             <option [ngValue]="warehouse.value">{{ warehouse.label }}</option>
@@ -53,7 +53,7 @@
       </label>
       <label>
         <span>Currency</span>
-        <select name="currency" required [(ngModel)]="currencyCode">
+        <select appSearchableSelect name="currency" required [(ngModel)]="currencyCode">
           <option value="" disabled>Select currency</option>
           @for (currency of currencies; track currency.value) {
             <option [value]="currency.value">{{ currency.label }}</option>
@@ -75,7 +75,7 @@
         <div class="editable-line">
           <label>
             <span>Inventory item</span>
-            <select [ngModel]="line.itemId" [name]="'item-' + index" (ngModelChange)="selectItem(index, $event)">
+            <select appSearchableSelect [ngModel]="line.itemId" [name]="'item-' + index" (ngModelChange)="selectItem(index, $event)">
               <option [ngValue]="null" disabled>Select item</option>
               @for (item of items; track item.id) {
                 <option [ngValue]="item.id">{{ item.sku }} · {{ item.name }} ({{ item.baseUnitCode }})</option>
@@ -172,10 +172,10 @@
                 <label><span>Movement number</span><input name="receiveMovementNumber" maxlength="40" required [(ngModel)]="receiveMovementNumber" /></label>
                 <label><span>Receipt date</span><input name="receiveDate" type="date" required [(ngModel)]="receiveDate" /></label>
                 <label><span>Receive quantity</span><input name="receiveQuantity" type="number" min="0.000001" step="0.000001" required [(ngModel)]="receiveQuantity" /></label>
-                <label><span>Journal</span><select name="receiveJournal" required [(ngModel)]="receiveJournalId"><option [ngValue]="null" disabled>Select</option>@for (option of journals; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
-                <label><span>Accounting period</span><select name="receivePeriod" required [(ngModel)]="receivePeriodId"><option [ngValue]="null" disabled>Select</option>@for (option of periods; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
-                <label><span>Inventory asset account</span><select name="inventoryAccount" required [(ngModel)]="receiveInventoryAccountId"><option [ngValue]="null" disabled>Select</option>@for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
-                <label><span>Offset / clearing account</span><select name="offsetAccount" required [(ngModel)]="receiveOffsetAccountId"><option [ngValue]="null" disabled>Select</option>@for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
+                <label><span>Journal</span><select appSearchableSelect name="receiveJournal" required [(ngModel)]="receiveJournalId"><option [ngValue]="null" disabled>Select</option>@for (option of journals; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
+                <label><span>Accounting period</span><select appSearchableSelect name="receivePeriod" required [(ngModel)]="receivePeriodId"><option [ngValue]="null" disabled>Select</option>@for (option of periods; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
+                <label><span>Inventory asset account</span><select appSearchableSelect name="inventoryAccount" required [(ngModel)]="receiveInventoryAccountId"><option [ngValue]="null" disabled>Select</option>@for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
+                <label><span>Offset / clearing account</span><select appSearchableSelect name="offsetAccount" required [(ngModel)]="receiveOffsetAccountId"><option [ngValue]="null" disabled>Select</option>@for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }</select></label>
               </div>
               <div class="receipt-actions">
                 <button class="button secondary" type="button" (click)="cancelReceive()">Close</button>

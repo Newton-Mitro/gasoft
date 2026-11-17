@@ -15,6 +15,7 @@ import {
 import { SalesCreditNotesService } from './sales-credit-notes.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { SearchableSelectDirective } from '../../../shared/directives/searchable-select.directive';
 
 interface CreditLineInput {
   invoiceLineId: number;
@@ -25,7 +26,7 @@ interface CreditLineInput {
 
 @Component({
   selector: 'app-sales-credit-notes-page',
-  imports: [FormsModule, PaginationComponent, FieldValidationDirective],
+  imports: [FormsModule, PaginationComponent, FieldValidationDirective, SearchableSelectDirective],
   templateUrl: './sales-credit-notes.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './sales-credit-notes.page.css'],
 })

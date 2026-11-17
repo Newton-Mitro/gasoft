@@ -38,7 +38,7 @@
         </label>
         <label>
           <span>Ledger asset account</span>
-          <select name="chartAccount" required [(ngModel)]="chartOfAccountId">
+          <select appSearchableSelect name="chartAccount" required [(ngModel)]="chartOfAccountId">
             <option [ngValue]="null" disabled>Select asset account</option>
             @for (account of chartAccounts; track account.value) {
               <option [ngValue]="account.value">{{ account.label }}</option>
@@ -69,7 +69,7 @@
     <div class="workspace-header">
       <label class="account-select">
         <span>Bank account</span>
-        <select [ngModel]="selectedAccountId" (ngModelChange)="selectAccount($event)">
+        <select appSearchableSelect [ngModel]="selectedAccountId" (ngModelChange)="selectAccount($event)">
           @for (account of accounts; track account.id) {
             <option [ngValue]="account.id">{{ account.name }} · {{ account.bankName }} ·••{{ account.accountNumberLastFour }}</option>
           }
@@ -192,7 +192,7 @@
                         <div class="adjustment-form">
                           <h4>Post a bank fee or reconciliation adjustment</h4>
                           <p>The remaining signed statement amount will be posted to the bank account and the opposite amount to the selected offset account. This posts a journal entry in an open period and matches it automatically.</p>
-                          <label><span>Offset account</span><select name="offsetAccount" [(ngModel)]="adjustmentAccountId">
+                          <label><span>Offset account</span><select appSearchableSelect name="offsetAccount" [(ngModel)]="adjustmentAccountId">
                             <option [ngValue]="null" disabled>Select account</option>
                             @for (account of adjustmentAccounts; track account.value) {
                               <option [ngValue]="account.value">{{ account.label }}</option>

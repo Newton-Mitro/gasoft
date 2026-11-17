@@ -13,6 +13,7 @@ import {
 import { BudgetService } from './budget.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
+import { SearchableSelectDirective } from '../../shared/directives/searchable-select.directive';
 
 interface EditableBudgetAccount extends BudgetAccount {
   amounts: Record<number, number>;
@@ -20,7 +21,7 @@ interface EditableBudgetAccount extends BudgetAccount {
 
 @Component({
   selector: 'app-budget-page',
-  imports: [FormsModule, FieldValidationDirective],
+  imports: [FormsModule, FieldValidationDirective, SearchableSelectDirective],
   templateUrl: './budget.page.html',
   styleUrls: ['../../shared/styles/feature-page.css', './budget.page.css'],
 })

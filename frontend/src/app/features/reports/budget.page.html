@@ -10,14 +10,14 @@
 
 <section class="budget-toolbar panel">
   <label>Fiscal year
-    <select name="fiscalYear" [(ngModel)]="selectedFiscalYearId" (ngModelChange)="onFiscalYearChange()">
+    <select appSearchableSelect name="fiscalYear" [(ngModel)]="selectedFiscalYearId" (ngModelChange)="onFiscalYearChange()">
       @for (year of fiscalYears; track year.id) {
         <option [ngValue]="year.id">{{ year.startsOn }} – {{ year.endsOn }}</option>
       }
     </select>
   </label>
   <label>Budget version
-    <select name="budget" [(ngModel)]="selectedBudgetId" (ngModelChange)="onBudgetChange()">
+    <select appSearchableSelect name="budget" [(ngModel)]="selectedBudgetId" (ngModelChange)="onBudgetChange()">
       @for (budget of budgets; track budget.id) {
         <option [ngValue]="budget.id">{{ budget.name }}</option>
       }
@@ -84,7 +84,7 @@
   } @else if (report) {
     <section class="budget-toolbar panel period-filter">
       <label>Accounting period
-        <select name="reportPeriod" [ngModel]="selectedPeriodId" (ngModelChange)="onPeriodChange($event)">
+        <select appSearchableSelect name="reportPeriod" [ngModel]="selectedPeriodId" (ngModelChange)="onPeriodChange($event)">
           @for (period of periods; track period.id) { <option [ngValue]="period.id">{{ formatPeriod(period) }}</option> }
         </select>
       </label>

@@ -159,7 +159,7 @@
           <td>
             @if (account.isCashAccount) { <span class="cash-label">Cash account</span> }
             @else {
-              <select [name]="'category-' + account.accountId"
+              <select appSearchableSelect [name]="'category-' + account.accountId"
                 [disabled]="classificationsLoading"
                 [ngModel]="account.cashFlowCategory ?? ''"
                 (ngModelChange)="updateClassification(account, $event)">

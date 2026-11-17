@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
+import { SearchableSelectDirective } from '../../shared/directives/searchable-select.directive';
 import { forkJoin } from 'rxjs';
 import { errorMessage } from '../../shared/utils/page-utils';
 import { CashFlowClassification, CashFlowReport } from './report.model';
@@ -15,7 +16,7 @@ interface CashFlowVisual {
 
 @Component({
   selector: 'app-cash-flow-page',
-  imports: [FormsModule, FieldValidationDirective],
+  imports: [FormsModule, FieldValidationDirective, SearchableSelectDirective],
   templateUrl: './cash-flow.page.html',
   styleUrls: ['../../shared/styles/feature-page.css', './cash-flow.page.css'],
 })

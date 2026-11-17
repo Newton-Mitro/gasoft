@@ -18,10 +18,11 @@ import { FiscalYearService } from './fiscal-year.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 import { FormValidationService } from '../../../shared/services/form-validation.service';
+import { SearchableSelectDirective } from '../../../shared/directives/searchable-select.directive';
 
 @Component({
   selector: 'app-fiscal-years-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent, FieldValidationDirective],
+  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent, FieldValidationDirective, SearchableSelectDirective],
   templateUrl: './fiscal-years.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
