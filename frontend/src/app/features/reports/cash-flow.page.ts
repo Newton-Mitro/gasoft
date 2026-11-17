@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
 import { forkJoin } from 'rxjs';
 import { errorMessage } from '../../shared/utils/page-utils';
 import { CashFlowClassification, CashFlowReport } from './report.model';
@@ -8,7 +9,7 @@ import { NotificationService } from '../../shared/services/notification.service'
 
 @Component({
   selector: 'app-cash-flow-page',
-  imports: [FormsModule],
+  imports: [FormsModule, FieldValidationDirective],
   templateUrl: './cash-flow.page.html',
   styleUrls: ['../../shared/styles/feature-page.css', './cash-flow.page.css'],
 })

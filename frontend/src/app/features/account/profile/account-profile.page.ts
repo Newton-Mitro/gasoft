@@ -4,10 +4,11 @@ import { AccountProfile, AuthService } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { AuthenticatedImageComponent } from '../../../shared/components/authenticated-image/authenticated-image.component';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 
 @Component({
   selector: 'app-account-profile-page',
-  imports: [FormsModule, AuthenticatedImageComponent],
+  imports: [FormsModule, AuthenticatedImageComponent, FieldValidationDirective],
   templateUrl: './account-profile.page.html',
   styleUrl: './account-profile.page.css',
 })

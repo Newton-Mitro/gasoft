@@ -343,3 +343,13 @@
     transition-duration: .01ms !important;
   }
 }
+.field-grid label.invalid-field input,
+.field-grid label.invalid-field select {
+  border-color: var(--error-text);
+}
+.field-validation-error {
+  display: block;
+  color: var(--error-text);
+  font-size: 11px;
+  line-height: 1.4;
+}

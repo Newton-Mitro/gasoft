@@ -13,10 +13,11 @@ import {
 } from './consolidation.model';
 import { ConsolidationService } from './consolidation.service';
 import { NotificationService } from '../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
 
 @Component({
   selector: 'app-consolidation-page',
-  imports: [FormsModule],
+  imports: [FormsModule, FieldValidationDirective],
   templateUrl: './consolidation.page.html',
   styleUrls: ['../../shared/styles/feature-page.css', './consolidation.page.css'],
 })

@@ -12,18 +12,22 @@ import {
   FiscalYearCloseChecklist,
   FiscalYearPayload,
   FiscalYearStatusChange,
+  isIsoDateOnly,
 } from './fiscal-year.model';
 import { FiscalYearService } from './fiscal-year.service';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { FormValidationService } from '../../../shared/services/form-validation.service';
 
 @Component({
   selector: 'app-fiscal-years-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent],
+  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent, FieldValidationDirective],
   templateUrl: './fiscal-years.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
 export class FiscalYearsPageComponent implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
+  private readonly formValidation = inject(FormValidationService);
   readonly pageKey = 'fiscal-years';
   readonly title = 'Fiscal years';
   readonly description = 'Review the financial year calendar used by your company.';
@@ -98,6 +102,16 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
       startsOn: String(this.form['startsOn'] ?? ''),
       endsOn: String(this.form['endsOn'] ?? ''),
     };
+    const validationErrors: Record<string, string[]> = {};
+    if (!isIsoDateOnly(payload.startsOn)) {
+      validationErrors['startsOn'] = ['Enter a valid date in YYYY-MM-DD format.'];
+    }
+    if (!isIsoDateOnly(payload.endsOn)) {
+      validationErrors['endsOn'] = ['Enter a valid date in YYYY-MM-DD format.'];
+    }
+    this.formValidation.setErrors(validationErrors);
+    if (Object.keys(validationErrors).length) return;
+
     this.saving = true;
     this.error = '';
     let request;

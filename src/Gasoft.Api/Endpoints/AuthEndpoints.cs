@@ -25,6 +25,7 @@ public static class AuthEndpoints
                     workspace.CompanyId,
                     workspace.WorkspaceSlug));
         })
+        .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create)
         .AllowAnonymous()
         .RequireRateLimiting("public-auth")
         .WithName("CreateAccessToken");
@@ -42,6 +43,7 @@ public static class AuthEndpoints
                 ? Results.Unauthorized()
                 : Results.Ok(workspaces);
         })
+        .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create)
         .AllowAnonymous()
         .RequireRateLimiting("public-auth")
         .WithName("GetSignInWorkspaces");
@@ -64,6 +66,7 @@ public static class AuthEndpoints
                 message = "If an account matches those details, a password reset link will be sent shortly."
             });
         })
+        .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create)
         .AllowAnonymous()
         .RequireRateLimiting("public-auth")
         .WithName("RequestPasswordReset");
@@ -80,6 +83,7 @@ public static class AuthEndpoints
                 cancellationToken);
             return errors is null ? Results.NoContent() : Results.ValidationProblem(errors);
         })
+        .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create)
         .AllowAnonymous()
         .RequireRateLimiting("public-auth")
         .WithName("ResetPassword");

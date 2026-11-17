@@ -46,6 +46,7 @@ public static class TenantRegistrationEndpoints
                 return Results.Conflict(new { error = exception.Message });
             }
         })
+        .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create)
         .AllowAnonymous()
         .RequireRateLimiting("public-auth")
         .WithName("RegisterTenant");

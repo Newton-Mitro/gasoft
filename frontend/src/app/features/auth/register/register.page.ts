@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { errorMessage, registrationError } from '../../../shared/utils/page-utils';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 
 interface Currency {
   code: string;
@@ -13,7 +14,7 @@ interface Currency {
 
 @Component({
   selector: 'app-register-page',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, FieldValidationDirective],
   template: `
     <main class="auth-page">
       <section class="auth-brand">
@@ -41,7 +42,7 @@ interface Currency {
             <label>Legal name<input name="legalName" [(ngModel)]="legalName" required /></label>
           </div>
           <label>Functional currency
-            <select name="currency" [(ngModel)]="currencyCode" [disabled]="currencyLoading() || currencyLoadFailed()" required>
+            <select name="functionalCurrencyCode" [(ngModel)]="currencyCode" [disabled]="currencyLoading() || currencyLoadFailed()" required>
               @if (currencyLoading()) { <option value="" disabled>Loading currencies…</option> }
               @else if (currencyLoadFailed()) { <option value="" disabled>Could not load currencies</option> }
               @else { <option value="" disabled>Select a currency</option> }

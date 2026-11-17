@@ -11,13 +11,13 @@ describe('errorMessage', () => {
     expect(errorMessage(error, 'Fallback')).toBe('The date range is invalid.');
   });
 
-  it('joins validation errors returned by the API', () => {
+  it('keeps validation errors focused on their fields instead of repeating them in an error message', () => {
     const error = new HttpErrorResponse({
       status: 400,
       error: { errors: { email: ['Enter a valid email.'], password: ['Password is required.'] } },
     });
 
-    expect(errorMessage(error, 'Fallback')).toBe('Enter a valid email. Password is required.');
+    expect(errorMessage(error, 'Fallback')).toBe('');
   });
 
   it('reports an unavailable API clearly', () => {
@@ -50,14 +50,14 @@ describe('errorMessage', () => {
     });
   });
 
-  it('labels registration validation messages by field', () => {
+  it('keeps registration validation errors focused on their fields', () => {
     const error = new HttpErrorResponse({
       status: 400,
       error: { errors: { slug: ['Use lowercase letters, numbers, and hyphens.'] } },
     });
 
     expect(registrationError(error)).toEqual({
-      message: 'Workspace URL: Use lowercase letters, numbers, and hyphens.',
+      message: '',
       showSignIn: false,
     });
   });

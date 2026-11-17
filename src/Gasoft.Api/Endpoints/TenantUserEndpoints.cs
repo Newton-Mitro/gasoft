@@ -8,7 +8,9 @@ public static class TenantUserEndpoints
 {
     public static IEndpointRouteBuilder MapTenantUserEndpoints(this IEndpointRouteBuilder app)
     {
-        var users = app.MapGroup("/api/v1/tenant/users").RequireAuthorization();
+        var users = app.MapGroup("/api/v1/tenant/users")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         users.MapGet("", async (
             HttpContext context,

@@ -7,7 +7,9 @@ public static class ConsolidationEndpoints
 {
     public static IEndpointRouteBuilder MapConsolidationEndpoints(this IEndpointRouteBuilder app)
     {
-        var groups = app.MapGroup("/api/v1/tenant/consolidation-groups").RequireAuthorization();
+        var groups = app.MapGroup("/api/v1/tenant/consolidation-groups")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         groups.MapGet("", async (
             IConsolidationService service,

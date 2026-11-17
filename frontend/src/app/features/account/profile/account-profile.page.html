@@ -29,7 +29,7 @@
           <div>
             <label class="button secondary image-picker">
               Choose profile image
-              <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onImageSelected($event)" />
+              <input name="image" type="file" accept="image/jpeg,image/png,image/webp" (change)="onImageSelected($event)" />
             </label>
             <p class="image-hint">JPEG, PNG, or WebP; up to 5 MB.</p>
             @if (selectedImage) {

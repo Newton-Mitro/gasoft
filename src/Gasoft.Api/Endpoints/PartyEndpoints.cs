@@ -7,7 +7,9 @@ public static class PartyEndpoints
 {
     public static IEndpointRouteBuilder MapPartyEndpoints(this IEndpointRouteBuilder app)
     {
-        var parties = app.MapGroup("/api/v1/parties").RequireAuthorization();
+        var parties = app.MapGroup("/api/v1/parties")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         parties.MapGet("/", async (IPartyService service, CancellationToken cancellationToken) =>
                 Results.Ok(await service.GetAllAsync(cancellationToken)))

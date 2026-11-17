@@ -8,7 +8,9 @@ public static class AccountEndpoints
 {
     public static IEndpointRouteBuilder MapAccountEndpoints(this IEndpointRouteBuilder app)
     {
-        var account = app.MapGroup("/api/v1/account").RequireAuthorization();
+        var account = app.MapGroup("/api/v1/account")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         account.MapGet("/profile", async (
             ClaimsPrincipal principal,

@@ -13,7 +13,9 @@ public static class InventoryEndpoints
             Results.Ok(await service.GetUnitsOfMeasureAsync(cancellationToken)))
             .AllowAnonymous();
 
-        var tenant = app.MapGroup("/api/v1").RequireAuthorization();
+        var tenant = app.MapGroup("/api/v1")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
         tenant.MapGet("/item-categories", async (
             IInventoryService service,
             CancellationToken cancellationToken) =>
@@ -137,7 +139,9 @@ public static class InventoryEndpoints
             }
         });
 
-        var companies = app.MapGroup("/api/v1/companies/{companyId:long}").RequireAuthorization();
+        var companies = app.MapGroup("/api/v1/companies/{companyId:long}")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
         companies.MapGet("/warehouses", async (
             long companyId,
             IInventoryService service,

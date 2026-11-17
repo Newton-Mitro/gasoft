@@ -4,10 +4,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 
 @Component({
   selector: 'app-reset-password-page',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, FieldValidationDirective],
   template: `
     <main class="auth-page">
       <section class="auth-brand">

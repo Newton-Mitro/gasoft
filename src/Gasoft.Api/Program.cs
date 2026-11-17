@@ -14,6 +14,8 @@ var signingKey = builder.Configuration["Jwt:SigningKey"]
     ?? throw new InvalidOperationException("Configure Jwt:SigningKey using user-secrets or an environment variable.");
 
 builder.Services.AddOpenApi();
+builder.Services.AddExceptionHandler<BadRequestBodyExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddRateLimiter(options =>
 {
@@ -67,6 +69,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseRateLimiter();
 app.UseAuthentication();

@@ -8,7 +8,8 @@ public static class SalesQuoteEndpoints
     public static IEndpointRouteBuilder MapSalesQuoteEndpoints(this IEndpointRouteBuilder app)
     {
         var companies = app.MapGroup("/api/v1/companies/{companyId:long}/sales-quotes")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         companies.MapGet("", async (
             long companyId,

@@ -114,12 +114,12 @@
       <p>Enter reporting-currency units per one unit of the organization’s functional currency. Use rates appropriate to the reporting period.</p>
       <div class="table-scroll"><table>
         <thead><tr><th>Organization</th><th>Functional currency</th><th>Closing rate · balance sheet</th><th>Average rate · revenue & expenses</th></tr></thead>
-        <tbody>@for (company of group.companies; track company.id) {
+        <tbody>@for (company of group.companies; track company.id; let index = $index) {
           <tr><td>{{ company.legalName }}</td><td>{{ company.functionalCurrencyCode }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> {{ group.reportingCurrencyCode }}</td>
-            <td><input type="number" min="0.0000000001" step="0.0000000001" [name]="'closing-' + company.id"
+            <td><input type="number" min="0.0000000001" step="0.0000000001" [name]="'translationRate' + index + 'ClosingRate'"
               [(ngModel)]="translationRateInputs[company.id].closingRate"
               [disabled]="company.functionalCurrencyCode === group.reportingCurrencyCode" /></td>
-            <td><input type="number" min="0.0000000001" step="0.0000000001" [name]="'average-' + company.id"
+            <td><input type="number" min="0.0000000001" step="0.0000000001" [name]="'translationRate' + index + 'AverageRate'"
               [(ngModel)]="translationRateInputs[company.id].averageRate"
               [disabled]="company.functionalCurrencyCode === group.reportingCurrencyCode" /></td>
           </tr>

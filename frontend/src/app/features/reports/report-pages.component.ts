@@ -12,6 +12,7 @@ import {
   TrialBalanceReport,
 } from './report.model';
 import { NotificationService } from '../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
 
 interface SummaryCard {
   label: string;
@@ -29,7 +30,7 @@ interface ReportRow {
 
 @Component({
   selector: 'app-financial-report',
-  imports: [FormsModule],
+  imports: [FormsModule, FieldValidationDirective],
   templateUrl: './report-pages.component.html',
   styleUrl: '../../shared/styles/feature-page.css',
 })

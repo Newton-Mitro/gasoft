@@ -4,10 +4,11 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService, WorkspaceOption } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 
 @Component({
   selector: 'app-login-page',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, FieldValidationDirective],
   styles: [`
     .auth-card {
       width: min(100%, 440px);

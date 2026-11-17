@@ -1,9 +1,16 @@
 import { of } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
-import { FiscalYear } from './fiscal-year.model';
+import { FiscalYear, isIsoDateOnly } from './fiscal-year.model';
 import { FiscalYearService } from './fiscal-year.service';
 
 describe('FiscalYearService', () => {
+  it('accepts only real ISO calendar dates for fiscal-year request values', () => {
+    expect(isIsoDateOnly('2026-11-17')).toBe(true);
+    expect(isIsoDateOnly('2026-02-29')).toBe(false);
+    expect(isIsoDateOnly('17/11/2026')).toBe(false);
+    expect(isIsoDateOnly('')).toBe(false);
+  });
+
   it('loads fiscal years from the company API', () => {
     const calls: unknown[][] = [];
     const api = {

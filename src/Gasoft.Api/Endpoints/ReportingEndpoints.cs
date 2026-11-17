@@ -7,7 +7,9 @@ public static class ReportingEndpoints
 {
     public static IEndpointRouteBuilder MapReportingEndpoints(this IEndpointRouteBuilder app)
     {
-        var companies = app.MapGroup("/api/v1/companies/{companyId:long}/reports").RequireAuthorization();
+        var companies = app.MapGroup("/api/v1/companies/{companyId:long}/reports")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         companies.MapGet("/cash-flow/accounts", async (
             long companyId,

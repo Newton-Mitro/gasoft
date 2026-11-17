@@ -27,6 +27,7 @@ export class NotificationService {
   }
 
   error(message: string): void {
+    if (!message.trim()) return;
     this.toast.error(message, {
       duration: 6000,
       className: 'app-toast app-toast-error',

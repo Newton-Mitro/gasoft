@@ -36,11 +36,11 @@
       <div class="table-scroll"><table>
         <thead><tr><th>Invoice line</th><th>Original quantity</th><th>Credit quantity</th><th>Unit price</th></tr></thead>
         <tbody>
-          @for (line of lines; track line.invoiceLineId) {
+          @for (line of lines; track line.invoiceLineId; let index = $index) {
             <tr>
               <td>{{ line.description }}</td><td>{{ line.originalQuantity }}</td>
               <td><input class="quantity-input" type="number" min="0" [max]="line.originalQuantity" step="0.000001"
-                [(ngModel)]="line.quantity" [name]="'quantity-' + line.invoiceLineId" /></td>
+                [(ngModel)]="line.quantity" [name]="'quantity-' + index" /></td>
               <td>{{ selectedInvoice()?.currencyCode }} {{ sourceUnitPrice(line.invoiceLineId) }}</td>
             </tr>
           }
@@ -70,9 +70,9 @@
         <option [ngValue]="null" disabled>Select account</option>
         @for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
       </select></label>
-      @for (taxCodeId of taxCodeIds; track taxCodeId) {
+      @for (taxCodeId of taxCodeIds; track taxCodeId; let index = $index) {
         <label><span>Tax account for code {{ taxCodeId }}</span>
-          <select [name]="'tax-account-' + taxCodeId" [(ngModel)]="taxAccountIds[taxCodeId]">
+          <select [name]="'taxAccount' + index + 'AccountId'" [(ngModel)]="taxAccountIds[taxCodeId]">
             <option [ngValue]="null" disabled>Select account</option>
             @for (option of accounts; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
           </select>

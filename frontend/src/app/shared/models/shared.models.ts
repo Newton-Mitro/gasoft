@@ -8,6 +8,12 @@ export interface Field {
   label: string;
   type?: 'text' | 'password' | 'email' | 'tel' | 'url' | 'date' | 'number' | 'checkbox' | 'select';
   required?: boolean;
+  min?: number;
+  max?: number;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  step?: number | 'any';
   options?: Choice[];
   optionSource?: 'groups' | 'years' | 'parties' | 'accounts' | 'categories' | 'taxCategories' | 'currencies' | 'journals' | 'periods' | 'warehouses' | 'items' | 'units' | 'jurisdictions' | 'taxCodes';
 }

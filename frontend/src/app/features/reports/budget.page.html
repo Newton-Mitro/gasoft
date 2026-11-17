@@ -72,7 +72,7 @@
             @for (account of accounts; track account.accountId) {
               <tr><td><strong>{{ account.code }} · {{ account.name }}</strong></td><td>{{ account.accountType }}</td>
                 @for (period of periods; track period.id) {
-                  <td><input type="number" min="0" step="0.01" [name]="'amount-' + account.accountId + '-' + period.id" [(ngModel)]="account.amounts[period.id]" /></td>
+                  <td><input type="number" min="0" step="0.01" [name]="'budgetLine' + budgetLineIndex(account.accountId, period.id) + 'Amount'" [(ngModel)]="account.amounts[period.id]" /></td>
                 }
               </tr>
             }

@@ -11,7 +11,8 @@ public static class BankReconciliationEndpoints
     public static IEndpointRouteBuilder MapBankReconciliationEndpoints(this IEndpointRouteBuilder app)
     {
         var accounts = app.MapGroup("/api/v1/companies/{companyId:long}/bank-accounts")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         accounts.MapGet("", async (
             long companyId,

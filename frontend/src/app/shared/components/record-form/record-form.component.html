@@ -9,7 +9,7 @@
       <span class="form-mark" aria-hidden="true"><i class="fa-solid" [class.fa-pen-to-square]="formMode === 'edit'" [class.fa-plus]="formMode !== 'edit'"></i></span>
     </div>
   </div>
-  <form (ngSubmit)="submitForm.emit()">
+  <form (ngSubmit)="submit()">
     <div class="section-caption">
       <div>
         <strong>Details</strong>
@@ -19,14 +19,14 @@
     </div>
     <div class="field-grid" [class.transaction-fields]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries' || formMode === 'receive' || formMode === 'issue'">
       @for (field of fields; track field.key) {
-        <label [class.checkbox-label]="field.type === 'checkbox'">
+        <label [class.checkbox-label]="field.type === 'checkbox'" [class.invalid-field]="fieldErrors(field.key).length > 0">
           @if (field.type === 'checkbox') {
             <input type="checkbox" [name]="field.key" [ngModel]="$any(form)[field.key]" (ngModelChange)="valueChange.emit({ key: field.key, value: $event })" />
             <span>{{ field.label }}</span>
           } @else {
             <span class="field-label">{{ field.label }} @if (field.required) { <span class="required-marker" aria-label="required">*</span> }</span>
             @if (field.type === 'select') {
-              <select [name]="field.key" [required]="!!field.required" [disabled]="isOptionLoading(field.optionSource) || hasOptionFailed(field.optionSource)" [ngModel]="$any(form)[field.key]" (ngModelChange)="valueChange.emit({ key: field.key, value: $event })">
+              <select [name]="field.key" [required]="!!field.required" [disabled]="isOptionLoading(field.optionSource) || hasOptionFailed(field.optionSource)" [ngModel]="$any(form)[field.key]" (ngModelChange)="clearFieldError(field.key); valueChange.emit({ key: field.key, value: $event })">
                 <option [ngValue]="null" disabled>
                   @if (isOptionLoading(field.optionSource)) { Loading {{ field.label.toLowerCase() }}… }
                   @else if (hasOptionFailed(field.optionSource)) { Could not load {{ field.label.toLowerCase() }} }
@@ -37,7 +37,7 @@
                 }
               </select>
             } @else {
-              <input [type]="field.type ?? 'text'" [name]="field.key" [required]="!!field.required" [min]="field.key === 'exchangeRate' ? 0.0000000001 : field.type === 'number' ? 0 : null" [step]="field.key === 'exchangeRate' ? '0.0000000001' : field.type === 'number' ? 'any' : null" [ngModel]="$any(form)[field.key]" (ngModelChange)="valueChange.emit({ key: field.key, value: $event })" />
+              <input [type]="field.type ?? 'text'" [name]="field.key" [required]="!!field.required" [min]="field.min ?? (field.key === 'exchangeRate' ? 0.0000000001 : field.type === 'number' ? 0 : null)" [max]="field.max ?? null" [minlength]="field.minLength ?? null" [maxlength]="field.maxLength ?? null" [attr.pattern]="field.pattern ?? null" [step]="field.step ?? (field.key === 'exchangeRate' ? '0.0000000001' : field.type === 'number' ? 'any' : null)" [ngModel]="$any(form)[field.key]" (ngModelChange)="clearFieldError(field.key); valueChange.emit({ key: field.key, value: $event })" />
             }
           }
         </label>

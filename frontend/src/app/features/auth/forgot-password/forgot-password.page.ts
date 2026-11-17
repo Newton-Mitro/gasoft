@@ -1,13 +1,14 @@
 import { Component, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 import { AuthService } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { NotificationService } from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-forgot-password-page',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, FieldValidationDirective],
   template: `
     <main class="auth-page">
       <section class="auth-brand">

@@ -7,7 +7,9 @@ public static class BudgetEndpoints
 {
     public static IEndpointRouteBuilder MapBudgetEndpoints(this IEndpointRouteBuilder app)
     {
-        var companies = app.MapGroup("/api/v1/companies/{companyId:long}/budgets").RequireAuthorization();
+        var companies = app.MapGroup("/api/v1/companies/{companyId:long}/budgets")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         companies.MapGet("", async (
             long companyId,
@@ -92,7 +94,9 @@ public static class BudgetEndpoints
         .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"))
         .WithName("DeleteBudget");
 
-        var reports = app.MapGroup("/api/v1/companies/{companyId:long}/reports").RequireAuthorization();
+        var reports = app.MapGroup("/api/v1/companies/{companyId:long}/reports")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
         reports.MapGet("/budget-vs-actual", async (
             long companyId,
             long budgetId,

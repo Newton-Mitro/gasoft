@@ -12,6 +12,7 @@ import {
 } from './budget.model';
 import { BudgetService } from './budget.service';
 import { NotificationService } from '../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
 
 interface EditableBudgetAccount extends BudgetAccount {
   amounts: Record<number, number>;
@@ -19,7 +20,7 @@ interface EditableBudgetAccount extends BudgetAccount {
 
 @Component({
   selector: 'app-budget-page',
-  imports: [FormsModule],
+  imports: [FormsModule, FieldValidationDirective],
   templateUrl: './budget.page.html',
   styleUrls: ['../../shared/styles/feature-page.css', './budget.page.css'],
 })
@@ -57,6 +58,19 @@ export class BudgetPageComponent implements OnInit {
     this.report = null;
     if (this.selectedBudgetId === null) return;
     this.loadReport(this.selectedBudgetId);
+  }
+
+  budgetLineIndex(accountId: number, periodId: number): number {
+    let index = 0;
+    for (const account of this.accounts) {
+      for (const period of this.periods) {
+        if (Number(account.amounts[period.id] ?? 0) > 0) {
+          if (account.accountId === accountId && period.id === periodId) return index;
+          index++;
+        }
+      }
+    }
+    return -1;
   }
 
   createBudget(): void {

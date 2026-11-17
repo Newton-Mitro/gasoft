@@ -2720,6 +2720,1502 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("TaxJurisdictions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 20L,
+                            Code = "AD",
+                            CountryCode = "AD"
+                        },
+                        new
+                        {
+                            Id = 784L,
+                            Code = "AE",
+                            CountryCode = "AE"
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            Code = "AF",
+                            CountryCode = "AF"
+                        },
+                        new
+                        {
+                            Id = 28L,
+                            Code = "AG",
+                            CountryCode = "AG"
+                        },
+                        new
+                        {
+                            Id = 660L,
+                            Code = "AI",
+                            CountryCode = "AI"
+                        },
+                        new
+                        {
+                            Id = 8L,
+                            Code = "AL",
+                            CountryCode = "AL"
+                        },
+                        new
+                        {
+                            Id = 51L,
+                            Code = "AM",
+                            CountryCode = "AM"
+                        },
+                        new
+                        {
+                            Id = 24L,
+                            Code = "AO",
+                            CountryCode = "AO"
+                        },
+                        new
+                        {
+                            Id = 10L,
+                            Code = "AQ",
+                            CountryCode = "AQ"
+                        },
+                        new
+                        {
+                            Id = 32L,
+                            Code = "AR",
+                            CountryCode = "AR"
+                        },
+                        new
+                        {
+                            Id = 16L,
+                            Code = "AS",
+                            CountryCode = "AS"
+                        },
+                        new
+                        {
+                            Id = 40L,
+                            Code = "AT",
+                            CountryCode = "AT"
+                        },
+                        new
+                        {
+                            Id = 36L,
+                            Code = "AU",
+                            CountryCode = "AU"
+                        },
+                        new
+                        {
+                            Id = 533L,
+                            Code = "AW",
+                            CountryCode = "AW"
+                        },
+                        new
+                        {
+                            Id = 248L,
+                            Code = "AX",
+                            CountryCode = "AX"
+                        },
+                        new
+                        {
+                            Id = 31L,
+                            Code = "AZ",
+                            CountryCode = "AZ"
+                        },
+                        new
+                        {
+                            Id = 70L,
+                            Code = "BA",
+                            CountryCode = "BA"
+                        },
+                        new
+                        {
+                            Id = 52L,
+                            Code = "BB",
+                            CountryCode = "BB"
+                        },
+                        new
+                        {
+                            Id = 50L,
+                            Code = "BD",
+                            CountryCode = "BD"
+                        },
+                        new
+                        {
+                            Id = 56L,
+                            Code = "BE",
+                            CountryCode = "BE"
+                        },
+                        new
+                        {
+                            Id = 854L,
+                            Code = "BF",
+                            CountryCode = "BF"
+                        },
+                        new
+                        {
+                            Id = 100L,
+                            Code = "BG",
+                            CountryCode = "BG"
+                        },
+                        new
+                        {
+                            Id = 48L,
+                            Code = "BH",
+                            CountryCode = "BH"
+                        },
+                        new
+                        {
+                            Id = 108L,
+                            Code = "BI",
+                            CountryCode = "BI"
+                        },
+                        new
+                        {
+                            Id = 204L,
+                            Code = "BJ",
+                            CountryCode = "BJ"
+                        },
+                        new
+                        {
+                            Id = 652L,
+                            Code = "BL",
+                            CountryCode = "BL"
+                        },
+                        new
+                        {
+                            Id = 60L,
+                            Code = "BM",
+                            CountryCode = "BM"
+                        },
+                        new
+                        {
+                            Id = 96L,
+                            Code = "BN",
+                            CountryCode = "BN"
+                        },
+                        new
+                        {
+                            Id = 68L,
+                            Code = "BO",
+                            CountryCode = "BO"
+                        },
+                        new
+                        {
+                            Id = 535L,
+                            Code = "BQ",
+                            CountryCode = "BQ"
+                        },
+                        new
+                        {
+                            Id = 76L,
+                            Code = "BR",
+                            CountryCode = "BR"
+                        },
+                        new
+                        {
+                            Id = 44L,
+                            Code = "BS",
+                            CountryCode = "BS"
+                        },
+                        new
+                        {
+                            Id = 64L,
+                            Code = "BT",
+                            CountryCode = "BT"
+                        },
+                        new
+                        {
+                            Id = 74L,
+                            Code = "BV",
+                            CountryCode = "BV"
+                        },
+                        new
+                        {
+                            Id = 72L,
+                            Code = "BW",
+                            CountryCode = "BW"
+                        },
+                        new
+                        {
+                            Id = 112L,
+                            Code = "BY",
+                            CountryCode = "BY"
+                        },
+                        new
+                        {
+                            Id = 84L,
+                            Code = "BZ",
+                            CountryCode = "BZ"
+                        },
+                        new
+                        {
+                            Id = 124L,
+                            Code = "CA",
+                            CountryCode = "CA"
+                        },
+                        new
+                        {
+                            Id = 166L,
+                            Code = "CC",
+                            CountryCode = "CC"
+                        },
+                        new
+                        {
+                            Id = 180L,
+                            Code = "CD",
+                            CountryCode = "CD"
+                        },
+                        new
+                        {
+                            Id = 140L,
+                            Code = "CF",
+                            CountryCode = "CF"
+                        },
+                        new
+                        {
+                            Id = 178L,
+                            Code = "CG",
+                            CountryCode = "CG"
+                        },
+                        new
+                        {
+                            Id = 756L,
+                            Code = "CH",
+                            CountryCode = "CH"
+                        },
+                        new
+                        {
+                            Id = 384L,
+                            Code = "CI",
+                            CountryCode = "CI"
+                        },
+                        new
+                        {
+                            Id = 184L,
+                            Code = "CK",
+                            CountryCode = "CK"
+                        },
+                        new
+                        {
+                            Id = 152L,
+                            Code = "CL",
+                            CountryCode = "CL"
+                        },
+                        new
+                        {
+                            Id = 120L,
+                            Code = "CM",
+                            CountryCode = "CM"
+                        },
+                        new
+                        {
+                            Id = 156L,
+                            Code = "CN",
+                            CountryCode = "CN"
+                        },
+                        new
+                        {
+                            Id = 170L,
+                            Code = "CO",
+                            CountryCode = "CO"
+                        },
+                        new
+                        {
+                            Id = 188L,
+                            Code = "CR",
+                            CountryCode = "CR"
+                        },
+                        new
+                        {
+                            Id = 192L,
+                            Code = "CU",
+                            CountryCode = "CU"
+                        },
+                        new
+                        {
+                            Id = 132L,
+                            Code = "CV",
+                            CountryCode = "CV"
+                        },
+                        new
+                        {
+                            Id = 531L,
+                            Code = "CW",
+                            CountryCode = "CW"
+                        },
+                        new
+                        {
+                            Id = 162L,
+                            Code = "CX",
+                            CountryCode = "CX"
+                        },
+                        new
+                        {
+                            Id = 196L,
+                            Code = "CY",
+                            CountryCode = "CY"
+                        },
+                        new
+                        {
+                            Id = 203L,
+                            Code = "CZ",
+                            CountryCode = "CZ"
+                        },
+                        new
+                        {
+                            Id = 276L,
+                            Code = "DE",
+                            CountryCode = "DE"
+                        },
+                        new
+                        {
+                            Id = 262L,
+                            Code = "DJ",
+                            CountryCode = "DJ"
+                        },
+                        new
+                        {
+                            Id = 208L,
+                            Code = "DK",
+                            CountryCode = "DK"
+                        },
+                        new
+                        {
+                            Id = 212L,
+                            Code = "DM",
+                            CountryCode = "DM"
+                        },
+                        new
+                        {
+                            Id = 214L,
+                            Code = "DO",
+                            CountryCode = "DO"
+                        },
+                        new
+                        {
+                            Id = 12L,
+                            Code = "DZ",
+                            CountryCode = "DZ"
+                        },
+                        new
+                        {
+                            Id = 218L,
+                            Code = "EC",
+                            CountryCode = "EC"
+                        },
+                        new
+                        {
+                            Id = 233L,
+                            Code = "EE",
+                            CountryCode = "EE"
+                        },
+                        new
+                        {
+                            Id = 818L,
+                            Code = "EG",
+                            CountryCode = "EG"
+                        },
+                        new
+                        {
+                            Id = 732L,
+                            Code = "EH",
+                            CountryCode = "EH"
+                        },
+                        new
+                        {
+                            Id = 232L,
+                            Code = "ER",
+                            CountryCode = "ER"
+                        },
+                        new
+                        {
+                            Id = 724L,
+                            Code = "ES",
+                            CountryCode = "ES"
+                        },
+                        new
+                        {
+                            Id = 231L,
+                            Code = "ET",
+                            CountryCode = "ET"
+                        },
+                        new
+                        {
+                            Id = 246L,
+                            Code = "FI",
+                            CountryCode = "FI"
+                        },
+                        new
+                        {
+                            Id = 242L,
+                            Code = "FJ",
+                            CountryCode = "FJ"
+                        },
+                        new
+                        {
+                            Id = 238L,
+                            Code = "FK",
+                            CountryCode = "FK"
+                        },
+                        new
+                        {
+                            Id = 583L,
+                            Code = "FM",
+                            CountryCode = "FM"
+                        },
+                        new
+                        {
+                            Id = 234L,
+                            Code = "FO",
+                            CountryCode = "FO"
+                        },
+                        new
+                        {
+                            Id = 250L,
+                            Code = "FR",
+                            CountryCode = "FR"
+                        },
+                        new
+                        {
+                            Id = 266L,
+                            Code = "GA",
+                            CountryCode = "GA"
+                        },
+                        new
+                        {
+                            Id = 826L,
+                            Code = "GB",
+                            CountryCode = "GB"
+                        },
+                        new
+                        {
+                            Id = 308L,
+                            Code = "GD",
+                            CountryCode = "GD"
+                        },
+                        new
+                        {
+                            Id = 268L,
+                            Code = "GE",
+                            CountryCode = "GE"
+                        },
+                        new
+                        {
+                            Id = 254L,
+                            Code = "GF",
+                            CountryCode = "GF"
+                        },
+                        new
+                        {
+                            Id = 831L,
+                            Code = "GG",
+                            CountryCode = "GG"
+                        },
+                        new
+                        {
+                            Id = 288L,
+                            Code = "GH",
+                            CountryCode = "GH"
+                        },
+                        new
+                        {
+                            Id = 292L,
+                            Code = "GI",
+                            CountryCode = "GI"
+                        },
+                        new
+                        {
+                            Id = 304L,
+                            Code = "GL",
+                            CountryCode = "GL"
+                        },
+                        new
+                        {
+                            Id = 270L,
+                            Code = "GM",
+                            CountryCode = "GM"
+                        },
+                        new
+                        {
+                            Id = 324L,
+                            Code = "GN",
+                            CountryCode = "GN"
+                        },
+                        new
+                        {
+                            Id = 312L,
+                            Code = "GP",
+                            CountryCode = "GP"
+                        },
+                        new
+                        {
+                            Id = 226L,
+                            Code = "GQ",
+                            CountryCode = "GQ"
+                        },
+                        new
+                        {
+                            Id = 300L,
+                            Code = "GR",
+                            CountryCode = "GR"
+                        },
+                        new
+                        {
+                            Id = 239L,
+                            Code = "GS",
+                            CountryCode = "GS"
+                        },
+                        new
+                        {
+                            Id = 320L,
+                            Code = "GT",
+                            CountryCode = "GT"
+                        },
+                        new
+                        {
+                            Id = 316L,
+                            Code = "GU",
+                            CountryCode = "GU"
+                        },
+                        new
+                        {
+                            Id = 624L,
+                            Code = "GW",
+                            CountryCode = "GW"
+                        },
+                        new
+                        {
+                            Id = 328L,
+                            Code = "GY",
+                            CountryCode = "GY"
+                        },
+                        new
+                        {
+                            Id = 344L,
+                            Code = "HK",
+                            CountryCode = "HK"
+                        },
+                        new
+                        {
+                            Id = 334L,
+                            Code = "HM",
+                            CountryCode = "HM"
+                        },
+                        new
+                        {
+                            Id = 340L,
+                            Code = "HN",
+                            CountryCode = "HN"
+                        },
+                        new
+                        {
+                            Id = 191L,
+                            Code = "HR",
+                            CountryCode = "HR"
+                        },
+                        new
+                        {
+                            Id = 332L,
+                            Code = "HT",
+                            CountryCode = "HT"
+                        },
+                        new
+                        {
+                            Id = 348L,
+                            Code = "HU",
+                            CountryCode = "HU"
+                        },
+                        new
+                        {
+                            Id = 360L,
+                            Code = "ID",
+                            CountryCode = "ID"
+                        },
+                        new
+                        {
+                            Id = 372L,
+                            Code = "IE",
+                            CountryCode = "IE"
+                        },
+                        new
+                        {
+                            Id = 376L,
+                            Code = "IL",
+                            CountryCode = "IL"
+                        },
+                        new
+                        {
+                            Id = 833L,
+                            Code = "IM",
+                            CountryCode = "IM"
+                        },
+                        new
+                        {
+                            Id = 356L,
+                            Code = "IN",
+                            CountryCode = "IN"
+                        },
+                        new
+                        {
+                            Id = 86L,
+                            Code = "IO",
+                            CountryCode = "IO"
+                        },
+                        new
+                        {
+                            Id = 368L,
+                            Code = "IQ",
+                            CountryCode = "IQ"
+                        },
+                        new
+                        {
+                            Id = 364L,
+                            Code = "IR",
+                            CountryCode = "IR"
+                        },
+                        new
+                        {
+                            Id = 352L,
+                            Code = "IS",
+                            CountryCode = "IS"
+                        },
+                        new
+                        {
+                            Id = 380L,
+                            Code = "IT",
+                            CountryCode = "IT"
+                        },
+                        new
+                        {
+                            Id = 832L,
+                            Code = "JE",
+                            CountryCode = "JE"
+                        },
+                        new
+                        {
+                            Id = 388L,
+                            Code = "JM",
+                            CountryCode = "JM"
+                        },
+                        new
+                        {
+                            Id = 400L,
+                            Code = "JO",
+                            CountryCode = "JO"
+                        },
+                        new
+                        {
+                            Id = 392L,
+                            Code = "JP",
+                            CountryCode = "JP"
+                        },
+                        new
+                        {
+                            Id = 404L,
+                            Code = "KE",
+                            CountryCode = "KE"
+                        },
+                        new
+                        {
+                            Id = 417L,
+                            Code = "KG",
+                            CountryCode = "KG"
+                        },
+                        new
+                        {
+                            Id = 116L,
+                            Code = "KH",
+                            CountryCode = "KH"
+                        },
+                        new
+                        {
+                            Id = 296L,
+                            Code = "KI",
+                            CountryCode = "KI"
+                        },
+                        new
+                        {
+                            Id = 174L,
+                            Code = "KM",
+                            CountryCode = "KM"
+                        },
+                        new
+                        {
+                            Id = 659L,
+                            Code = "KN",
+                            CountryCode = "KN"
+                        },
+                        new
+                        {
+                            Id = 408L,
+                            Code = "KP",
+                            CountryCode = "KP"
+                        },
+                        new
+                        {
+                            Id = 410L,
+                            Code = "KR",
+                            CountryCode = "KR"
+                        },
+                        new
+                        {
+                            Id = 414L,
+                            Code = "KW",
+                            CountryCode = "KW"
+                        },
+                        new
+                        {
+                            Id = 136L,
+                            Code = "KY",
+                            CountryCode = "KY"
+                        },
+                        new
+                        {
+                            Id = 398L,
+                            Code = "KZ",
+                            CountryCode = "KZ"
+                        },
+                        new
+                        {
+                            Id = 418L,
+                            Code = "LA",
+                            CountryCode = "LA"
+                        },
+                        new
+                        {
+                            Id = 422L,
+                            Code = "LB",
+                            CountryCode = "LB"
+                        },
+                        new
+                        {
+                            Id = 662L,
+                            Code = "LC",
+                            CountryCode = "LC"
+                        },
+                        new
+                        {
+                            Id = 438L,
+                            Code = "LI",
+                            CountryCode = "LI"
+                        },
+                        new
+                        {
+                            Id = 144L,
+                            Code = "LK",
+                            CountryCode = "LK"
+                        },
+                        new
+                        {
+                            Id = 430L,
+                            Code = "LR",
+                            CountryCode = "LR"
+                        },
+                        new
+                        {
+                            Id = 426L,
+                            Code = "LS",
+                            CountryCode = "LS"
+                        },
+                        new
+                        {
+                            Id = 440L,
+                            Code = "LT",
+                            CountryCode = "LT"
+                        },
+                        new
+                        {
+                            Id = 442L,
+                            Code = "LU",
+                            CountryCode = "LU"
+                        },
+                        new
+                        {
+                            Id = 428L,
+                            Code = "LV",
+                            CountryCode = "LV"
+                        },
+                        new
+                        {
+                            Id = 434L,
+                            Code = "LY",
+                            CountryCode = "LY"
+                        },
+                        new
+                        {
+                            Id = 504L,
+                            Code = "MA",
+                            CountryCode = "MA"
+                        },
+                        new
+                        {
+                            Id = 492L,
+                            Code = "MC",
+                            CountryCode = "MC"
+                        },
+                        new
+                        {
+                            Id = 498L,
+                            Code = "MD",
+                            CountryCode = "MD"
+                        },
+                        new
+                        {
+                            Id = 499L,
+                            Code = "ME",
+                            CountryCode = "ME"
+                        },
+                        new
+                        {
+                            Id = 663L,
+                            Code = "MF",
+                            CountryCode = "MF"
+                        },
+                        new
+                        {
+                            Id = 450L,
+                            Code = "MG",
+                            CountryCode = "MG"
+                        },
+                        new
+                        {
+                            Id = 584L,
+                            Code = "MH",
+                            CountryCode = "MH"
+                        },
+                        new
+                        {
+                            Id = 807L,
+                            Code = "MK",
+                            CountryCode = "MK"
+                        },
+                        new
+                        {
+                            Id = 466L,
+                            Code = "ML",
+                            CountryCode = "ML"
+                        },
+                        new
+                        {
+                            Id = 104L,
+                            Code = "MM",
+                            CountryCode = "MM"
+                        },
+                        new
+                        {
+                            Id = 496L,
+                            Code = "MN",
+                            CountryCode = "MN"
+                        },
+                        new
+                        {
+                            Id = 446L,
+                            Code = "MO",
+                            CountryCode = "MO"
+                        },
+                        new
+                        {
+                            Id = 580L,
+                            Code = "MP",
+                            CountryCode = "MP"
+                        },
+                        new
+                        {
+                            Id = 474L,
+                            Code = "MQ",
+                            CountryCode = "MQ"
+                        },
+                        new
+                        {
+                            Id = 478L,
+                            Code = "MR",
+                            CountryCode = "MR"
+                        },
+                        new
+                        {
+                            Id = 500L,
+                            Code = "MS",
+                            CountryCode = "MS"
+                        },
+                        new
+                        {
+                            Id = 470L,
+                            Code = "MT",
+                            CountryCode = "MT"
+                        },
+                        new
+                        {
+                            Id = 480L,
+                            Code = "MU",
+                            CountryCode = "MU"
+                        },
+                        new
+                        {
+                            Id = 462L,
+                            Code = "MV",
+                            CountryCode = "MV"
+                        },
+                        new
+                        {
+                            Id = 454L,
+                            Code = "MW",
+                            CountryCode = "MW"
+                        },
+                        new
+                        {
+                            Id = 484L,
+                            Code = "MX",
+                            CountryCode = "MX"
+                        },
+                        new
+                        {
+                            Id = 458L,
+                            Code = "MY",
+                            CountryCode = "MY"
+                        },
+                        new
+                        {
+                            Id = 508L,
+                            Code = "MZ",
+                            CountryCode = "MZ"
+                        },
+                        new
+                        {
+                            Id = 516L,
+                            Code = "NA",
+                            CountryCode = "NA"
+                        },
+                        new
+                        {
+                            Id = 540L,
+                            Code = "NC",
+                            CountryCode = "NC"
+                        },
+                        new
+                        {
+                            Id = 562L,
+                            Code = "NE",
+                            CountryCode = "NE"
+                        },
+                        new
+                        {
+                            Id = 574L,
+                            Code = "NF",
+                            CountryCode = "NF"
+                        },
+                        new
+                        {
+                            Id = 566L,
+                            Code = "NG",
+                            CountryCode = "NG"
+                        },
+                        new
+                        {
+                            Id = 558L,
+                            Code = "NI",
+                            CountryCode = "NI"
+                        },
+                        new
+                        {
+                            Id = 528L,
+                            Code = "NL",
+                            CountryCode = "NL"
+                        },
+                        new
+                        {
+                            Id = 578L,
+                            Code = "NO",
+                            CountryCode = "NO"
+                        },
+                        new
+                        {
+                            Id = 524L,
+                            Code = "NP",
+                            CountryCode = "NP"
+                        },
+                        new
+                        {
+                            Id = 520L,
+                            Code = "NR",
+                            CountryCode = "NR"
+                        },
+                        new
+                        {
+                            Id = 570L,
+                            Code = "NU",
+                            CountryCode = "NU"
+                        },
+                        new
+                        {
+                            Id = 554L,
+                            Code = "NZ",
+                            CountryCode = "NZ"
+                        },
+                        new
+                        {
+                            Id = 512L,
+                            Code = "OM",
+                            CountryCode = "OM"
+                        },
+                        new
+                        {
+                            Id = 591L,
+                            Code = "PA",
+                            CountryCode = "PA"
+                        },
+                        new
+                        {
+                            Id = 604L,
+                            Code = "PE",
+                            CountryCode = "PE"
+                        },
+                        new
+                        {
+                            Id = 258L,
+                            Code = "PF",
+                            CountryCode = "PF"
+                        },
+                        new
+                        {
+                            Id = 598L,
+                            Code = "PG",
+                            CountryCode = "PG"
+                        },
+                        new
+                        {
+                            Id = 608L,
+                            Code = "PH",
+                            CountryCode = "PH"
+                        },
+                        new
+                        {
+                            Id = 586L,
+                            Code = "PK",
+                            CountryCode = "PK"
+                        },
+                        new
+                        {
+                            Id = 616L,
+                            Code = "PL",
+                            CountryCode = "PL"
+                        },
+                        new
+                        {
+                            Id = 666L,
+                            Code = "PM",
+                            CountryCode = "PM"
+                        },
+                        new
+                        {
+                            Id = 612L,
+                            Code = "PN",
+                            CountryCode = "PN"
+                        },
+                        new
+                        {
+                            Id = 630L,
+                            Code = "PR",
+                            CountryCode = "PR"
+                        },
+                        new
+                        {
+                            Id = 275L,
+                            Code = "PS",
+                            CountryCode = "PS"
+                        },
+                        new
+                        {
+                            Id = 620L,
+                            Code = "PT",
+                            CountryCode = "PT"
+                        },
+                        new
+                        {
+                            Id = 585L,
+                            Code = "PW",
+                            CountryCode = "PW"
+                        },
+                        new
+                        {
+                            Id = 600L,
+                            Code = "PY",
+                            CountryCode = "PY"
+                        },
+                        new
+                        {
+                            Id = 634L,
+                            Code = "QA",
+                            CountryCode = "QA"
+                        },
+                        new
+                        {
+                            Id = 638L,
+                            Code = "RE",
+                            CountryCode = "RE"
+                        },
+                        new
+                        {
+                            Id = 642L,
+                            Code = "RO",
+                            CountryCode = "RO"
+                        },
+                        new
+                        {
+                            Id = 688L,
+                            Code = "RS",
+                            CountryCode = "RS"
+                        },
+                        new
+                        {
+                            Id = 643L,
+                            Code = "RU",
+                            CountryCode = "RU"
+                        },
+                        new
+                        {
+                            Id = 646L,
+                            Code = "RW",
+                            CountryCode = "RW"
+                        },
+                        new
+                        {
+                            Id = 682L,
+                            Code = "SA",
+                            CountryCode = "SA"
+                        },
+                        new
+                        {
+                            Id = 90L,
+                            Code = "SB",
+                            CountryCode = "SB"
+                        },
+                        new
+                        {
+                            Id = 690L,
+                            Code = "SC",
+                            CountryCode = "SC"
+                        },
+                        new
+                        {
+                            Id = 729L,
+                            Code = "SD",
+                            CountryCode = "SD"
+                        },
+                        new
+                        {
+                            Id = 752L,
+                            Code = "SE",
+                            CountryCode = "SE"
+                        },
+                        new
+                        {
+                            Id = 702L,
+                            Code = "SG",
+                            CountryCode = "SG"
+                        },
+                        new
+                        {
+                            Id = 654L,
+                            Code = "SH",
+                            CountryCode = "SH"
+                        },
+                        new
+                        {
+                            Id = 705L,
+                            Code = "SI",
+                            CountryCode = "SI"
+                        },
+                        new
+                        {
+                            Id = 744L,
+                            Code = "SJ",
+                            CountryCode = "SJ"
+                        },
+                        new
+                        {
+                            Id = 703L,
+                            Code = "SK",
+                            CountryCode = "SK"
+                        },
+                        new
+                        {
+                            Id = 694L,
+                            Code = "SL",
+                            CountryCode = "SL"
+                        },
+                        new
+                        {
+                            Id = 674L,
+                            Code = "SM",
+                            CountryCode = "SM"
+                        },
+                        new
+                        {
+                            Id = 686L,
+                            Code = "SN",
+                            CountryCode = "SN"
+                        },
+                        new
+                        {
+                            Id = 706L,
+                            Code = "SO",
+                            CountryCode = "SO"
+                        },
+                        new
+                        {
+                            Id = 740L,
+                            Code = "SR",
+                            CountryCode = "SR"
+                        },
+                        new
+                        {
+                            Id = 728L,
+                            Code = "SS",
+                            CountryCode = "SS"
+                        },
+                        new
+                        {
+                            Id = 678L,
+                            Code = "ST",
+                            CountryCode = "ST"
+                        },
+                        new
+                        {
+                            Id = 222L,
+                            Code = "SV",
+                            CountryCode = "SV"
+                        },
+                        new
+                        {
+                            Id = 534L,
+                            Code = "SX",
+                            CountryCode = "SX"
+                        },
+                        new
+                        {
+                            Id = 760L,
+                            Code = "SY",
+                            CountryCode = "SY"
+                        },
+                        new
+                        {
+                            Id = 748L,
+                            Code = "SZ",
+                            CountryCode = "SZ"
+                        },
+                        new
+                        {
+                            Id = 796L,
+                            Code = "TC",
+                            CountryCode = "TC"
+                        },
+                        new
+                        {
+                            Id = 148L,
+                            Code = "TD",
+                            CountryCode = "TD"
+                        },
+                        new
+                        {
+                            Id = 260L,
+                            Code = "TF",
+                            CountryCode = "TF"
+                        },
+                        new
+                        {
+                            Id = 768L,
+                            Code = "TG",
+                            CountryCode = "TG"
+                        },
+                        new
+                        {
+                            Id = 764L,
+                            Code = "TH",
+                            CountryCode = "TH"
+                        },
+                        new
+                        {
+                            Id = 762L,
+                            Code = "TJ",
+                            CountryCode = "TJ"
+                        },
+                        new
+                        {
+                            Id = 772L,
+                            Code = "TK",
+                            CountryCode = "TK"
+                        },
+                        new
+                        {
+                            Id = 626L,
+                            Code = "TL",
+                            CountryCode = "TL"
+                        },
+                        new
+                        {
+                            Id = 795L,
+                            Code = "TM",
+                            CountryCode = "TM"
+                        },
+                        new
+                        {
+                            Id = 788L,
+                            Code = "TN",
+                            CountryCode = "TN"
+                        },
+                        new
+                        {
+                            Id = 776L,
+                            Code = "TO",
+                            CountryCode = "TO"
+                        },
+                        new
+                        {
+                            Id = 792L,
+                            Code = "TR",
+                            CountryCode = "TR"
+                        },
+                        new
+                        {
+                            Id = 780L,
+                            Code = "TT",
+                            CountryCode = "TT"
+                        },
+                        new
+                        {
+                            Id = 798L,
+                            Code = "TV",
+                            CountryCode = "TV"
+                        },
+                        new
+                        {
+                            Id = 158L,
+                            Code = "TW",
+                            CountryCode = "TW"
+                        },
+                        new
+                        {
+                            Id = 834L,
+                            Code = "TZ",
+                            CountryCode = "TZ"
+                        },
+                        new
+                        {
+                            Id = 804L,
+                            Code = "UA",
+                            CountryCode = "UA"
+                        },
+                        new
+                        {
+                            Id = 800L,
+                            Code = "UG",
+                            CountryCode = "UG"
+                        },
+                        new
+                        {
+                            Id = 581L,
+                            Code = "UM",
+                            CountryCode = "UM"
+                        },
+                        new
+                        {
+                            Id = 840L,
+                            Code = "US",
+                            CountryCode = "US"
+                        },
+                        new
+                        {
+                            Id = 858L,
+                            Code = "UY",
+                            CountryCode = "UY"
+                        },
+                        new
+                        {
+                            Id = 860L,
+                            Code = "UZ",
+                            CountryCode = "UZ"
+                        },
+                        new
+                        {
+                            Id = 336L,
+                            Code = "VA",
+                            CountryCode = "VA"
+                        },
+                        new
+                        {
+                            Id = 670L,
+                            Code = "VC",
+                            CountryCode = "VC"
+                        },
+                        new
+                        {
+                            Id = 862L,
+                            Code = "VE",
+                            CountryCode = "VE"
+                        },
+                        new
+                        {
+                            Id = 92L,
+                            Code = "VG",
+                            CountryCode = "VG"
+                        },
+                        new
+                        {
+                            Id = 850L,
+                            Code = "VI",
+                            CountryCode = "VI"
+                        },
+                        new
+                        {
+                            Id = 704L,
+                            Code = "VN",
+                            CountryCode = "VN"
+                        },
+                        new
+                        {
+                            Id = 548L,
+                            Code = "VU",
+                            CountryCode = "VU"
+                        },
+                        new
+                        {
+                            Id = 876L,
+                            Code = "WF",
+                            CountryCode = "WF"
+                        },
+                        new
+                        {
+                            Id = 882L,
+                            Code = "WS",
+                            CountryCode = "WS"
+                        },
+                        new
+                        {
+                            Id = 887L,
+                            Code = "YE",
+                            CountryCode = "YE"
+                        },
+                        new
+                        {
+                            Id = 175L,
+                            Code = "YT",
+                            CountryCode = "YT"
+                        },
+                        new
+                        {
+                            Id = 710L,
+                            Code = "ZA",
+                            CountryCode = "ZA"
+                        },
+                        new
+                        {
+                            Id = 894L,
+                            Code = "ZM",
+                            CountryCode = "ZM"
+                        },
+                        new
+                        {
+                            Id = 716L,
+                            Code = "ZW",
+                            CountryCode = "ZW"
+                        });
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.TaxRate", b =>

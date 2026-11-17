@@ -7,7 +7,9 @@ public static class TaxEndpoints
 {
     public static IEndpointRouteBuilder MapTaxEndpoints(this IEndpointRouteBuilder app)
     {
-        var jurisdictions = app.MapGroup("/api/v1/tax-jurisdictions").RequireAuthorization();
+        var jurisdictions = app.MapGroup("/api/v1/tax-jurisdictions")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
         jurisdictions.MapGet("", async (ITaxService service, CancellationToken cancellationToken) =>
                 Results.Ok(await service.GetJurisdictionsAsync(cancellationToken)))
             .WithName("GetTaxJurisdictions");
@@ -24,7 +26,8 @@ public static class TaxEndpoints
         .WithName("GetTaxJurisdictionsPage");
 
         var companyTaxCodes = app.MapGroup("/api/v1/companies/{companyId:long}/tax-codes")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
         companyTaxCodes.MapGet("", async (
             long companyId,
             ITaxService service,
@@ -188,7 +191,8 @@ public static class TaxEndpoints
         .WithName("GetCompanyTaxReference");
 
         var companies = app.MapGroup("/api/v1/companies/{companyId:long}/tax-registrations")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
         companies.MapGet("", async (
             long companyId,
             ITaxService service,

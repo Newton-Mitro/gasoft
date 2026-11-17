@@ -16,6 +16,7 @@ import {
 } from './purchase-orders.model';
 import { PurchaseOrdersService } from './purchase-orders.service';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 
 interface PartyOption {
   id: number;
@@ -40,7 +41,7 @@ interface EditableLine {
 
 @Component({
   selector: 'app-purchase-orders-page',
-  imports: [FormsModule, PaginationComponent],
+  imports: [FormsModule, PaginationComponent, FieldValidationDirective],
   templateUrl: './purchase-orders.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './purchase-orders.page.css'],
 })

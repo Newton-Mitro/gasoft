@@ -8,7 +8,8 @@ public static class FixedAssetEndpoints
     public static IEndpointRouteBuilder MapFixedAssetEndpoints(this IEndpointRouteBuilder app)
     {
         var assets = app.MapGroup("/api/v1/companies/{companyId:long}/fixed-assets")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         assets.MapGet("", async (
             long companyId,

@@ -5,9 +5,11 @@ import {
   JOURNAL_ENTRY_BALANCE_TOLERANCE,
 } from '../../../features/general-ledger/journal-entries/journal-entry-lines';
 import { Choice, JournalEntryLineForm } from '../../models/shared.models';
+import { FieldValidationDirective } from '../../directives/field-validation.directive';
 
 @Component({
   selector: 'app-journal-entry-lines-editor',
+  imports: [FieldValidationDirective],
   styleUrl: './journal-entry-lines-editor.component.css',
   templateUrl: './journal-entry-lines-editor.component.html',
 })

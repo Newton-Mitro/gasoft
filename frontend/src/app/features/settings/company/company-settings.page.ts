@@ -10,10 +10,11 @@ import { Company, CreateCompanyPayload, UpdateCompanyPayload } from './company.m
 import { CompanyService } from './company.service';
 import { AuthenticatedImageComponent } from '../../../shared/components/authenticated-image/authenticated-image.component';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 
 @Component({
   selector: 'app-company-settings-page',
-  imports: [RouterLink, RecordFormComponent, AuthenticatedImageComponent],
+  imports: [RouterLink, RecordFormComponent, AuthenticatedImageComponent, FieldValidationDirective],
   templateUrl: './company-settings.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })

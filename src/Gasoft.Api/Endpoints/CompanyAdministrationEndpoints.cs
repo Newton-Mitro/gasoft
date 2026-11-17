@@ -7,7 +7,9 @@ public static class CompanyAdministrationEndpoints
 {
     public static IEndpointRouteBuilder MapCompanyAdministrationEndpoints(this IEndpointRouteBuilder app)
     {
-        var tenantCompanies = app.MapGroup("/api/v1/tenant/companies").RequireAuthorization();
+        var tenantCompanies = app.MapGroup("/api/v1/tenant/companies")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         tenantCompanies.MapGet("", async (
             ICompanyAdministrationService service,
@@ -133,6 +135,7 @@ public static class CompanyAdministrationEndpoints
             }
         })
         .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"))
+        .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create)
         .WithName("UpdateCompany");
 
         return app;

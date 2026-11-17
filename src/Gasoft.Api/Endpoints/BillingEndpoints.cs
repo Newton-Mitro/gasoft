@@ -7,7 +7,9 @@ public static class BillingEndpoints
 {
     public static IEndpointRouteBuilder MapBillingEndpoints(this IEndpointRouteBuilder app)
     {
-        var companies = app.MapGroup("/api/v1/companies/{companyId:long}").RequireAuthorization();
+        var companies = app.MapGroup("/api/v1/companies/{companyId:long}")
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         companies.MapGet("/sales-invoices", async (
             long companyId,

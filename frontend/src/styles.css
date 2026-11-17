@@ -378,6 +378,27 @@ html[data-theme="dark"] .form-panel::before {
   outline-offset: 2px;
 }
 html[data-theme="dark"] .app-toast .hot-toast-close-btn { filter: invert(1); }
+.field-validation-error {
+  display: block;
+  margin-top: 4px;
+  color: var(--error-text);
+  font-size: 11px;
+  line-height: 1.4;
+}
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--error-text) !important;
+}
+input[aria-invalid="true"]:focus,
+select[aria-invalid="true"]:focus,
+textarea[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--error-text) 16%, transparent) !important;
+}
+input[type="checkbox"][aria-invalid="true"] {
+  outline: 2px solid var(--error-text);
+  outline-offset: 2px;
+}
 .auth-brand .brand { color: #fff; }
 .auth-brand .brand-mark { color: var(--accent-text); }
 .brand-copy { max-width: 430px; margin: auto 0; padding: 45px 0; }

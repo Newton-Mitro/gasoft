@@ -199,6 +199,7 @@ public sealed class AppDbContext(
             entity.HasIndex(x => x.Code).IsUnique();
             entity.Property(x => x.Code).HasMaxLength(40).IsRequired();
             entity.Property(x => x.CountryCode).HasMaxLength(2).IsFixedLength().IsRequired();
+            entity.HasData(TaxJurisdictionSeed.All);
         });
 
         builder.Entity<TaxCategory>(entity =>

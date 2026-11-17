@@ -4,12 +4,13 @@ import { provideRouter } from '@angular/router';
 import { provideHotToastConfig } from '@ngxpert/hot-toast';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth.interceptor';
+import { validationInterceptor } from './core/validation.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, validationInterceptor])),
     provideHotToastConfig({ position: 'top-right', duration: 4000, dismissible: true }),
   ]
 };

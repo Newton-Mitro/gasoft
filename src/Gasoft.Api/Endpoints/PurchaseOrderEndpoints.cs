@@ -9,7 +9,8 @@ public static class PurchaseOrderEndpoints
     public static IEndpointRouteBuilder MapPurchaseOrderEndpoints(this IEndpointRouteBuilder app)
     {
         var companies = app.MapGroup("/api/v1/companies/{companyId:long}/purchase-orders")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
 
         companies.MapGet("", async (
             long companyId,

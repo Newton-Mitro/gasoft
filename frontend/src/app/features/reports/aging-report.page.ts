@@ -6,12 +6,13 @@ import { errorMessage } from '../../shared/utils/page-utils';
 import { AgingReport } from './report.model';
 import { FinancialReportService } from './report.service';
 import { NotificationService } from '../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
 
 type AgingReportKind = 'receivables' | 'payables';
 
 @Component({
   selector: 'app-aging-report-page',
-  imports: [FormsModule],
+  imports: [FormsModule, FieldValidationDirective],
   templateUrl: './aging-report.page.html',
   styleUrls: ['../../shared/styles/feature-page.css', './aging-report.page.css'],
 })
