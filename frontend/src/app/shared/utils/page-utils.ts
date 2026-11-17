@@ -6,7 +6,7 @@ export function errorMessage(error: unknown, fallback: string): string {
   if (typeof body === 'string' && body.trim()) return body;
   if (body && typeof body === 'object') {
     const details = body as { detail?: unknown; error?: unknown; title?: unknown; errors?: unknown };
-    if (hasValidationErrors(details.errors)) return '';
+    if (isValidationProblem(error, details.errors)) return '';
     if (typeof details.detail === 'string') return details.detail;
     if (typeof details.error === 'string') return details.error;
     if (typeof details.title === 'string') return details.title;
@@ -14,13 +14,9 @@ export function errorMessage(error: unknown, fallback: string): string {
   return error.status === 0 ? 'Could not connect to the API. Is the server running?' : fallback;
 }
 
-function hasValidationErrors(value: unknown): boolean {
-  if (!value || typeof value !== 'object') return false;
-  return Object.values(value).some(messages =>
-    Array.isArray(messages)
-      ? messages.some(message => typeof message === 'string' && message.trim())
-      : typeof messages === 'string' && !!messages.trim(),
-  );
+function isValidationProblem(error: HttpErrorResponse, errors: unknown): boolean {
+  return (error.status === 400 || error.status === 422) &&
+    !!errors && typeof errors === 'object' && !Array.isArray(errors);
 }
 
 export function registrationError(error: unknown): { message: string; showSignIn: boolean } {
@@ -42,8 +38,8 @@ export function registrationError(error: unknown): { message: string; showSignIn
     return { message: 'We could not create your workspace right now. Please try again later.', showSignIn: false };
   }
 
-  if (error.status === 400 && error.error && typeof error.error === 'object' &&
-    'errors' in error.error && hasValidationErrors((error.error as { errors?: unknown }).errors)) {
+  if (error.error && typeof error.error === 'object' &&
+    isValidationProblem(error, (error.error as { errors?: unknown }).errors)) {
     return { message: '', showSignIn: false };
   }
 

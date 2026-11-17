@@ -20,6 +20,15 @@ describe('errorMessage', () => {
     expect(errorMessage(error, 'Fallback')).toBe('');
   });
 
+  it('does not turn an empty validation problem into a toast fallback', () => {
+    const error = new HttpErrorResponse({
+      status: 400,
+      error: { title: 'One or more validation errors occurred.', errors: {} },
+    });
+
+    expect(errorMessage(error, 'Fallback')).toBe('');
+  });
+
   it('reports an unavailable API clearly', () => {
     const error = new HttpErrorResponse({ status: 0 });
 

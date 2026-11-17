@@ -1,5 +1,8 @@
 import { Component, HostListener, inject } from '@angular/core';
 import { KeyValuePipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationStart, Router } from '@angular/router';
+import { filter } from 'rxjs';
 import { FormValidationService } from '../../services/form-validation.service';
 
 @Component({
@@ -81,6 +84,15 @@ import { FormValidationService } from '../../services/form-validation.service';
 })
 export class ValidationSummaryComponent {
   readonly formValidation = inject(FormValidationService);
+
+  constructor() {
+    inject(Router).events
+      .pipe(
+        filter(event => event instanceof NavigationStart),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.formValidation.clear());
+  }
 
   @HostListener('input', ['$event.target'])
   @HostListener('change', ['$event.target'])
