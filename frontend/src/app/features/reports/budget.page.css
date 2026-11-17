@@ -5,7 +5,9 @@
 .create-budget { display: flex; align-items: flex-end; gap: 8px; margin-left: auto; }
 .create-budget label { min-width: 190px; }
 .primary-button, .danger-button { min-height: 36px; padding: 0 13px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-strong); font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
-.primary-button { border-color: var(--accent); background: var(--accent); color: var(--accent-contrast, #fff); }
+.primary-button { border-color: var(--accent); background: var(--accent); color: #fff; box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 24%, transparent); }
+.primary-button:hover:not(:disabled) { border-color: var(--accent-hover); background: var(--accent-hover); }
+.primary-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus-color) 45%, transparent); outline-offset: 2px; }
 .danger-button { color: var(--error-text); }
 .primary-button:disabled, .danger-button:disabled { opacity: .55; cursor: not-allowed; }
 .budget-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 10px; margin-bottom: 14px; }
