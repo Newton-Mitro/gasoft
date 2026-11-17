@@ -1,9 +1,34 @@
 import { of } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
-import { AccountPage } from './account.model';
+import { Account, AccountPage } from './account.model';
 import { AccountService } from './account.service';
 
 describe('AccountService', () => {
+  it('loads all accounts for the tree view', () => {
+    const calls: unknown[][] = [];
+    const api = {
+      get: (endpoint: string, companyScoped: boolean) => {
+        calls.push([endpoint, companyScoped]);
+        return of([{
+          id: 2,
+          companyId: 3,
+          accountGroupId: 4,
+          parentId: null,
+          code: '1000',
+          name: 'Cash',
+          allowPosting: true,
+          isActive: true,
+        }]);
+      },
+    } as unknown as ApiService;
+    let response: Account[] | undefined;
+
+    new AccountService(api).getAll().subscribe(result => response = result);
+
+    expect(calls).toEqual([['accounts', true]]);
+    expect(response?.[0]?.code).toBe('1000');
+  });
+
   it('loads the paginated, searchable account endpoint', () => {
     const calls: unknown[][] = [];
     const api = {

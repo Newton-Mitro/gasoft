@@ -1,19 +1,20 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
 import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
-import { PaginationComponent, PageChange } from '../../../shared/components/pagination/pagination.component';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
 import { Account, AccountPayload } from './account.model';
 import { AccountService } from './account.service';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { accountDescendantIds, buildAccountTree, filterAccountTree } from './account-tree';
 
 @Component({
   selector: 'app-accounts-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent],
+  imports: [FormsModule, RouterLink, NgTemplateOutlet, RecordFormComponent],
   templateUrl: './accounts.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -26,15 +27,11 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
     { key: 'accountGroupId', label: 'Account group', type: 'select', required: true, optionSource: 'groups' },
     { key: 'code', label: 'Account code', required: true },
     { key: 'name', label: 'Account name', required: true },
-    { key: 'parentId', label: 'Parent account ID', type: 'number' },
+    { key: 'parentId', label: 'Parent account', type: 'select' },
     { key: 'allowPosting', label: 'Allow postings', type: 'checkbox' },
   ];
   readonly indexPath = '/general-ledger/accounts';
   rows: Account[] = [];
-  totalCount = 0;
-  page = 1;
-  pageSize = 25;
-  totalPages = 0;
   form: Record<string, unknown> = {};
   options: Record<string, Choice[]> = {};
   loading = false;
@@ -42,9 +39,14 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   error = '';
   search = '';
   view: 'index' | 'create' | 'edit' = 'index';
+  draggedAccountId: number | null = null;
+  dropTargetAccountId: number | null = null;
+  dropTargetGroupId: number | null = null;
+  reparentingAccountId: number | null = null;
+  readonly collapsedGroupIds = new Set<number>();
+  readonly collapsedAccountIds = new Set<number>();
   private routeSubscription?: Subscription;
   private currentRecordId: number | null = null;
-  private searchTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -74,7 +76,6 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routeSubscription?.unsubscribe();
-    if (this.searchTimer) clearTimeout(this.searchTimer);
   }
 
   get formMode(): RecordFormMode {
@@ -82,22 +83,84 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
   }
 
   get formFields(): Field[] {
+    const accountGroupId = Number(this.form['accountGroupId']);
+    const excludedIds = this.currentRecordId === null
+      ? new Set<number>()
+      : accountDescendantIds(this.rows, this.currentRecordId).add(this.currentRecordId);
+    const parentOptions = this.rows
+      .filter(account => account.accountGroupId === accountGroupId &&
+        !account.allowPosting &&
+        !excludedIds.has(account.id))
+      .map(account => ({ label: `${account.code} · ${account.name}`, value: account.id }));
+    const fields = this.fields.map(field =>
+      field.key === 'parentId'
+        ? { ...field, options: parentOptions }
+        : field);
     return this.view === 'edit'
-      ? [...this.fields, { key: 'isActive', label: 'Active', type: 'checkbox' }]
-      : this.fields;
+      ? [...fields, { key: 'isActive', label: 'Active', type: 'checkbox' }]
+      : fields;
+  }
+
+  get accountGroups(): { id: number; label: string; trees: ReturnType<typeof buildAccountTree> }[] {
+    return this.options['groups']
+      ?.map(group => {
+        const id = Number(group.value);
+        const trees = filterAccountTree(buildAccountTree(this.rows, id), this.search);
+        return { id, label: group.label, trees };
+      })
+      .filter(group => !this.search.trim() || group.trees.length > 0) ?? [];
+  }
+
+  accountCountForGroup(groupId: number): number {
+    return this.rows.filter(account => account.accountGroupId === groupId).length;
+  }
+
+  get groupCount(): number {
+    return this.options['groups']?.length ?? 0;
+  }
+
+  get rootAccountCount(): number {
+    return this.rows.filter(account => account.parentId === null).length;
+  }
+
+  get postableAccountCount(): number {
+    return this.rows.filter(account => account.allowPosting).length;
+  }
+
+  expandAll(): void {
+    this.collapsedGroupIds.clear();
+    this.collapsedAccountIds.clear();
+    this.changeDetector.markForCheck();
+  }
+
+  collapseAll(): void {
+    this.options['groups']?.forEach(group => this.collapsedGroupIds.add(Number(group.value)));
+    this.rows.forEach(account => {
+      if (this.rows.some(child => child.parentId === account.id)) {
+        this.collapsedAccountIds.add(account.id);
+      }
+    });
+    this.changeDetector.markForCheck();
+  }
+
+  toggleGroup(groupId: number): void {
+    this.toggleCollapsed(this.collapsedGroupIds, groupId);
+  }
+
+  isGroupCollapsed(groupId: number): boolean {
+    return this.collapsedGroupIds.has(groupId);
+  }
+
+  toggleAccount(accountId: number): void {
+    this.toggleCollapsed(this.collapsedAccountIds, accountId);
+  }
+
+  isAccountCollapsed(accountId: number): boolean {
+    return this.collapsedAccountIds.has(accountId);
   }
 
   onSearchChange(value: string): void {
     this.search = value;
-    this.page = 1;
-    if (this.searchTimer) clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => this.loadRows(), 300);
-  }
-
-  onPageChange(change: PageChange): void {
-    this.page = change.page;
-    this.pageSize = change.pageSize;
-    this.loadRows();
   }
 
   setFormValue(key: string, value: unknown): void {
@@ -158,10 +221,129 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
     void this.router.navigateByUrl(this.indexPath);
   }
 
+  onDragStart(event: DragEvent, account: Account): void {
+    if (this.reparentingAccountId !== null) {
+      event.preventDefault();
+      return;
+    }
+    this.draggedAccountId = account.id;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', String(account.id));
+    }
+  }
+
+  onDragEnd(): void {
+    this.draggedAccountId = null;
+    this.dropTargetAccountId = null;
+    this.dropTargetGroupId = null;
+  }
+
+  canDropOnAccount(target: Account): boolean {
+    const dragged = this.rows.find(account => account.id === this.draggedAccountId);
+    if (!dragged || dragged.id === target.id || target.allowPosting ||
+      dragged.accountGroupId !== target.accountGroupId) {
+      return false;
+    }
+    return !accountDescendantIds(this.rows, dragged.id).has(target.id);
+  }
+
+  onAccountDragOver(event: DragEvent, target: Account): void {
+    if (!this.canDropOnAccount(target)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    this.dropTargetAccountId = target.id;
+    this.dropTargetGroupId = null;
+  }
+
+  onAccountDrop(event: DragEvent, target: Account): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.canDropOnAccount(target)) return;
+    this.moveAccount(this.draggedAccountId!, target.id, target.accountGroupId);
+  }
+
+  canDropToGroupRoot(groupId: number): boolean {
+    const dragged = this.rows.find(account => account.id === this.draggedAccountId);
+    return !!dragged &&
+      (dragged.accountGroupId !== groupId || dragged.parentId !== null);
+  }
+
+  onGroupDragOver(event: DragEvent, groupId: number): void {
+    if (!this.canDropToGroupRoot(groupId)) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    this.dropTargetGroupId = groupId;
+    this.dropTargetAccountId = null;
+  }
+
+  onGroupDrop(event: DragEvent, groupId: number): void {
+    event.preventDefault();
+    if (!this.canDropToGroupRoot(groupId)) return;
+    this.moveAccount(this.draggedAccountId!, null, groupId);
+  }
+
+  private moveAccount(accountId: number, parentId: number | null, accountGroupId: number): void {
+    const account = this.rows.find(item => item.id === accountId);
+    if (!account || (account.parentId === parentId && account.accountGroupId === accountGroupId)) {
+      this.onDragEnd();
+      return;
+    }
+    this.reparentingAccountId = accountId;
+    this.error = '';
+    this.accounts.update(account.id, {
+      accountGroupId,
+      code: account.code,
+      name: account.name,
+      parentId,
+      allowPosting: account.allowPosting,
+      isActive: account.isActive,
+    }).subscribe({
+      next: updated => {
+        this.accounts.getAll().subscribe({
+          next: rows => {
+            this.rows = rows;
+            const groupChanged = accountGroupId !== account.accountGroupId;
+            const message = groupChanged
+              ? `${updated.code} and its child accounts moved to another account group.`
+              : `${updated.code} is now ${parentId === null ? 'a top-level account' : 'a child account'}.`;
+            this.notifications.success(message);
+            this.reparentingAccountId = null;
+            this.onDragEnd();
+            this.changeDetector.markForCheck();
+          },
+          error: error => {
+            this.notifications.error(errorMessage(error, 'The account moved, but the account tree could not be refreshed.'));
+            this.reparentingAccountId = null;
+            this.onDragEnd();
+            this.changeDetector.markForCheck();
+          },
+        });
+      },
+      error: error => {
+        this.notifications.error(errorMessage(error, 'Could not change the account parent.'));
+        this.reparentingAccountId = null;
+        this.onDragEnd();
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
+  private toggleCollapsed(collapsedIds: Set<number>, id: number): void {
+    if (collapsedIds.has(id)) collapsedIds.delete(id);
+    else collapsedIds.add(id);
+    this.changeDetector.markForCheck();
+  }
+
   private loadGroupOptions(): void {
-    this.optionData.getOptions('groups').subscribe({
-      next: options => {
+    combineLatest([
+      this.optionData.getOptions('groups'),
+      this.accounts.getAll(),
+    ]).subscribe({
+      next: ([options, accounts]) => {
         this.options = { ...this.options, groups: options };
+        this.rows = accounts;
         this.changeDetector.markForCheck();
       },
       error: error => {
@@ -174,13 +356,13 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.accounts.getPage(this.search, this.page, this.pageSize).subscribe({
-      next: page => {
-        this.rows = page.items;
-        this.page = page.page;
-        this.pageSize = page.pageSize;
-        this.totalCount = page.totalCount;
-        this.totalPages = page.totalPages;
+    combineLatest([
+      this.accounts.getAll(),
+      this.optionData.getOptions('groups'),
+    ]).subscribe({
+      next: ([rows, groups]) => {
+        this.rows = rows;
+        this.options = { ...this.options, groups };
         this.loading = false;
         this.changeDetector.markForCheck();
       },

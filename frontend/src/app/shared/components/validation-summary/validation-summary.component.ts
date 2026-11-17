@@ -39,7 +39,7 @@ import { FormValidationService } from '../../services/form-validation.service';
       border-left: 4px solid var(--error-text);
       border-radius: 12px;
       background: var(--surface);
-      color: var(--text-strong);
+      color: var(--error-text);
       box-shadow: 0 12px 32px color-mix(in srgb, var(--text-strong) 18%, transparent);
       font-size: 12px;
     }
@@ -67,10 +67,10 @@ import { FormValidationService } from '../../services/form-validation.service';
       margin: 10px 0 0;
       padding-left: 18px;
       overflow: auto;
-      color: var(--text);
+      color: var(--error-text);
     }
     li span {
-      color: var(--text-strong);
+      color: var(--error-text);
       font-weight: 650;
     }
     @media (max-width: 600px) {

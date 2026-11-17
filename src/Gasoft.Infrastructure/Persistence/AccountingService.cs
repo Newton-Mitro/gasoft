@@ -1089,9 +1089,9 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             var parent = await db.ChartOfAccounts.SingleOrDefaultAsync(
                 account => account.CompanyId == companyId && account.Id == request.ParentId,
                 cancellationToken);
-            if (parent is null || parent.AllowPosting)
+            if (parent is null || parent.AllowPosting || parent.AccountGroupId != request.AccountGroupId)
             {
-                throw Validation("parentId", "A parent must be an existing non-posting account in this company.");
+                throw Validation("parentId", "A parent must be a non-posting account in the same account group.");
             }
         }
 
@@ -1148,9 +1148,9 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             var parent = await db.ChartOfAccounts.SingleOrDefaultAsync(
                 item => item.CompanyId == companyId && item.Id == request.ParentId,
                 cancellationToken);
-            if (parent is null || parent.AllowPosting)
+            if (parent is null || parent.AllowPosting || parent.AccountGroupId != request.AccountGroupId)
             {
-                throw Validation("parentId", "A parent must be an existing non-posting account in this company.");
+                throw Validation("parentId", "A parent must be a non-posting account in the same account group.");
             }
 
             var descendantIds = new HashSet<long>();
@@ -1176,6 +1176,28 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
                 cancellationToken))
         {
             throw Validation("allowPosting", "An account with child accounts cannot allow direct posting.");
+        }
+
+        if (account.AccountGroupId != request.AccountGroupId)
+        {
+            var descendants = new List<ChartOfAccount>();
+            var visitedIds = new HashSet<long> { accountId };
+            var parentIds = new[] { accountId };
+            while (parentIds.Length > 0)
+            {
+                var children = await db.ChartOfAccounts
+                    .Where(item => item.CompanyId == companyId &&
+                        item.ParentId.HasValue && parentIds.Contains(item.ParentId.Value))
+                    .ToListAsync(cancellationToken);
+                var newChildren = children.Where(child => visitedIds.Add(child.Id)).ToList();
+                descendants.AddRange(newChildren);
+                parentIds = newChildren.Select(child => child.Id).ToArray();
+            }
+
+            foreach (var descendant in descendants)
+            {
+                descendant.AccountGroupId = request.AccountGroupId;
+            }
         }
 
         account.AccountGroupId = request.AccountGroupId;

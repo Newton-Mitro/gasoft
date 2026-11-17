@@ -8,6 +8,10 @@ import { Account, AccountPage, AccountPayload } from './account.model';
 export class AccountService {
   constructor(private readonly api: ApiService) {}
 
+  getAll(): Observable<Account[]> {
+    return this.api.get<unknown>('accounts', true).pipe(map(toAccounts));
+  }
+
   getPage(search: string, page: number, pageSize: number): Observable<AccountPage> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (search.trim()) params = params.set('search', search.trim());
@@ -25,6 +29,13 @@ export class AccountService {
   update(id: number, payload: AccountPayload): Observable<Account> {
     return this.api.put<Account>(`accounts/${id}`, payload, true);
   }
+}
+
+function toAccounts(result: unknown): Account[] {
+  if (!Array.isArray(result) || !result.every(isAccount)) {
+    throw new Error('The accounts response contains invalid account data.');
+  }
+  return result;
 }
 
 function toAccountPage(result: unknown): AccountPage {

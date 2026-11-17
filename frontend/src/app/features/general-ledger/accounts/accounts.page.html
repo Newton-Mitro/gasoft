@@ -28,38 +28,78 @@
     />
   }
 } @else {
-  <div class="page-heading">
+  <div class="page-heading accounts-page-heading">
     <div>
-      <p class="eyebrow">COMPANY WORKSPACE</p>
+      <p class="eyebrow"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i> GENERAL LEDGER</p>
       <h1>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
-    <a class="button primary" [routerLink]="[indexPath, 'create']"><i class="fa-solid fa-plus" aria-hidden="true"></i> New account</a>
+    <a class="button primary accounts-create-button" [routerLink]="[indexPath, 'create']">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      <span>New account</span>
+    </a>
   </div>
+  @if (!loading && rows.length) {
+    <section class="account-overview" aria-label="Chart of accounts overview">
+      <article class="account-overview-card overview-total">
+        <span class="overview-icon"><i class="fa-solid fa-list-ol" aria-hidden="true"></i></span>
+        <div><span class="overview-label">Total accounts</span><strong>{{ rows.length }}</strong></div>
+      </article>
+      <article class="account-overview-card">
+        <span class="overview-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
+        <div><span class="overview-label">Account groups</span><strong>{{ groupCount }}</strong></div>
+      </article>
+      <article class="account-overview-card">
+        <span class="overview-icon"><i class="fa-solid fa-sitemap" aria-hidden="true"></i></span>
+        <div><span class="overview-label">Top-level accounts</span><strong>{{ rootAccountCount }}</strong></div>
+      </article>
+      <article class="account-overview-card">
+        <span class="overview-icon"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></span>
+        <div><span class="overview-label">Postable accounts</span><strong>{{ postableAccountCount }}</strong></div>
+      </article>
+    </section>
+  }
   @if (error) {
     <div class="alert error">{{ error }}</div>
   }
-  <div class="toolbar">
+  <div class="toolbar accounts-toolbar">
     <label class="search-box">
       <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
       <input
         name="search"
-        placeholder="Search by code or name…"
+        placeholder="Find an account by code or name…"
         [ngModel]="search"
         (ngModelChange)="onSearchChange($event)"
       />
+      @if (search) {
+        <button type="button" class="search-clear" aria-label="Clear account search" (click)="onSearchChange('')">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      }
     </label>
+    <div class="tree-view-actions" aria-label="Tree view controls">
+      <button type="button" class="button secondary" (click)="expandAll()">
+        <i class="fa-solid fa-angles-down" aria-hidden="true"></i> Expand all
+      </button>
+      <button type="button" class="button secondary" (click)="collapseAll()">
+        <i class="fa-solid fa-angles-up" aria-hidden="true"></i> Collapse all
+      </button>
+    </div>
   </div>
   @if (loading) {
     <div class="loading-card"><span class="spinner"></span> Loading accounts…</div>
   }
   @if (!loading) {
-    <section class="table-panel panel">
+    <section class="account-tree-panel panel">
       <div class="table-header">
-        <div>
-          <h2>{{ title }}</h2>
-          <span>{{ totalCount }} {{ totalCount === 1 ? 'record' : 'records' }}</span>
+        <div class="account-tree-heading">
+          <span class="account-tree-heading-icon"><i class="fa-solid fa-folder-tree" aria-hidden="true"></i></span>
+          <div>
+            <h2>Account structure</h2>
+            <span>Browse accounts by group, or drag an account to reorganize your chart.</span>
+          </div>
         </div>
+        <span class="account-total-pill">{{ rows.length }} {{ rows.length === 1 ? 'account' : 'accounts' }}</span>
       </div>
       @if (!rows.length) {
         <div class="empty-state">
@@ -79,53 +119,129 @@
           }
         </div>
       } @else {
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Account group</th>
-                <th>Parent account</th>
-                <th>Posting</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (account of rows; track account.id) {
-                <tr>
-                  <td>{{ account.code }}</td>
-                  <td>{{ account.name }}</td>
-                  <td>{{ account.accountGroupId }}</td>
-                  <td>{{ account.parentId ?? '—' }}</td>
-                  <td>{{ account.allowPosting ? 'Allowed' : 'No' }}</td>
-                  <td>
-                    <span class="status-tag" [class.posted]="account.isActive">{{
-                      account.isActive ? 'Active' : 'Inactive'
-                    }}</span>
-                  </td>
-                  <td>
-                    <a
-                      class="button secondary table-action"
-                      [routerLink]="[indexPath, account.id, 'edit']"
-                      >Edit</a
+        @if (accountGroups.length) {
+          <div class="account-tree-groups">
+            @for (group of accountGroups; track group.id) {
+              <section class="account-group-tree">
+                <header
+                  class="account-group-heading"
+                  [class.root-drop-target]="dropTargetGroupId === group.id"
+                  (dragover)="onGroupDragOver($event, group.id)"
+                  (dragleave)="dropTargetGroupId = null"
+                  (drop)="onGroupDrop($event, group.id)"
+                >
+                  <div class="account-group-title">
+                    <button
+                      type="button"
+                      class="account-tree-toggle group-tree-toggle"
+                      [attr.aria-expanded]="!isGroupCollapsed(group.id)"
+                      [attr.aria-label]="(isGroupCollapsed(group.id) ? 'Expand ' : 'Collapse ') + group.label"
+                      (click)="toggleGroup(group.id)"
                     >
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+                      <i class="fa-solid" [class.fa-chevron-right]="isGroupCollapsed(group.id)" [class.fa-chevron-down]="!isGroupCollapsed(group.id)" aria-hidden="true"></i>
+                    </button>
+                    <span class="account-group-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
+                    <div>
+                      <h3>{{ group.label }}</h3>
+                      <span>{{ accountCountForGroup(group.id) }} {{ accountCountForGroup(group.id) === 1 ? 'account' : 'accounts' }}</span>
+                    </div>
+                  </div>
+                  <span class="account-root-drop-hint">
+                    <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+                    Drop here to move to this group as a top-level account
+                  </span>
+                </header>
+                @if (!isGroupCollapsed(group.id)) {
+                  <div class="account-tree-body">
+                  @if (!group.trees.length) {
+                    <p class="account-tree-empty">No accounts in this group yet.</p>
+                  } @else {
+                    <ng-container
+                      *ngTemplateOutlet="accountTree; context: { $implicit: group.trees, level: 0 }"
+                    />
+                  }
+                  </div>
+                }
+              </section>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <h3>No matching accounts</h3>
+            <p>Try another search term.</p>
+          </div>
+        }
       }
-      <app-pagination
-        [loading]="loading"
-        [page]="page"
-        [pageSize]="pageSize"
-        [totalCount]="totalCount"
-        [totalPages]="totalPages"
-        (pageChange)="onPageChange($event)"
-      />
     </section>
   }
 }
+
+<ng-template #accountTree let-nodes let-level="level">
+  @for (node of nodes; track node.account.id) {
+    <div class="account-tree-item" [style.padding-left.px]="level * 24">
+      <article
+        class="account-tree-row"
+        [class.account-dragging]="draggedAccountId === node.account.id"
+        [class.account-drop-target]="dropTargetAccountId === node.account.id"
+        [class.account-moving]="reparentingAccountId === node.account.id"
+        [attr.aria-label]="node.account.code + ' ' + node.account.name"
+        (dragover)="onAccountDragOver($event, node.account)"
+        (dragleave)="dropTargetAccountId = null"
+        (drop)="onAccountDrop($event, node.account)"
+      >
+        <button
+          type="button"
+          class="account-drag-handle"
+          draggable="true"
+          [disabled]="reparentingAccountId !== null"
+          [attr.aria-label]="'Drag ' + node.account.code + ' to change its parent'"
+          title="Drag to change parent"
+          (dragstart)="onDragStart($event, node.account)"
+          (dragend)="onDragEnd()"
+        >
+          <i class="fa-solid fa-grip-vertical" aria-hidden="true"></i>
+        </button>
+        @if (node.children.length) {
+          <button
+            type="button"
+            class="account-tree-toggle account-node-toggle"
+            [attr.aria-expanded]="!isAccountCollapsed(node.account.id)"
+            [attr.aria-label]="(isAccountCollapsed(node.account.id) ? 'Expand ' : 'Collapse ') + node.account.code"
+            (click)="toggleAccount(node.account.id)"
+          >
+            <i class="fa-solid" [class.fa-chevron-right]="isAccountCollapsed(node.account.id)" [class.fa-chevron-down]="!isAccountCollapsed(node.account.id)" aria-hidden="true"></i>
+          </button>
+        } @else {
+          <span class="account-tree-toggle-spacer" aria-hidden="true"></span>
+        }
+        <div class="account-tree-info">
+          <span class="account-tree-code">{{ node.account.code }}</span>
+          <span class="account-tree-name">{{ node.account.name }}</span>
+        </div>
+        <div class="account-tree-badges">
+          <span class="account-tree-badge" [class.posting]="node.account.allowPosting">
+            {{ node.account.allowPosting ? 'Postable' : 'Header' }}
+          </span>
+          <span class="status-tag" [class.posted]="node.account.isActive">
+            {{ node.account.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+        <a
+          class="button secondary table-action account-edit-action"
+          [routerLink]="[indexPath, node.account.id, 'edit']"
+          [attr.aria-label]="'Edit ' + node.account.code + ' ' + node.account.name"
+        >Edit</a>
+        @if (reparentingAccountId === node.account.id) {
+          <span class="account-moving-indicator"><span class="spinner"></span></span>
+        }
+      </article>
+      @if (node.children.length && !isAccountCollapsed(node.account.id)) {
+        <div class="account-tree-children">
+          <ng-container
+            *ngTemplateOutlet="accountTree; context: { $implicit: node.children, level: level + 1 }"
+          />
+        </div>
+      }
+    </div>
+  }
+</ng-template>
