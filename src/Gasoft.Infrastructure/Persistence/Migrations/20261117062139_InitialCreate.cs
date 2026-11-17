@@ -818,6 +818,38 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "FiscalYearStatusChanges",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CompanyId = table.Column<long>(type: "bigint", nullable: false),
+                    FiscalYearId = table.Column<long>(type: "bigint", nullable: false),
+                    ChangedByUserId = table.Column<long>(type: "bigint", nullable: false),
+                    FromStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ToStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    ChangedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    TenantId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FiscalYearStatusChanges", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FiscalYearStatusChanges_AspNetUsers_ChangedByUserId",
+                        column: x => x.ChangedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_FiscalYearStatusChanges_FiscalYears_TenantId_CompanyId_Fisc~",
+                        columns: x => new { x.TenantId, x.CompanyId, x.FiscalYearId },
+                        principalTable: "FiscalYears",
+                        principalColumns: new[] { "TenantId", "CompanyId", "Id" },
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TaxRates",
                 columns: table => new
                 {
@@ -1033,6 +1065,38 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AccountingPeriodStatusChanges",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CompanyId = table.Column<long>(type: "bigint", nullable: false),
+                    AccountingPeriodId = table.Column<long>(type: "bigint", nullable: false),
+                    ChangedByUserId = table.Column<long>(type: "bigint", nullable: false),
+                    FromStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ToStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    ChangedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    TenantId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AccountingPeriodStatusChanges", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AccountingPeriodStatusChanges_AccountingPeriods_TenantId_Co~",
+                        columns: x => new { x.TenantId, x.CompanyId, x.AccountingPeriodId },
+                        principalTable: "AccountingPeriods",
+                        principalColumns: new[] { "TenantId", "CompanyId", "Id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AccountingPeriodStatusChanges_AspNetUsers_ChangedByUserId",
+                        column: x => x.ChangedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "JournalEntries",
                 columns: table => new
                 {
@@ -1165,6 +1229,49 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         principalTable: "BankAccounts",
                         principalColumns: new[] { "TenantId", "CompanyId", "Id" },
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FiscalYearClosings",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CompanyId = table.Column<long>(type: "bigint", nullable: false),
+                    FiscalYearId = table.Column<long>(type: "bigint", nullable: false),
+                    JournalEntryId = table.Column<long>(type: "bigint", nullable: false),
+                    RetainedEarningsAccountId = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedByUserId = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    TenantId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FiscalYearClosings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FiscalYearClosings_AspNetUsers_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_FiscalYearClosings_ChartOfAccounts_TenantId_CompanyId_Retai~",
+                        columns: x => new { x.TenantId, x.CompanyId, x.RetainedEarningsAccountId },
+                        principalTable: "ChartOfAccounts",
+                        principalColumns: new[] { "TenantId", "CompanyId", "Id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_FiscalYearClosings_FiscalYears_TenantId_CompanyId_FiscalYea~",
+                        columns: x => new { x.TenantId, x.CompanyId, x.FiscalYearId },
+                        principalTable: "FiscalYears",
+                        principalColumns: new[] { "TenantId", "CompanyId", "Id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_FiscalYearClosings_JournalEntries_TenantId_CompanyId_Journa~",
+                        columns: x => new { x.TenantId, x.CompanyId, x.JournalEntryId },
+                        principalTable: "JournalEntries",
+                        principalColumns: new[] { "TenantId", "CompanyId", "Id" },
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -2087,6 +2194,16 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_AccountingPeriodStatusChanges_ChangedByUserId",
+                table: "AccountingPeriodStatusChanges",
+                column: "ChangedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AccountingPeriodStatusChanges_TenantId_CompanyId_Accounting~",
+                table: "AccountingPeriodStatusChanges",
+                columns: new[] { "TenantId", "CompanyId", "AccountingPeriodId", "ChangedAt" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
                 column: "RoleId");
@@ -2298,10 +2415,41 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 column: "TargetCurrencyCode");
 
             migrationBuilder.CreateIndex(
+                name: "IX_FiscalYearClosings_CreatedByUserId",
+                table: "FiscalYearClosings",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FiscalYearClosings_TenantId_CompanyId_FiscalYearId",
+                table: "FiscalYearClosings",
+                columns: new[] { "TenantId", "CompanyId", "FiscalYearId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FiscalYearClosings_TenantId_CompanyId_JournalEntryId",
+                table: "FiscalYearClosings",
+                columns: new[] { "TenantId", "CompanyId", "JournalEntryId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FiscalYearClosings_TenantId_CompanyId_RetainedEarningsAccou~",
+                table: "FiscalYearClosings",
+                columns: new[] { "TenantId", "CompanyId", "RetainedEarningsAccountId" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_FiscalYears_TenantId_CompanyId_StartsOn",
                 table: "FiscalYears",
                 columns: new[] { "TenantId", "CompanyId", "StartsOn" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FiscalYearStatusChanges_ChangedByUserId",
+                table: "FiscalYearStatusChanges",
+                column: "ChangedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FiscalYearStatusChanges_TenantId_CompanyId_FiscalYearId_Cha~",
+                table: "FiscalYearStatusChanges",
+                columns: new[] { "TenantId", "CompanyId", "FiscalYearId", "ChangedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_FixedAssetDepreciations_TenantId_CompanyId_AccountingPeriod~",
@@ -2773,32 +2921,14 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 table: "Warehouses",
                 columns: new[] { "TenantId", "CompanyId", "Code" },
                 unique: true);
-
-            migrationBuilder.Sql("""
-                INSERT INTO "TaxJurisdictions" ("Code", "CountryCode")
-                SELECT code, code
-                FROM unnest(string_to_array(
-                    'AD,AE,AF,AG,AI,AL,AM,AO,AQ,AR,AS,AT,AU,AW,AX,AZ,BA,BB,BD,BE,BF,BG,BH,BI,BJ,BL,BM,BN,BO,BQ,BR,BS,BT,BV,BW,BY,BZ,CA,CC,CD,CF,CG,CH,CI,CK,CL,CM,CN,CO,CR,CU,CV,CW,CX,CY,CZ,DE,DJ,DK,DM,DO,DZ,EC,EE,EG,EH,ER,ES,ET,FI,FJ,FK,FM,FO,FR,GA,GB,GD,GE,GF,GG,GH,GI,GL,GM,GN,GP,GQ,GR,GS,GT,GU,GW,GY,HK,HM,HN,HR,HT,HU,ID,IE,IL,IM,IN,IO,IQ,IR,IS,IT,JE,JM,JO,JP,KE,KG,KH,KI,KM,KN,KP,KR,KW,KY,KZ,LA,LB,LC,LI,LK,LR,LS,LT,LU,LV,LY,MA,MC,MD,ME,MF,MG,MH,MK,ML,MM,MN,MO,MP,MQ,MR,MS,MT,MU,MV,MW,MX,MY,MZ,NA,NC,NE,NF,NG,NI,NL,NO,NP,NR,NU,NZ,OM,PA,PE,PF,PG,PH,PK,PL,PM,PN,PR,PS,PT,PW,PY,QA,RE,RO,RS,RU,RW,SA,SB,SC,SD,SE,SG,SH,SI,SJ,SK,SL,SM,SN,SO,SR,SS,ST,SV,SX,SY,SZ,TC,TD,TF,TG,TH,TJ,TK,TL,TM,TN,TO,TR,TT,TV,TW,TZ,UA,UG,UM,US,UY,UZ,VA,VC,VE,VG,VI,VN,VU,WF,WS,YE,YT,ZA,ZM,ZW',
-                    ','
-                )) AS codes(code)
-                ON CONFLICT ("Code") DO NOTHING;
-                """);
-
-            migrationBuilder.Sql("""
-                INSERT INTO "TaxCategories" ("Code", "Name")
-                VALUES
-                    ('STANDARD', 'Standard'),
-                    ('REDUCED', 'Reduced'),
-                    ('ZERO', 'Zero-rated'),
-                    ('EXEMPT', 'Exempt'),
-                    ('REVERSE_CHARGE', 'Reverse charge')
-                ON CONFLICT ("Code") DO NOTHING;
-                """);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AccountingPeriodStatusChanges");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -2837,6 +2967,12 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "ExchangeRates");
+
+            migrationBuilder.DropTable(
+                name: "FiscalYearClosings");
+
+            migrationBuilder.DropTable(
+                name: "FiscalYearStatusChanges");
 
             migrationBuilder.DropTable(
                 name: "FixedAssetDepreciations");
