@@ -7,6 +7,12 @@ import { CashFlowClassification, CashFlowReport } from './report.model';
 import { FinancialReportService } from './report.service';
 import { NotificationService } from '../../shared/services/notification.service';
 
+interface CashFlowVisual {
+  label: string;
+  amount: number;
+  width: number;
+}
+
 @Component({
   selector: 'app-cash-flow-page',
   imports: [FormsModule, FieldValidationDirective],
@@ -44,6 +50,28 @@ export class CashFlowPageComponent implements OnInit {
       currency: this.report?.currencyCode ?? 'USD',
       maximumFractionDigits: 2,
     }).format(amount);
+  }
+
+  get cashFlowVisuals(): CashFlowVisual[] {
+    if (!this.report) return [];
+    const values = this.method === 'direct'
+      ? [
+        { label: 'Operating', amount: this.report.direct.operating.net },
+        { label: 'Investing', amount: this.report.direct.investing.net },
+        { label: 'Financing', amount: this.report.direct.financing.net },
+        { label: 'Unclassified', amount: this.report.direct.unclassified.net },
+      ]
+      : [
+        { label: 'Operating', amount: this.report.indirect.operatingCashFlow },
+        { label: 'Investing', amount: this.report.indirect.investingCashFlow },
+        { label: 'Financing', amount: this.report.indirect.financingCashFlow },
+        { label: 'Unclassified', amount: this.report.indirect.unclassifiedCashFlow },
+      ];
+    const maximum = Math.max(1, ...values.map(value => Math.abs(value.amount)));
+    return values.map(value => ({
+      ...value,
+      width: value.amount === 0 ? 0 : Math.max(3, Math.abs(value.amount) / maximum * 100),
+    }));
   }
 
   updateClassification(account: CashFlowClassification, category: string): void {

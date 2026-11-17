@@ -23,6 +23,26 @@
     </div>
     <span class="table-badge">{{ report.currencyCode }} functional currency</span>
   </div>
+  <section class="cash-flow-visual panel" aria-label="Cash flow by activity">
+    <div class="cash-flow-visual-heading">
+      <div><p class="eyebrow">CASH MOVEMENT</p><h2>Net flow by activity</h2></div>
+      <span>{{ method === 'direct' ? 'Direct method' : 'Indirect method' }}</span>
+    </div>
+    <div class="cash-flow-visual-grid">
+      @for (flow of cashFlowVisuals; track flow.label) {
+        <div class="cash-flow-visual-item" [class.negative]="flow.amount < 0">
+          <div class="cash-flow-visual-label"><span>{{ flow.label }}</span><strong>{{ formatAmount(flow.amount) }}</strong></div>
+          <div class="cash-flow-visual-track" role="meter" [attr.aria-label]="flow.label + ' net cash flow'" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="flow.width">
+            <span [style.width.%]="flow.width"></span>
+          </div>
+        </div>
+      }
+    </div>
+    <div class="cash-flow-visual-total">
+      <span>Net increase / (decrease) in cash</span>
+      <strong>{{ formatAmount(method === 'direct' ? report.direct.netCashIncrease : report.indirect.netCashIncrease) }}</strong>
+    </div>
+  </section>
   @if (method === 'direct') {
     <section class="statement-sections">
       @for (section of [report.direct.operating, report.direct.investing, report.direct.financing]; track section.category) {

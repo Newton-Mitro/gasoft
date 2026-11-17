@@ -30,6 +30,27 @@
             <h2>{{ totals.currencyCode }}</h2>
             <strong>{{ formatAmount(totals.total, totals.currencyCode) }}</strong>
           </div>
+          <div class="aging-visual" role="img" [attr.aria-label]="'Aging breakdown for ' + totals.currencyCode">
+            @for (segment of agingSegments(totals); track segment.label) {
+              <span
+                class="aging-visual-segment"
+                [class.current]="segment.tone === 'current'"
+                [class.early]="segment.tone === 'early'"
+                [class.middle]="segment.tone === 'middle'"
+                [class.late]="segment.tone === 'late'"
+                [class.old]="segment.tone === 'old'"
+                [style.width.%]="segment.width"
+                [title]="segment.label + ': ' + formatAmount(segment.amount, totals.currencyCode)"
+              ></span>
+            }
+          </div>
+          <div class="aging-legend" aria-hidden="true">
+            <span><i class="current"></i>Current</span>
+            <span><i class="early"></i>1–30</span>
+            <span><i class="middle"></i>31–60</span>
+            <span><i class="late"></i>61–90</span>
+            <span><i class="old"></i>90+</span>
+          </div>
           <dl>
             <div><dt>Current</dt><dd>{{ formatAmount(totals.current, totals.currencyCode) }}</dd></div>
             <div><dt>1–30 days</dt><dd>{{ formatAmount(totals.days1To30, totals.currencyCode) }}</dd></div>

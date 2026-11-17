@@ -73,6 +73,55 @@
   font-variant-numeric: tabular-nums;
 }
 
+.aging-visual {
+  display: flex;
+  height: 9px;
+  gap: 2px;
+  margin-top: 13px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+
+.aging-visual-segment {
+  min-width: 0;
+  height: 100%;
+  transition: width .2s ease;
+}
+
+.aging-visual-segment.current { background: var(--success-text); }
+.aging-visual-segment.early { background: var(--accent); }
+.aging-visual-segment.middle { background: var(--focus-color); }
+.aging-visual-segment.late { background: #d29d4f; }
+.aging-visual-segment.old { background: var(--error-text); }
+
+.aging-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 8px;
+}
+
+.aging-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.aging-legend i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.aging-legend .current { background: var(--success-text); }
+.aging-legend .early { background: var(--accent); }
+.aging-legend .middle { background: var(--focus-color); }
+.aging-legend .late { background: #d29d4f; }
+.aging-legend .old { background: var(--error-text); }
+
 .currency-card dl {
   display: grid;
   gap: 9px;

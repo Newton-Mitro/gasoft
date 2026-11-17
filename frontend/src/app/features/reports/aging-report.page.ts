@@ -10,6 +10,13 @@ import { FieldValidationDirective } from '../../shared/directives/field-validati
 
 type AgingReportKind = 'receivables' | 'payables';
 
+interface AgingSegment {
+  label: string;
+  amount: number;
+  width: number;
+  tone: 'current' | 'early' | 'middle' | 'late' | 'old';
+}
+
 @Component({
   selector: 'app-aging-report-page',
   imports: [FormsModule, FieldValidationDirective],
@@ -56,6 +63,21 @@ export class AgingReportPageComponent implements OnInit {
       currency: currencyCode,
       maximumFractionDigits: 2,
     }).format(amount);
+  }
+
+  agingSegments(totals: AgingReport['totalsByCurrency'][number]): AgingSegment[] {
+    const buckets: Omit<AgingSegment, 'width'>[] = [
+      { label: 'Current', amount: totals.current, tone: 'current' },
+      { label: '1–30 days', amount: totals.days1To30, tone: 'early' },
+      { label: '31–60 days', amount: totals.days31To60, tone: 'middle' },
+      { label: '61–90 days', amount: totals.days61To90, tone: 'late' },
+      { label: 'Over 90 days', amount: totals.over90Days, tone: 'old' },
+    ];
+    const denominator = Math.max(Math.abs(totals.total), 1);
+    return buckets.map(bucket => ({
+      ...bucket,
+      width: Math.min(100, Math.abs(bucket.amount) / denominator * 100),
+    }));
   }
 
   onDateChange(): void {

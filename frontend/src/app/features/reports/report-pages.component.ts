@@ -28,11 +28,21 @@ interface ReportRow {
   credit?: number;
 }
 
+interface ReportVisualMetric {
+  label: string;
+  value: number;
+  width: number;
+  tone: 'primary' | 'secondary' | 'tertiary';
+}
+
 @Component({
   selector: 'app-financial-report',
   imports: [FormsModule, FieldValidationDirective],
   templateUrl: './report-pages.component.html',
-  styleUrl: '../../shared/styles/feature-page.css',
+  styleUrls: [
+    '../../shared/styles/feature-page.css',
+    './report-pages.component.css',
+  ],
 })
 export class FinancialReportPageComponent implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
@@ -42,6 +52,7 @@ export class FinancialReportPageComponent implements OnInit, OnDestroy {
   description = '';
   rows: ReportRow[] = [];
   summaryCards: SummaryCard[] = [];
+  visualMetrics: ReportVisualMetric[] = [];
   currencyCode = 'USD';
   fromDate = '';
   toDate = '';
@@ -136,6 +147,11 @@ export class FinancialReportPageComponent implements OnInit, OnDestroy {
         { label: 'Total debits', value: trialBalance.totalDebit },
         { label: 'Total credits', value: trialBalance.totalCredit },
       ];
+      const maximum = Math.max(trialBalance.totalDebit, trialBalance.totalCredit, 1);
+      this.visualMetrics = [
+        { label: 'Debits', value: trialBalance.totalDebit, width: trialBalance.totalDebit / maximum * 100, tone: 'primary' },
+        { label: 'Credits', value: trialBalance.totalCredit, width: trialBalance.totalCredit / maximum * 100, tone: 'secondary' },
+      ];
     } else if (this.reportType === 'income-statement') {
       const incomeStatement = report as IncomeStatementReport;
       this.summaryCards = [
@@ -143,12 +159,29 @@ export class FinancialReportPageComponent implements OnInit, OnDestroy {
         { label: 'Total expenses', value: incomeStatement.totalExpenses },
         { label: 'Net income', value: incomeStatement.netIncome, highlight: true },
       ];
+      const maximum = Math.max(incomeStatement.totalRevenue, incomeStatement.totalExpenses, 1);
+      this.visualMetrics = [
+        { label: 'Revenue', value: incomeStatement.totalRevenue, width: incomeStatement.totalRevenue / maximum * 100, tone: 'primary' },
+        { label: 'Expenses', value: incomeStatement.totalExpenses, width: incomeStatement.totalExpenses / maximum * 100, tone: 'secondary' },
+        {
+          label: 'Net income',
+          value: incomeStatement.netIncome,
+          width: Math.min(100, Math.abs(incomeStatement.netIncome) / maximum * 100),
+          tone: 'tertiary',
+        },
+      ];
     } else {
       const balanceSheet = report as BalanceSheetReport;
       this.summaryCards = [
         { label: 'Total assets', value: balanceSheet.totalAssets },
         { label: 'Total liabilities', value: balanceSheet.totalLiabilities },
         { label: 'Liabilities & equity', value: balanceSheet.totalLiabilitiesAndEquity, highlight: true },
+      ];
+      const maximum = Math.max(balanceSheet.totalAssets, balanceSheet.totalLiabilities, balanceSheet.totalEquity, 1);
+      this.visualMetrics = [
+        { label: 'Assets', value: balanceSheet.totalAssets, width: balanceSheet.totalAssets / maximum * 100, tone: 'primary' },
+        { label: 'Liabilities', value: balanceSheet.totalLiabilities, width: balanceSheet.totalLiabilities / maximum * 100, tone: 'secondary' },
+        { label: 'Equity', value: balanceSheet.totalEquity, width: balanceSheet.totalEquity / maximum * 100, tone: 'tertiary' },
       ];
     }
   }

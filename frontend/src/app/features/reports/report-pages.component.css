@@ -1,0 +1,133 @@
+:host {
+  display: block;
+}
+
+.report-visual {
+  margin-bottom: 15px;
+  padding: 18px 19px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background:
+    radial-gradient(circle at 100% 0, color-mix(in srgb, var(--accent-soft) 46%, transparent), transparent 40%),
+    var(--surface);
+}
+
+.report-visual-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.report-visual-heading .eyebrow {
+  margin-bottom: 5px;
+}
+
+.report-visual-heading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.visual-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--error-text) 27%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--error-text) 8%, var(--surface));
+  color: var(--error-text);
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.visual-status.balanced {
+  border-color: color-mix(in srgb, var(--success-text) 27%, var(--border));
+  background: color-mix(in srgb, var(--success-text) 9%, var(--surface));
+  color: var(--success-text);
+}
+
+.report-visual-metrics {
+  display: grid;
+  gap: 15px;
+  margin-top: 18px;
+}
+
+.visual-metric {
+  display: grid;
+  gap: 7px;
+}
+
+.visual-metric-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.visual-metric-label > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.visual-metric-label strong {
+  color: var(--text-strong);
+  font-size: 10px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.visual-metric.negative .visual-metric-label strong {
+  color: var(--error-text);
+}
+
+.visual-metric.negative .visual-track > span {
+  background: var(--error-text);
+}
+
+.visual-key {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.visual-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+
+.visual-track > span {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  transition: width .25s ease;
+}
+
+.visual-key.primary,
+.visual-track > span.primary {
+  background: var(--accent);
+}
+
+.visual-key.secondary,
+.visual-track > span.secondary {
+  background: var(--focus-color);
+}
+
+.visual-key.tertiary,
+.visual-track > span.tertiary {
+  background: var(--success-text);
+}
+
+@media (max-width: 600px) {
+  .report-visual {
+    padding: 15px;
+  }
+}

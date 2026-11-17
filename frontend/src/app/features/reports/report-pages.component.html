@@ -24,6 +24,39 @@
     </article>
   }
 </section>
+@if (!loading) {
+  <section class="report-visual panel" [attr.aria-label]="title + ' visual overview'">
+    <div class="report-visual-heading">
+      <div>
+        <p class="eyebrow">VISUAL OVERVIEW</p>
+        <h2>
+          @if (reportType === 'trial-balance') { Debit and credit comparison }
+          @else if (reportType === 'income-statement') { Revenue and expense mix }
+          @else { Balance sheet composition }
+        </h2>
+      </div>
+      @if (reportType === 'trial-balance') {
+        <span class="visual-status" [class.balanced]="summaryCards[0]?.value === summaryCards[1]?.value">
+          <i class="fa-solid" [class.fa-circle-check]="summaryCards[0]?.value === summaryCards[1]?.value" [class.fa-circle-exclamation]="summaryCards[0]?.value !== summaryCards[1]?.value" aria-hidden="true"></i>
+          {{ summaryCards[0]?.value === summaryCards[1]?.value ? 'Balanced' : 'Review difference' }}
+        </span>
+      }
+    </div>
+    <div class="report-visual-metrics">
+      @for (metric of visualMetrics; track metric.label) {
+        <div class="visual-metric" [class.negative]="metric.label === 'Net income' && metric.value < 0">
+          <div class="visual-metric-label">
+            <span><i class="visual-key" [class.primary]="metric.tone === 'primary'" [class.secondary]="metric.tone === 'secondary'" [class.tertiary]="metric.tone === 'tertiary'"></i>{{ metric.label }}</span>
+            <strong>{{ formatCurrency(metric.value) }}</strong>
+          </div>
+          <div class="visual-track" role="meter" [attr.aria-label]="metric.label" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="metric.width">
+            <span [class.primary]="metric.tone === 'primary'" [class.secondary]="metric.tone === 'secondary'" [class.tertiary]="metric.tone === 'tertiary'" [style.width.%]="metric.width"></span>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+}
 @if (loading) { <div class="loading-card"><span class="spinner"></span> Loading {{ title.toLowerCase() }}…</div> }
 @if (!loading) {
   <section class="table-panel panel">
