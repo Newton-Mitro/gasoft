@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { PaginationComponent, PageChange } from '../../../../shared/components/pagination/pagination.component';
 import { errorMessage } from '../../../../shared/utils/page-utils';
@@ -18,6 +19,10 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { FieldValidationDirective } from '../../../../shared/directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../../../shared/directives/searchable-select.directive';
 import { InputComponent } from '../../../../shared/components/input/input.component';
+import {
+  FormValidationErrors,
+  FormValidationService,
+} from '../../../../shared/services/form-validation.service';
 
 @Component({
   selector: 'app-bank-reconciliation-page',
@@ -27,6 +32,7 @@ import { InputComponent } from '../../../../shared/components/input/input.compon
 })
 export class BankReconciliationPageComponent implements OnInit {
   readonly notifications = inject(NotificationService);
+  private readonly formValidation = inject(FormValidationService);
   accounts: BankAccount[] = [];
   transactions: BankTransaction[] = [];
   page = 1;
@@ -42,6 +48,7 @@ export class BankReconciliationPageComponent implements OnInit {
   accountNumberLastFour = '';
   chartOfAccountId: number | null = null;
   selectedFile: File | null = null;
+  statementFileError = '';
   showAccountForm = false;
   matchTransactionId: number | null = null;
   adjustmentTransactionId: number | null = null;
@@ -112,12 +119,23 @@ export class BankReconciliationPageComponent implements OnInit {
   }
 
   createAccount(): void {
-    if (!this.company || !this.name.trim() || !this.bankName.trim() ||
-        !/^[A-Za-z0-9]{4}$/.test(this.accountNumberLastFour) ||
-        !this.chartOfAccountId) {
-      this.error = 'Enter account and bank names, the last four account digits, and a chart-of-accounts asset.';
+    this.formValidation.clear();
+    const validationErrors = validateBankAccount(
+      this.name,
+      this.bankName,
+      this.accountNumberLastFour,
+      this.chartOfAccountId,
+    );
+    if (Object.keys(validationErrors).length) {
+      this.formValidation.setErrors(validationErrors);
       return;
     }
+    if (!this.company) {
+      this.error = 'Choose a company before managing bank accounts.';
+      return;
+    }
+    const chartOfAccountId = this.chartOfAccountId;
+    if (chartOfAccountId === null) return;
     this.error = '';
     this.saving = true;
     this.bankService.createAccount({
@@ -125,7 +143,7 @@ export class BankReconciliationPageComponent implements OnInit {
       bankName: this.bankName.trim(),
       accountNumberLastFour: this.accountNumberLastFour.trim().toUpperCase(),
       currencyCode: this.company.functionalCurrencyCode,
-      chartOfAccountId: this.chartOfAccountId,
+      chartOfAccountId,
     }).subscribe({
       next: account => {
         this.accounts = [...this.accounts, account];
@@ -137,13 +155,14 @@ export class BankReconciliationPageComponent implements OnInit {
         this.accountNumberLastFour = '';
         this.chartOfAccountId = null;
         this.saving = false;
+        this.formValidation.clear();
         this.notifications.success('Bank account created successfully.');
         this.loadTransactions();
         this.changeDetector.markForCheck();
       },
       error: error => {
         this.error = '';
-        this.notifications.error(errorMessage(error, 'Could not create this bank account.'));
+        this.showServerValidationErrors(error, 'Could not create this bank account.');
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -162,8 +181,14 @@ export class BankReconciliationPageComponent implements OnInit {
   }
 
   openAccountForm(): void {
+    this.formValidation.clear();
     this.showAccountForm = true;
     this.error = '';
+  }
+
+  closeAccountForm(): void {
+    this.formValidation.clear();
+    this.showAccountForm = false;
   }
 
   onStatementSelected(event: Event): void {
@@ -171,9 +196,10 @@ export class BankReconciliationPageComponent implements OnInit {
     this.selectedFile = input.files?.[0] ?? null;
     this.importMessage = '';
     this.error = '';
+    this.statementFileError = '';
     if (!this.selectedFile) return;
     if (!this.selectedFile.name.toLowerCase().endsWith('.csv') || this.selectedFile.size > 10 * 1024 * 1024) {
-      this.error = 'Choose a CSV statement no larger than 10 MB.';
+      this.statementFileError = 'Choose a CSV statement no larger than 10 MB.';
       this.selectedFile = null;
       input.value = '';
     }
@@ -184,12 +210,14 @@ export class BankReconciliationPageComponent implements OnInit {
     this.importing = true;
     this.error = '';
     this.importMessage = '';
+    this.statementFileError = '';
     this.bankService.importStatement(this.selectedAccountId, this.selectedFile).subscribe({
       next: result => {
         this.importing = false;
         this.importMessage = `Imported ${result.imported} transaction${result.imported === 1 ? '' : 's'}; skipped ${result.duplicates} duplicate${result.duplicates === 1 ? '' : 's'}.`;
         this.notifications.success(this.importMessage);
         this.selectedFile = null;
+        this.statementFileError = '';
         this.page = 1;
         this.optionCache.clear();
         this.loadTransactions();
@@ -207,6 +235,7 @@ export class BankReconciliationPageComponent implements OnInit {
   showMatches(transaction: BankTransaction): void {
     const accountId = this.selectedAccountId;
     if (!accountId) return;
+    this.formValidation.clear();
     this.matchError = '';
     this.candidates = [];
     this.allocationAmounts = {};
@@ -231,13 +260,21 @@ export class BankReconciliationPageComponent implements OnInit {
   matchTransaction(transaction: BankTransaction, candidate: BankMatchCandidate): void {
     const accountId = this.selectedAccountId;
     if (!accountId) return;
-    const allocation = Number(this.allocationAmounts[candidate.journalLineId]);
-    if (!Number.isFinite(allocation) || allocation <= 0 ||
-      allocation > Math.min(Math.abs(transaction.remainingAmount), Math.abs(candidate.amount))) {
-      this.matchError = 'Enter a positive allocation no greater than the statement or ledger remaining amount.';
+    const field = `matchAmount-${candidate.journalLineId}`;
+    const allocation = this.allocationAmounts[candidate.journalLineId];
+    const validationErrors = validateAllocation(
+      allocation,
+      Math.min(Math.abs(transaction.remainingAmount), Math.abs(candidate.amount)),
+    );
+    if (validationErrors.length) {
+      this.formValidation.setErrors({
+        ...this.formValidation.errors(),
+        [field]: validationErrors,
+      });
       return;
     }
     this.saving = true;
+    this.formValidation.clearField(field);
     this.matchError = '';
     this.bankService.allocate(
       accountId,
@@ -282,6 +319,7 @@ export class BankReconciliationPageComponent implements OnInit {
   }
 
   openAdjustment(transaction: BankTransaction): void {
+    this.formValidation.clear();
     this.adjustmentTransactionId = transaction.id;
     this.adjustmentAccountId = null;
     this.adjustmentEntryDate = transaction.transactionDate;
@@ -289,22 +327,36 @@ export class BankReconciliationPageComponent implements OnInit {
     this.matchError = '';
   }
 
+  closeAdjustmentForm(): void {
+    this.formValidation.clear();
+    this.adjustmentTransactionId = null;
+  }
+
   recordAdjustment(transaction: BankTransaction): void {
     const accountId = this.selectedAccountId;
-    if (!accountId || !this.adjustmentAccountId || !this.adjustmentEntryDate) {
-      this.matchError = 'Choose an offset account and an entry date.';
+    const offsetAccountId = this.adjustmentAccountId;
+    this.formValidation.clear();
+    const validationErrors = validateAdjustment(
+      offsetAccountId,
+      this.adjustmentEntryDate,
+      this.adjustmentDescription,
+    );
+    if (Object.keys(validationErrors).length) {
+      this.formValidation.setErrors(validationErrors);
       return;
     }
+    if (!accountId || !offsetAccountId) return;
     this.saving = true;
     this.matchError = '';
     this.bankService.createAdjustment(accountId, transaction.id, {
-      offsetAccountId: this.adjustmentAccountId,
+      offsetAccountId,
       entryDate: this.adjustmentEntryDate,
       description: this.adjustmentDescription.trim() || null,
     }).subscribe({
       next: () => {
         this.saving = false;
         this.adjustmentTransactionId = null;
+        this.formValidation.clear();
         this.importMessage = 'A posted journal adjustment was created and matched to the statement transaction.';
         this.notifications.success(this.importMessage);
         this.loadTransactions(transaction.id);
@@ -312,7 +364,7 @@ export class BankReconciliationPageComponent implements OnInit {
       },
       error: error => {
         this.matchError = '';
-        this.notifications.error(errorMessage(error, 'Could not create the reconciliation adjustment.'));
+        this.showServerValidationErrors(error, 'Could not create the reconciliation adjustment.');
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -332,6 +384,19 @@ export class BankReconciliationPageComponent implements OnInit {
 
   absoluteAmount(amount: number): number {
     return Math.abs(amount);
+  }
+
+  private showServerValidationErrors(error: unknown, fallback: string): void {
+    const validationErrors = serverValidationErrors(error);
+    if (!Object.keys(validationErrors).length) {
+      this.notifications.error(errorMessage(error, fallback));
+      return;
+    }
+
+    this.formValidation.setErrors(validationErrors);
+    if (Object.keys(this.formValidation.unmatchedErrors()).length) {
+      this.notifications.error(errorMessage(error, fallback));
+    }
   }
 
   private loadAccounts(): void {
@@ -410,4 +475,76 @@ export class BankReconciliationPageComponent implements OnInit {
       },
     });
   }
+}
+
+function validateBankAccount(
+  name: string,
+  bankName: string,
+  accountNumberLastFour: string,
+  chartOfAccountId: number | null,
+): FormValidationErrors {
+  const errors: FormValidationErrors = {};
+  if (!name.trim()) errors['name'] = ['Enter an account name.'];
+  else if (name.trim().length > 120) errors['name'] = ['Account name must be 120 characters or fewer.'];
+  if (!bankName.trim()) errors['bankName'] = ['Enter a bank name.'];
+  else if (bankName.trim().length > 120) errors['bankName'] = ['Bank name must be 120 characters or fewer.'];
+  if (!/^[A-Za-z0-9]{4}$/.test(accountNumberLastFour.trim())) {
+    errors['lastFour'] = ['Enter exactly four letters or digits.'];
+  }
+  if (!Number.isSafeInteger(chartOfAccountId) || !chartOfAccountId || chartOfAccountId < 1) {
+    errors['chartAccount'] = ['Select a ledger asset account.'];
+  }
+  return errors;
+}
+
+function validateAllocation(amount: number | undefined, maximum: number): string[] {
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+    return ['Enter an allocation greater than zero.'];
+  }
+  if (amount > maximum) {
+    return ['Allocation cannot exceed the remaining statement or ledger amount.'];
+  }
+  return [];
+}
+
+function validateAdjustment(
+  offsetAccountId: number | null,
+  entryDate: string,
+  description: string,
+): FormValidationErrors {
+  const errors: FormValidationErrors = {};
+  if (!Number.isSafeInteger(offsetAccountId) || !offsetAccountId || offsetAccountId < 1) {
+    errors['offsetAccount'] = ['Select an offset account.'];
+  }
+  if (!isDateOnly(entryDate)) errors['adjustmentDate'] = ['Enter a valid posting date.'];
+  if (description.length > 500) {
+    errors['adjustmentDescription'] = ['Description must be 500 characters or fewer.'];
+  }
+  return errors;
+}
+
+function serverValidationErrors(error: unknown): FormValidationErrors {
+  if (!(error instanceof HttpErrorResponse) ||
+    (error.status !== 400 && error.status !== 422) ||
+    !error.error || typeof error.error !== 'object' ||
+    !('errors' in error.error) || !error.error.errors || typeof error.error.errors !== 'object') {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(error.error.errors).flatMap(([field, messages]) => {
+      const fieldMessages = Array.isArray(messages)
+        ? messages.filter((message): message is string => typeof message === 'string' && !!message.trim())
+        : typeof messages === 'string' && messages.trim()
+          ? [messages]
+          : [];
+      return fieldMessages.length ? [[field, fieldMessages]] : [];
+    }),
+  );
+}
+
+function isDateOnly(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
 }

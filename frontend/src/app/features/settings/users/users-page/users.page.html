@@ -41,7 +41,7 @@
         </button>
       </div>
       @if (!saving) {
-        <form class="member-form" (ngSubmit)="submit()">
+        <form class="member-form" novalidate (ngSubmit)="submit()">
           <div class="member-form-heading">
             <div>
               <span class="eyebrow">{{
@@ -52,69 +52,73 @@
             <span class="required-note"><span aria-hidden="true">*</span> Required</span>
           </div>
           <div class="member-fields">
-            @if (accountMode === 'new') {
-              <label>
-                <span>Full name <span class="required-marker" aria-hidden="true">*</span></span>
-                <app-input
-                  name="displayName"
-                  autocomplete="name"
-                  required
-                  maxlength="200"
-                  placeholder="e.g. Alex Morgan"
-                  [ngModel]="$any(form)['displayName']"
-                  (ngModelChange)="setFormValue('displayName', $event)"
-                />
-              </label>
-            }
-            <label>
-              <span
-                >{{ accountMode === 'new' ? 'Email address' : 'Existing account email' }}
-                <span class="required-marker" aria-hidden="true">*</span></span
-              >
-              <app-input
-                name="email"
-                type="email"
-                autocomplete="email"
-                required
-                maxlength="256"
-                placeholder="name@company.com"
-                [ngModel]="$any(form)['email']"
-                (ngModelChange)="setFormValue('email', $event)"
-              />
-            </label>
-            <label>
-              <span>Workspace role <span class="required-marker" aria-hidden="true">*</span></span>
-              <select appSearchableSelect
-                name="role"
-                required
-                [ngModel]="$any(form)['role']"
-                (ngModelChange)="setFormValue('role', $event)"
-              >
-                <option [ngValue]="null" disabled>Select a role</option>
-                @for (role of roleOptions; track role.value) {
-                  <option [ngValue]="role.value">{{ role.label }}</option>
-                }
-              </select>
-            </label>
-            @if (accountMode === 'new') {
+            <div class="member-fields-column">
+              @if (accountMode === 'new') {
+                <label>
+                  <span>Full name <span class="required-marker" aria-hidden="true">*</span></span>
+                  <app-input
+                    name="displayName"
+                    autocomplete="name"
+                    required
+                    maxlength="200"
+                    placeholder="e.g. Alex Morgan"
+                    [ngModel]="$any(form)['displayName']"
+                    (ngModelChange)="setFormValue('displayName', $event)"
+                  />
+                </label>
+              }
               <label>
                 <span
-                  >Temporary password
+                  >{{ accountMode === 'new' ? 'Email address' : 'Existing account email' }}
                   <span class="required-marker" aria-hidden="true">*</span></span
                 >
                 <app-input
-                  name="temporaryPassword"
-                  type="password"
-                  autocomplete="new-password"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
                   required
-                  maxlength="128"
-                  placeholder="Create a temporary password"
-                  [ngModel]="$any(form)['temporaryPassword']"
-                  (ngModelChange)="setFormValue('temporaryPassword', $event)"
+                  maxlength="256"
+                  placeholder="name@company.com"
+                  [ngModel]="$any(form)['email']"
+                  (ngModelChange)="setFormValue('email', $event)"
                 />
-                <small>Share it privately. They can change it after signing in.</small>
               </label>
-            }
+            </div>
+            <div class="member-fields-column">
+              <label>
+                <span>Workspace role <span class="required-marker" aria-hidden="true">*</span></span>
+                <select appSearchableSelect
+                  name="role"
+                  required
+                  [ngModel]="$any(form)['role']"
+                  (ngModelChange)="setFormValue('role', $event)"
+                >
+                  <option [ngValue]="null" disabled>Select a role</option>
+                  @for (role of roleOptions; track role.value) {
+                    <option [ngValue]="role.value">{{ role.label }}</option>
+                  }
+                </select>
+              </label>
+              @if (accountMode === 'new') {
+                <label>
+                  <span
+                    >Temporary password
+                    <span class="required-marker" aria-hidden="true">*</span></span
+                  >
+                  <app-input
+                    name="temporaryPassword"
+                    type="password"
+                    autocomplete="new-password"
+                    required
+                    maxlength="128"
+                    placeholder="Create a temporary password"
+                    [ngModel]="$any(form)['temporaryPassword']"
+                    (ngModelChange)="setFormValue('temporaryPassword', $event)"
+                  />
+                  <small>Share it privately. They can change it after signing in.</small>
+                </label>
+              }
+            </div>
           </div>
           @if (accountMode === 'existing') {
             <p class="existing-account-note">

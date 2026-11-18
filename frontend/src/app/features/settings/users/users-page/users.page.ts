@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
@@ -17,6 +18,10 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { FieldValidationDirective } from '../../../../shared/directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../../../shared/directives/searchable-select.directive';
 import { InputComponent } from '../../../../shared/components/input/input.component';
+import {
+  FormValidationErrors,
+  FormValidationService,
+} from '../../../../shared/services/form-validation.service';
 
 const ROLE_OPTIONS: Choice[] = [
   { label: 'Admin', value: 'Admin' },
@@ -32,6 +37,7 @@ const ROLE_OPTIONS: Choice[] = [
 })
 export class UsersPageComponent implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
+  private readonly formValidation = inject(FormValidationService);
   readonly pageKey = 'users';
   readonly title = 'Team members';
   readonly description = 'Manage tenant membership and access roles. Add new accounts or invite an existing Gasoft user.';
@@ -69,6 +75,7 @@ export class UsersPageComponent implements OnInit, OnDestroy {
       const view = data['view'];
       this.view = view === 'create' || view === 'edit' ? view : 'index';
       this.currentRecordId = toRecordId(params);
+      this.formValidation.clear();
       this.error = '';
       this.success = '';
       if (this.view === 'create') {
@@ -107,17 +114,18 @@ export class UsersPageComponent implements OnInit, OnDestroy {
     const displayName = String(this.form['displayName'] ?? '').trim();
     const temporaryPassword = String(this.form['temporaryPassword'] ?? '');
     const role = String(this.form['role'] ?? '');
-    if (!email || email.length > 256 || !displayName || displayName.length > 200 ||
-      !temporaryPassword || temporaryPassword.length > 128 ||
-      !ROLE_OPTIONS.some(option => option.value === role)) {
-      this.error = 'Enter a valid name, email, permitted role, and temporary password.';
+    const validationErrors = validateNewUser(displayName, email, role, temporaryPassword);
+    this.formValidation.setErrors(validationErrors);
+    if (Object.keys(validationErrors).length) {
       return;
     }
+    this.error = '';
     const payload: CreateTenantUserPayload = { email, displayName, temporaryPassword, role };
     this.save(this.users.create(payload), 'Could not add this team member.');
   }
 
   setAccountMode(mode: 'new' | 'existing'): void {
+    this.formValidation.clear();
     this.accountMode = mode;
     this.form = {};
     this.error = '';
@@ -169,11 +177,13 @@ export class UsersPageComponent implements OnInit, OnDestroy {
   private submitExistingUser(): void {
     const email = String(this.form['email'] ?? '').trim();
     const role = String(this.form['role'] ?? '');
-    if (!email || email.length > 256 || !ROLE_OPTIONS.some(option => option.value === role)) {
-      this.error = 'Enter a valid email address and permitted role.';
+    const validationErrors = validateExistingUser(email, role);
+    this.formValidation.setErrors(validationErrors);
+    if (Object.keys(validationErrors).length) {
       return;
     }
 
+    this.error = '';
     const payload: AddExistingTenantUserPayload = { email, role };
     this.save(this.users.addExisting(payload), 'Could not add this existing account.');
   }
@@ -189,7 +199,7 @@ export class UsersPageComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.error = '';
-        this.notifications.error(errorMessage(error, failureMessage));
+        this.showServerValidationErrors(error, failureMessage);
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -244,9 +254,77 @@ export class UsersPageComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  private showServerValidationErrors(error: unknown, fallback: string): void {
+    const validationErrors = serverValidationErrors(error);
+    if (!Object.keys(validationErrors).length) {
+      this.notifications.error(errorMessage(error, fallback));
+      return;
+    }
+
+    this.formValidation.setErrors(validationErrors);
+    if (Object.keys(this.formValidation.unmatchedErrors()).length) {
+      this.notifications.error(errorMessage(error, fallback));
+    }
+  }
 }
 
 function toRecordId(params: ParamMap): number | null {
   const id = Number(params.get('recordId'));
   return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
+function validateNewUser(
+  displayName: string,
+  email: string,
+  role: string,
+  temporaryPassword: string,
+): FormValidationErrors {
+  const errors: FormValidationErrors = {};
+  if (!displayName) errors['displayName'] = ['Enter a full name.'];
+  else if (displayName.length > 200) {
+    errors['displayName'] = ['Full name must be 200 characters or fewer.'];
+  }
+  if (!isValidEmail(email)) errors['email'] = ['Enter a valid email address.'];
+  if (!ROLE_OPTIONS.some(option => option.value === role)) {
+    errors['role'] = ['Select a workspace role.'];
+  }
+  if (!temporaryPassword) errors['temporaryPassword'] = ['Enter a temporary password.'];
+  else if (temporaryPassword.length > 128) {
+    errors['temporaryPassword'] = ['Password must be 128 characters or fewer.'];
+  }
+  return errors;
+}
+
+function validateExistingUser(email: string, role: string): FormValidationErrors {
+  const errors: FormValidationErrors = {};
+  if (!isValidEmail(email)) errors['email'] = ['Enter a valid email address.'];
+  if (!ROLE_OPTIONS.some(option => option.value === role)) {
+    errors['role'] = ['Select a workspace role.'];
+  }
+  return errors;
+}
+
+function isValidEmail(email: string): boolean {
+  return email.length <= 256 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function serverValidationErrors(error: unknown): FormValidationErrors {
+  if (!(error instanceof HttpErrorResponse) ||
+    (error.status !== 400 && error.status !== 422) ||
+    !error.error || typeof error.error !== 'object' ||
+    !('errors' in error.error) || !error.error.errors || typeof error.error.errors !== 'object') {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(error.error.errors).flatMap(([field, messages]) => {
+      const fieldMessages = Array.isArray(messages)
+        ? messages.filter((message): message is string => typeof message === 'string' && !!message.trim())
+        : typeof messages === 'string' && messages.trim()
+          ? [messages]
+          : [];
+      return fieldMessages.length ? [[field, fieldMessages]] : [];
+    }),
+  );
 }

@@ -66,6 +66,13 @@
   gap: 15px;
 }
 
+.account-form-column {
+  display: grid;
+  align-content: start;
+  gap: 15px;
+  min-width: 0;
+}
+
 .account-form label,
 .account-select {
   display: grid;
@@ -168,6 +175,12 @@
   flex: 0 0 auto;
   align-items: center;
   gap: 9px;
+}
+
+.file-control {
+  display: grid;
+  max-width: 210px;
+  gap: 4px;
 }
 
 .file-picker {

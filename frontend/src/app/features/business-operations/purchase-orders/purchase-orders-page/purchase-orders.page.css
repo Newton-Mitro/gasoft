@@ -42,6 +42,13 @@
   margin: 18px 0;
 }
 
+.header-fields-column {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+
 .header-fields label,
 .editable-line label,
 .receive-fields label {
@@ -116,12 +123,17 @@
 .editable-line {
   display: grid;
   grid-template-columns: minmax(160px, 1.2fr) minmax(150px, 1.2fr) minmax(95px, 0.6fr) minmax(100px, 0.7fr) 28px;
-  align-items: end;
+  align-items: start;
   gap: 9px;
   padding: 11px;
   border: 1px solid var(--border);
   border-radius: 9px;
   background: var(--surface-muted);
+}
+
+.editable-line > .remove-line {
+  align-self: start;
+  margin-top: 17px;
 }
 
 .remove-line {
@@ -408,6 +420,10 @@ td small {
   .header-fields,
   .receive-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .header-fields {
+    grid-template-columns: 1fr;
   }
 
   .editable-line {

@@ -199,6 +199,13 @@
   padding: 23px 24px;
 }
 
+.member-fields-column {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  min-width: 0;
+}
+
 .member-fields label {
   display: flex;
   min-width: 0;
@@ -315,6 +322,10 @@
 
   .member-fields {
     grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .member-fields-column {
     gap: 15px;
   }
 

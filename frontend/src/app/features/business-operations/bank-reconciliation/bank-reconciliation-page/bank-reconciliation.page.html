@@ -23,33 +23,37 @@
       </div>
     </div>
     @if (company) {
-      <form class="account-form" (ngSubmit)="createAccount()">
-        <label>
-          <span>Account name</span>
-          <app-input name="name" type="text" maxlength="120" required [(ngModel)]="name" placeholder="Operating account" />
-        </label>
-        <label>
-          <span>Bank name</span>
-          <app-input name="bankName" type="text" maxlength="120" required [(ngModel)]="bankName" placeholder="Example Bank" />
-        </label>
-        <label>
-          <span>Last four digits</span>
-          <app-input name="lastFour" type="text" minlength="4" maxlength="4" required [(ngModel)]="accountNumberLastFour" placeholder="1234" />
-        </label>
-        <label>
-          <span>Ledger asset account</span>
-          <select appSearchableSelect name="chartAccount" required [(ngModel)]="chartOfAccountId">
-            <option [ngValue]="null" disabled>Select asset account</option>
-            @for (account of chartAccounts; track account.value) {
-              <option [ngValue]="account.value">{{ account.label }}</option>
-            }
-          </select>
-        </label>
+      <form class="account-form" novalidate (ngSubmit)="createAccount()">
+        <div class="account-form-column">
+          <label>
+            <span>Account name</span>
+            <app-input name="name" type="text" maxlength="120" required [(ngModel)]="name" placeholder="Operating account" />
+          </label>
+          <label>
+            <span>Bank name</span>
+            <app-input name="bankName" type="text" maxlength="120" required [(ngModel)]="bankName" placeholder="Example Bank" />
+          </label>
+        </div>
+        <div class="account-form-column">
+          <label>
+            <span>Last four digits</span>
+            <app-input name="lastFour" type="text" minlength="4" maxlength="4" required [(ngModel)]="accountNumberLastFour" placeholder="1234" />
+          </label>
+          <label>
+            <span>Ledger asset account</span>
+            <select appSearchableSelect name="chartAccount" required [(ngModel)]="chartOfAccountId">
+              <option [ngValue]="null" disabled>Select asset account</option>
+              @for (account of chartAccounts; track account.value) {
+                <option [ngValue]="account.value">{{ account.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
         <div class="form-footer">
           <span>Functional currency: <strong>{{ company.functionalCurrencyCode }}</strong></span>
           <div class="form-actions">
             @if (accounts.length) {
-              <button class="button secondary" type="button" (click)="showAccountForm = false">Cancel</button>
+              <button class="button secondary" type="button" (click)="closeAccountForm()">Cancel</button>
             }
             <button class="button primary" type="submit" [disabled]="saving || !chartAccounts.length">
               {{ saving ? 'Saving…' : 'Add bank account' }}
@@ -90,10 +94,23 @@
         <p>CSV columns: <code>date, description, amount</code>, with optional <code>reference</code>. Use ISO dates; positive amounts are deposits, negative amounts are withdrawals.</p>
       </div>
       <div class="import-controls">
-        <label class="file-picker">
-          <span>{{ selectedFile?.name || 'Choose CSV file' }}</span>
-          <input type="file" accept=".csv,text/csv" (change)="onStatementSelected($event)" />
-        </label>
+        <div class="file-control">
+          <label class="file-picker">
+            <span>{{ selectedFile?.name || 'Choose CSV file' }}</span>
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              [attr.aria-invalid]="statementFileError ? 'true' : null"
+              [attr.aria-describedby]="statementFileError ? 'statement-file-error' : null"
+              (change)="onStatementSelected($event)"
+            />
+          </label>
+          @if (statementFileError) {
+            <span id="statement-file-error" class="field-validation-error" role="alert">{{
+              statementFileError
+            }}</span>
+          }
+        </div>
         <button class="button primary" type="button" [disabled]="!selectedFile || importing" (click)="importStatement()">
           {{ importing ? 'Importing…' : 'Import statement' }}
         </button>
@@ -182,7 +199,7 @@
                             <div class="candidate-item">
                               <div><strong>{{ candidate.entryDate }} · available {{ formatAmount(candidate.amount) }}</strong><span>{{ candidate.description }}</span></div>
                               <label class="allocation-input"><span>Allocate</span><app-input type="number" min="0.01" [max]="absoluteAmount(candidate.amount)" step="0.01"
-                                [name]="'allocation-' + candidate.journalLineId" [(ngModel)]="allocationAmounts[candidate.journalLineId]" /></label>
+                                [name]="'matchAmount-' + candidate.journalLineId" [(ngModel)]="allocationAmounts[candidate.journalLineId]" /></label>
                               <button class="button primary table-action" type="button" [disabled]="saving" (click)="matchTransaction(transaction, candidate)">Allocate</button>
                             </div>
                           }
@@ -192,17 +209,17 @@
                         <div class="adjustment-form">
                           <h4>Post a bank fee or reconciliation adjustment</h4>
                           <p>The remaining signed statement amount will be posted to the bank account and the opposite amount to the selected offset account. This posts a journal entry in an open period and matches it automatically.</p>
-                          <label><span>Offset account</span><select appSearchableSelect name="offsetAccount" [(ngModel)]="adjustmentAccountId">
+                          <label><span>Offset account</span><select appSearchableSelect name="offsetAccount" required [(ngModel)]="adjustmentAccountId">
                             <option [ngValue]="null" disabled>Select account</option>
                             @for (account of adjustmentAccounts; track account.value) {
                               <option [ngValue]="account.value">{{ account.label }}</option>
                             }
                           </select></label>
-                          <label><span>Posting date</span><app-input name="adjustmentDate" type="date" [(ngModel)]="adjustmentEntryDate" /></label>
+                          <label><span>Posting date</span><app-input name="adjustmentDate" type="date" required [(ngModel)]="adjustmentEntryDate" /></label>
                           <label class="adjustment-description"><span>Description</span><app-input name="adjustmentDescription" maxlength="500" [(ngModel)]="adjustmentDescription" /></label>
                           <div class="adjustment-actions">
-                            <button class="button secondary" type="button" (click)="adjustmentTransactionId = null">Cancel</button>
-                            <button class="button primary" type="button" [disabled]="saving || !adjustmentAccountId" (click)="recordAdjustment(transaction)">Post and match {{ formatAmount(transaction.remainingAmount) }}</button>
+                            <button class="button secondary" type="button" (click)="closeAdjustmentForm()">Cancel</button>
+                            <button class="button primary" type="button" [disabled]="saving" (click)="recordAdjustment(transaction)">Post and match {{ formatAmount(transaction.remainingAmount) }}</button>
                           </div>
                         </div>
                       }

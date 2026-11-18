@@ -21,49 +21,55 @@
       </div>
     </div>
     <div class="header-fields">
-      <label>
-        <span>Supplier</span>
-        <select appSearchableSelect name="supplier" required [(ngModel)]="supplierId">
-          <option [ngValue]="null" disabled>Select supplier</option>
-          @for (supplier of suppliers; track supplier.id) {
-            <option [ngValue]="supplier.id">{{ supplier.partyNo }} · {{ supplier.displayName }}</option>
-          }
-        </select>
-      </label>
-      <label>
-        <span>Warehouse</span>
-        <select appSearchableSelect name="warehouse" required [(ngModel)]="warehouseId">
-          <option [ngValue]="null" disabled>Select warehouse</option>
-          @for (warehouse of warehouses; track warehouse.value) {
-            <option [ngValue]="warehouse.value">{{ warehouse.label }}</option>
-          }
-        </select>
-      </label>
-      <label>
-        <span>Order number</span>
-        <app-input name="orderNumber" required maxlength="40" [(ngModel)]="orderNumber" placeholder="PO-1001" />
-      </label>
-      <label>
-        <span>Order date</span>
-        <app-input name="orderDate" type="date" required [(ngModel)]="orderDate" />
-      </label>
-      <label>
-        <span>Expected date <small>(optional)</small></span>
-        <app-input name="expectedDate" type="date" [(ngModel)]="expectedDate" />
-      </label>
-      <label>
-        <span>Currency</span>
-        <select appSearchableSelect name="currency" required [(ngModel)]="currencyCode">
-          <option value="" disabled>Select currency</option>
-          @for (currency of currencies; track currency.value) {
-            <option [value]="currency.value">{{ currency.label }}</option>
-          }
-        </select>
-      </label>
-      <label>
-        <span>Exchange rate</span>
-        <app-input name="exchangeRate" type="number" min="0.0000000001" step="0.0000000001" required [(ngModel)]="exchangeRate" />
-      </label>
+      <div class="header-fields-column">
+        <label>
+          <span>Supplier</span>
+          <select appSearchableSelect name="supplier" required [(ngModel)]="supplierId">
+            <option [ngValue]="null" disabled>Select supplier</option>
+            @for (supplier of suppliers; track supplier.id) {
+              <option [ngValue]="supplier.id">{{ supplier.partyNo }} · {{ supplier.displayName }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          <span>Order date</span>
+          <app-input name="orderDate" type="date" required [(ngModel)]="orderDate" />
+        </label>
+        <label>
+          <span>Exchange rate</span>
+          <app-input name="exchangeRate" type="number" min="0.0000000001" step="0.0000000001" required [(ngModel)]="exchangeRate" />
+        </label>
+      </div>
+      <div class="header-fields-column">
+        <label>
+          <span>Warehouse</span>
+          <select appSearchableSelect name="warehouse" required [(ngModel)]="warehouseId">
+            <option [ngValue]="null" disabled>Select warehouse</option>
+            @for (warehouse of warehouses; track warehouse.value) {
+              <option [ngValue]="warehouse.value">{{ warehouse.label }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          <span>Expected date <small>(optional)</small></span>
+          <app-input name="expectedDate" type="date" [(ngModel)]="expectedDate" />
+        </label>
+      </div>
+      <div class="header-fields-column">
+        <label>
+          <span>Order number</span>
+          <app-input name="orderNumber" required maxlength="40" [(ngModel)]="orderNumber" placeholder="PO-1001" />
+        </label>
+        <label>
+          <span>Currency</span>
+          <select appSearchableSelect name="currency" required [(ngModel)]="currencyCode">
+            <option value="" disabled>Select currency</option>
+            @for (currency of currencies; track currency.value) {
+              <option [value]="currency.value">{{ currency.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
     </div>
 
     <div class="lines-heading">
@@ -75,7 +81,7 @@
         <div class="editable-line">
           <label>
             <span>Inventory item</span>
-            <select appSearchableSelect [ngModel]="line.itemId" [name]="'item-' + index" (ngModelChange)="selectItem(index, $event)">
+            <select appSearchableSelect required [ngModel]="line.itemId" [name]="'item-' + index" (ngModelChange)="selectItem(index, $event)">
               <option [ngValue]="null" disabled>Select item</option>
               @for (item of items; track item.id) {
                 <option [ngValue]="item.id">{{ item.sku }} · {{ item.name }} ({{ item.baseUnitCode }})</option>
@@ -84,15 +90,15 @@
           </label>
           <label class="line-description">
             <span>Description</span>
-            <app-input [(ngModel)]="line.description" [name]="'description-' + index" maxlength="500" />
+            <app-input required [(ngModel)]="line.description" [name]="'description-' + index" maxlength="500" />
           </label>
           <label>
             <span>Quantity</span>
-            <app-input type="number" min="0.000001" step="0.000001" [(ngModel)]="line.quantity" [name]="'quantity-' + index" />
+            <app-input type="number" min="0.000001" step="0.000001" required [(ngModel)]="line.quantity" [name]="'quantity-' + index" />
           </label>
           <label>
             <span>Unit cost</span>
-            <app-input type="number" min="0.000001" step="0.000001" [(ngModel)]="line.unitCost" [name]="'unit-cost-' + index" />
+            <app-input type="number" min="0.000001" step="0.000001" required [(ngModel)]="line.unitCost" [name]="'unit-cost-' + index" />
           </label>
           <button class="remove-line" type="button" aria-label="Remove item" [disabled]="lines.length < 2" (click)="removeLine(index)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </div>
