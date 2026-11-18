@@ -1,24 +1,24 @@
 import { Routes } from '@angular/router';
+import { FIXED_ASSETS_ROUTES } from './fixed-assets/fixed-assets.routes';
+import { PURCHASE_ORDERS_ROUTES } from './purchase-orders/purchase-orders.routes';
+import { BANK_RECONCILIATION_ROUTES } from './bank-reconciliation/bank-reconciliation.routes';
+import { PARTIES_ROUTES } from './parties/parties.routes';
+import { PARTY_ADDRESSES_ROUTES } from './party-addresses/party-addresses.routes';
+import { SALES_QUOTES_ROUTES } from './sales-quotes/sales-quotes.routes';
+import { SALES_CREDIT_NOTES_ROUTES } from './sales-credit-notes/sales-credit-notes.routes';
+import { SALES_INVOICES_ROUTES } from './sales-invoices/sales-invoices.routes';
+import { PURCHASE_BILLS_ROUTES } from './purchase-bills/purchase-bills.routes';
+import { PAYMENTS_ROUTES } from './payments/payments.routes';
+
 export const BUSINESS_OPERATIONS_ROUTES: Routes = [
-  { path: 'fixed-assets', loadComponent: () => import('./fixed-assets/fixed-assets.page').then(module => module.FixedAssetsPageComponent), data: { page: 'fixed-assets' } },
-  { path: 'purchase-orders/create', loadComponent: () => import('./purchase-orders/purchase-orders.page').then(module => module.PurchaseOrdersPageComponent), data: { page: 'purchase-orders', view: 'create' } },
-  { path: 'purchase-orders', loadComponent: () => import('./purchase-orders/purchase-orders.page').then(module => module.PurchaseOrdersPageComponent), data: { page: 'purchase-orders' } },
-  { path: 'banking/reconciliation', loadComponent: () => import('./bank-reconciliation/bank-reconciliation.page').then(module => module.BankReconciliationPageComponent), data: { page: 'bank-reconciliation' } },
-  { path: 'parties/create', loadComponent: () => import('./parties/parties.page').then(module => module.PartiesPageComponent), data: { page: 'parties', view: 'create' } },
-  { path: 'parties/:recordId/edit', loadComponent: () => import('./parties/parties.page').then(module => module.PartiesPageComponent), data: { page: 'parties', view: 'edit' } },
-  { path: 'parties', loadComponent: () => import('./parties/parties.page').then(module => module.PartiesPageComponent), data: { page: 'parties' } },
-  { path: 'parties/:partyId/addresses/create', loadComponent: () => import('./party-addresses/party-addresses.page').then(module => module.PartyAddressesPageComponent), data: { page: 'party-addresses', view: 'create' } },
-  { path: 'parties/:partyId/addresses/:recordId/edit', loadComponent: () => import('./party-addresses/party-addresses.page').then(module => module.PartyAddressesPageComponent), data: { page: 'party-addresses', view: 'edit' } },
-  { path: 'parties/:partyId/addresses', loadComponent: () => import('./party-addresses/party-addresses.page').then(module => module.PartyAddressesPageComponent), data: { page: 'party-addresses' } },
-  { path: 'sales-quotes', loadComponent: () => import('./sales-quotes/sales-quotes.page').then(module => module.SalesQuotesPageComponent), data: { page: 'sales-quotes' } },
-  { path: 'sales-credit-notes', loadComponent: () => import('./sales-credit-notes/sales-credit-notes.page').then(module => module.SalesCreditNotesPageComponent), data: { page: 'sales-credit-notes' } },
-  { path: 'sales-invoices/create', loadComponent: () => import('./sales-invoices/sales-invoices.page').then(module => module.SalesInvoicesPageComponent), data: { page: 'sales-invoices', view: 'create' } },
-  { path: 'sales-invoices/:recordId/edit', loadComponent: () => import('./sales-invoices/sales-invoices.page').then(module => module.SalesInvoicesPageComponent), data: { page: 'sales-invoices', view: 'edit' } },
-  { path: 'sales-invoices', loadComponent: () => import('./sales-invoices/sales-invoices.page').then(module => module.SalesInvoicesPageComponent), data: { page: 'sales-invoices' } },
-  { path: 'purchase-bills/create', loadComponent: () => import('./purchase-bills/purchase-bills.page').then(module => module.PurchaseBillsPageComponent), data: { page: 'purchase-bills', view: 'create' } },
-  { path: 'purchase-bills/:recordId/edit', loadComponent: () => import('./purchase-bills/purchase-bills.page').then(module => module.PurchaseBillsPageComponent), data: { page: 'purchase-bills', view: 'edit' } },
-  { path: 'purchase-bills', loadComponent: () => import('./purchase-bills/purchase-bills.page').then(module => module.PurchaseBillsPageComponent), data: { page: 'purchase-bills' } },
-  { path: 'payments/create', loadComponent: () => import('./payments/payments.page').then(module => module.PaymentsPageComponent), data: { page: 'payments', view: 'create' } },
-  { path: 'payments/:recordId/edit', loadComponent: () => import('./payments/payments.page').then(module => module.PaymentsPageComponent), data: { page: 'payments', view: 'edit' } },
-  { path: 'payments', loadComponent: () => import('./payments/payments.page').then(module => module.PaymentsPageComponent), data: { page: 'payments' } },
+  ...FIXED_ASSETS_ROUTES,
+  ...PURCHASE_ORDERS_ROUTES,
+  ...BANK_RECONCILIATION_ROUTES,
+  ...PARTIES_ROUTES,
+  ...PARTY_ADDRESSES_ROUTES,
+  ...SALES_QUOTES_ROUTES,
+  ...SALES_CREDIT_NOTES_ROUTES,
+  ...SALES_INVOICES_ROUTES,
+  ...PURCHASE_BILLS_ROUTES,
+  ...PAYMENTS_ROUTES,
 ];

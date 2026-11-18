@@ -1,19 +1,16 @@
 import { Routes } from '@angular/router';
+import { TAX_JURISDICTIONS_ROUTES } from './tax-jurisdictions/tax-jurisdictions.routes';
+import { TAX_CODES_ROUTES } from './tax-codes/tax-codes.routes';
+import { TAX_REGISTRATIONS_ROUTES } from './tax-registrations/tax-registrations.routes';
+import { COMPANY_ROUTES } from './company/company.routes';
+import { AUDIT_HISTORY_ROUTES } from './audit-history/audit-history.routes';
+import { USERS_ROUTES } from './users/users.routes';
+
 export const SETTINGS_ROUTES: Routes = [
-  { path: 'settings/tax-jurisdictions/create', redirectTo: '/settings/tax-jurisdictions', pathMatch: 'full' },
-  { path: 'settings/tax-jurisdictions/:recordId/edit', redirectTo: '/settings/tax-jurisdictions' },
-  { path: 'settings/tax-jurisdictions', loadComponent: () => import('./tax-jurisdictions/tax-jurisdictions.page').then(module => module.TaxJurisdictionsPageComponent), data: { page: 'tax-jurisdictions' } },
-  { path: 'settings/tax-codes/create', loadComponent: () => import('./tax-codes/tax-codes.page').then(module => module.TaxCodesPageComponent), data: { page: 'tax-codes', view: 'create' } },
-  { path: 'settings/tax-codes/:recordId/edit', loadComponent: () => import('./tax-codes/tax-codes.page').then(module => module.TaxCodesPageComponent), data: { page: 'tax-codes', view: 'edit' } },
-  { path: 'settings/tax-codes', loadComponent: () => import('./tax-codes/tax-codes.page').then(module => module.TaxCodesPageComponent), data: { page: 'tax-codes' } },
-  { path: 'settings/tax-registrations/create', loadComponent: () => import('./tax-registrations/tax-registrations.page').then(module => module.TaxRegistrationsPageComponent), data: { page: 'tax-registrations', view: 'create' } },
-  { path: 'settings/tax-registrations/:recordId/edit', loadComponent: () => import('./tax-registrations/tax-registrations.page').then(module => module.TaxRegistrationsPageComponent), data: { page: 'tax-registrations', view: 'edit' } },
-  { path: 'settings/tax-registrations', loadComponent: () => import('./tax-registrations/tax-registrations.page').then(module => module.TaxRegistrationsPageComponent), data: { page: 'tax-registrations' } },
-  { path: 'settings/company/create', loadComponent: () => import('./company/company-settings.page').then(module => module.CompanySettingsPageComponent), data: { page: 'company', view: 'create' } },
-  { path: 'settings/company/edit', loadComponent: () => import('./company/company-settings.page').then(module => module.CompanySettingsPageComponent), data: { page: 'company', view: 'edit' } },
-  { path: 'settings/company', loadComponent: () => import('./company/company-settings.page').then(module => module.CompanySettingsPageComponent), data: { page: 'company' } },
-  { path: 'settings/audit-history', loadComponent: () => import('./audit-history/audit-history.page').then(module => module.AuditHistoryPageComponent), data: { page: 'audit-history' } },
-  { path: 'users/create', loadComponent: () => import('./users/users.page').then(module => module.UsersPageComponent), data: { page: 'users', view: 'create' } },
-  { path: 'users/:recordId/edit', loadComponent: () => import('./users/users.page').then(module => module.UsersPageComponent), data: { page: 'users', view: 'edit' } },
-  { path: 'users', loadComponent: () => import('./users/users.page').then(module => module.UsersPageComponent), data: { page: 'users' } },
+  ...TAX_JURISDICTIONS_ROUTES,
+  ...TAX_CODES_ROUTES,
+  ...TAX_REGISTRATIONS_ROUTES,
+  ...COMPANY_ROUTES,
+  ...AUDIT_HISTORY_ROUTES,
+  ...USERS_ROUTES,
 ];

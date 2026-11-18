@@ -1,29 +1,18 @@
 import { Routes } from '@angular/router';
+import { ACCOUNTS_ROUTES } from './accounts/accounts.routes';
+import { ACCOUNT_GROUPS_ROUTES } from './account-groups/account-groups.routes';
+import { FISCAL_YEARS_ROUTES } from './fiscal-years/fiscal-years.routes';
+import { PERIODS_ROUTES } from './periods/periods.routes';
+import { JOURNALS_ROUTES } from './journals/journals.routes';
+import { JOURNAL_ENTRIES_ROUTES } from './journal-entries/journal-entries.routes';
+import { REPORTS_ROUTES } from '../reports/reports.routes';
+
 export const GENERAL_LEDGER_ROUTES: Routes = [
-  { path: 'general-ledger/accounts/create', loadComponent: () => import('./accounts/accounts.page').then(module => module.AccountsPageComponent), data: { page: 'accounts', view: 'create' } },
-  { path: 'general-ledger/accounts/:recordId/edit', loadComponent: () => import('./accounts/accounts.page').then(module => module.AccountsPageComponent), data: { page: 'accounts', view: 'edit' } },
-  { path: 'general-ledger/accounts', loadComponent: () => import('./accounts/accounts.page').then(module => module.AccountsPageComponent), data: { page: 'accounts' } },
-  { path: 'general-ledger/account-groups/create', loadComponent: () => import('./account-groups/account-groups.page').then(module => module.AccountGroupsPageComponent), data: { page: 'account-groups', view: 'create' } },
-  { path: 'general-ledger/account-groups/:recordId/edit', loadComponent: () => import('./account-groups/account-groups.page').then(module => module.AccountGroupsPageComponent), data: { page: 'account-groups', view: 'edit' } },
-  { path: 'general-ledger/account-groups', loadComponent: () => import('./account-groups/account-groups.page').then(module => module.AccountGroupsPageComponent), data: { page: 'account-groups' } },
-  { path: 'general-ledger/fiscal-years/create', loadComponent: () => import('./fiscal-years/fiscal-years.page').then(module => module.FiscalYearsPageComponent), data: { page: 'fiscal-years', view: 'create' } },
-  { path: 'general-ledger/fiscal-years/:recordId/edit', loadComponent: () => import('./fiscal-years/fiscal-years.page').then(module => module.FiscalYearsPageComponent), data: { page: 'fiscal-years', view: 'edit' } },
-  { path: 'general-ledger/fiscal-years', loadComponent: () => import('./fiscal-years/fiscal-years.page').then(module => module.FiscalYearsPageComponent), data: { page: 'fiscal-years' } },
-  { path: 'general-ledger/periods/create', loadComponent: () => import('./periods/periods.page').then(module => module.PeriodsPageComponent), data: { page: 'periods', view: 'create' } },
-  { path: 'general-ledger/periods/:recordId/edit', loadComponent: () => import('./periods/periods.page').then(module => module.PeriodsPageComponent), data: { page: 'periods', view: 'edit' } },
-  { path: 'general-ledger/periods', loadComponent: () => import('./periods/periods.page').then(module => module.PeriodsPageComponent), data: { page: 'periods' } },
-  { path: 'general-ledger/journals/create', loadComponent: () => import('./journals/journals.page').then(module => module.JournalsPageComponent), data: { page: 'journals', view: 'create' } },
-  { path: 'general-ledger/journals/:recordId/edit', loadComponent: () => import('./journals/journals.page').then(module => module.JournalsPageComponent), data: { page: 'journals', view: 'edit' } },
-  { path: 'general-ledger/journals', loadComponent: () => import('./journals/journals.page').then(module => module.JournalsPageComponent), data: { page: 'journals' } },
-  { path: 'general-ledger/journal-entries/create', loadComponent: () => import('./journal-entries/journal-entries.page').then(module => module.JournalEntriesPageComponent), data: { page: 'journal-entries', view: 'create' } },
-  { path: 'general-ledger/journal-entries/:recordId/edit', loadComponent: () => import('./journal-entries/journal-entries.page').then(module => module.JournalEntriesPageComponent), data: { page: 'journal-entries', view: 'edit' } },
-  { path: 'general-ledger/journal-entries', loadComponent: () => import('./journal-entries/journal-entries.page').then(module => module.JournalEntriesPageComponent), data: { page: 'journal-entries' } },
-  { path: 'reports/trial-balance', loadComponent: () => import('../reports/statements/report-pages.component').then(module => module.TrialBalancePageComponent), data: { page: 'trial-balance' } },
-  { path: 'reports/income-statement', loadComponent: () => import('../reports/statements/report-pages.component').then(module => module.IncomeStatementPageComponent), data: { page: 'income-statement' } },
-  { path: 'reports/balance-sheet', loadComponent: () => import('../reports/statements/report-pages.component').then(module => module.BalanceSheetPageComponent), data: { page: 'balance-sheet' } },
-  { path: 'reports/budget-vs-actual', loadComponent: () => import('../reports/budget/budget.page').then(module => module.BudgetPageComponent), data: { page: 'budget-vs-actual' } },
-  { path: 'reports/cash-flow', loadComponent: () => import('../reports/cash-flow/cash-flow.page').then(module => module.CashFlowPageComponent), data: { page: 'cash-flow' } },
-  { path: 'reports/receivables-aging', loadComponent: () => import('../reports/aging/aging-report.page').then(module => module.AgingReportPageComponent), data: { page: 'receivables-aging', agingKind: 'receivables' } },
-  { path: 'reports/payables-aging', loadComponent: () => import('../reports/aging/aging-report.page').then(module => module.AgingReportPageComponent), data: { page: 'payables-aging', agingKind: 'payables' } },
-  { path: 'reports/consolidation', loadComponent: () => import('../reports/consolidation/consolidation.page').then(module => module.ConsolidationPageComponent), data: { page: 'consolidation' } },
+  ...ACCOUNTS_ROUTES,
+  ...ACCOUNT_GROUPS_ROUTES,
+  ...FISCAL_YEARS_ROUTES,
+  ...PERIODS_ROUTES,
+  ...JOURNALS_ROUTES,
+  ...JOURNAL_ENTRIES_ROUTES,
+  ...REPORTS_ROUTES,
 ];
