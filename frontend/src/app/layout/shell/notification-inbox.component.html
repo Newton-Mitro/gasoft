@@ -1,0 +1,57 @@
+<div class="notification-area">
+  <button
+    class="notification-toggle"
+    type="button"
+    (click)="toggle()"
+    [attr.aria-expanded]="open"
+    aria-haspopup="dialog"
+    aria-label="Notifications"
+  >
+    <i class="fa-regular fa-bell" aria-hidden="true"></i>
+    @if (inbox.unreadCount() > 0) {
+      <span class="notification-count">{{ inbox.unreadCount() > 99 ? '99+' : inbox.unreadCount() }}</span>
+    }
+  </button>
+  @if (open) {
+    <section class="notification-panel" role="dialog" aria-label="Notifications">
+      <header class="notification-panel-heading">
+        <div>
+          <strong>Notifications</strong>
+          <span>{{ inbox.unreadCount() }} unread</span>
+        </div>
+        <button type="button" class="notification-close" (click)="open = false" aria-label="Close notifications">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </header>
+      @if (inbox.error()) {
+        <p class="notification-error" role="alert">{{ inbox.error() }}</p>
+      }
+      @if (inbox.loading()) {
+        <p class="notification-empty" role="status">Loading notifications…</p>
+      } @else if (inbox.notifications().length === 0) {
+        <p class="notification-empty">You’re all caught up.</p>
+      } @else {
+        <div class="notification-list">
+          @for (item of inbox.notifications(); track item.id) {
+            <article class="notification-item" [class.unread]="!item.readAt">
+              <div class="notification-item-copy">
+                <strong>{{ item.title }}</strong>
+                <p>{{ item.message }}</p>
+                <time [attr.datetime]="item.createdAt">{{ item.createdAt | date: 'medium' }}</time>
+              </div>
+              <div class="notification-item-actions">
+                @if (!item.readAt) {
+                  <button type="button" (click)="inbox.markRead(item.id)" aria-label="Mark as read">Mark read</button>
+                }
+                <button type="button" (click)="inbox.dismiss(item.id)" aria-label="Dismiss notification">Dismiss</button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+      @if (inbox.hasMore() && !inbox.loading()) {
+        <button type="button" class="notification-load-more" (click)="inbox.loadMore()">Load older notifications</button>
+      }
+    </section>
+  }
+</div>

@@ -128,6 +128,38 @@ public sealed class TenantRegistrationService(
             await dbContext.SaveChangesAsync(cancellationToken);
             await CompanySetupSeeder.SeedLedgerDefaultsAsync(
                 dbContext, tenant.Id, company, cancellationToken);
+            dbContext.AuditLogs.AddRange(
+                new AuditLog
+                {
+                    TenantId = tenant.Id,
+                    ActorUserId = user.Id,
+                    Action = "Created",
+                    EntityType = "Workspace",
+                    EntityId = tenant.Id.ToString(),
+                    DetailsJson = System.Text.Json.JsonSerializer.Serialize(new { tenant.Name, tenant.Slug }),
+                    CreatedAt = DateTimeOffset.UtcNow
+                },
+                new AuditLog
+                {
+                    TenantId = tenant.Id,
+                    ActorUserId = user.Id,
+                    Action = "Created",
+                    EntityType = "Company",
+                    EntityId = company.Id.ToString(),
+                    DetailsJson = System.Text.Json.JsonSerializer.Serialize(new { company.Code, company.LegalName }),
+                    CreatedAt = DateTimeOffset.UtcNow
+                },
+                new AuditLog
+                {
+                    TenantId = tenant.Id,
+                    ActorUserId = user.Id,
+                    Action = "Created",
+                    EntityType = "TenantUser",
+                    EntityId = $"{tenant.Id}:{user.Id}",
+                    DetailsJson = "{\"role\":\"Owner\",\"isActive\":true}",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+            await dbContext.SaveChangesAsync(cancellationToken);
 
             var accessToken = tokenService.CreateToken(user.Id, user.Email!, tenant.Id, "Owner");
             await transaction.CommitAsync(cancellationToken);

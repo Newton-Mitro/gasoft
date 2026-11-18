@@ -8,6 +8,7 @@ import { ThemeService } from '../../shared/theme/theme.service';
 import { AuthenticatedImageComponent } from '../../shared/components/authenticated-image/authenticated-image.component';
 import { NotificationService } from '../../shared/services/notification.service';
 import { SearchableSelectDirective } from '../../shared/directives/searchable-select.directive';
+import { NotificationInboxComponent } from './notification-inbox.component';
 
 interface CompanyOption {
   id: number;
@@ -30,7 +31,7 @@ interface NavSection {
 
 @Component({
   selector: 'app-shell',
-  imports: [FormsModule, RouterLink, RouterLinkActive, RouterOutlet, AuthenticatedImageComponent, SearchableSelectDirective],
+  imports: [FormsModule, RouterLink, RouterLinkActive, RouterOutlet, AuthenticatedImageComponent, SearchableSelectDirective, NotificationInboxComponent],
   styleUrl: './shell.css',
   templateUrl: './shell.html',
 })
@@ -92,10 +93,10 @@ export class Shell {
         { label: 'Tax codes & rates', path: '/settings/tax-codes', icon: 'fa-percent' },
         { label: 'Tax registrations', path: '/settings/tax-registrations', icon: 'fa-file-circle-check' },
         { label: 'Team members', path: '/users', icon: 'fa-users' },
+        { label: 'Audit history', path: '/settings/audit-history', icon: 'fa-clock-rotate-left' },
       ],
     },
   ];
-
   constructor(
     readonly auth: AuthService,
     readonly theme: ThemeService,
@@ -151,4 +152,5 @@ export class Shell {
     this.auth.logout();
     void this.router.navigate(['/login']);
   }
+
 }

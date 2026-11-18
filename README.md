@@ -50,6 +50,10 @@ dotnet ef database update \
 
 If you are starting with a fresh database, this creates the schema and seeds ISO 3166-1 country tax jurisdictions. Existing databases are updated without deleting their data.
 
+### Notifications and audit history
+
+The notification inbox stores important workflow events (such as postings and period/year status changes) and account-security events. Inbox items are personal to each user and can be marked read or dismissed. Tenant Owners and Admins can review tenant-scoped create, update, delete, posting, status-change, and authentication records in **Administration → Audit history**. Changes to sensitive credential and bank-account fields are excluded from audit details.
+
 ### Accounting period controls
 
 New organizations are created with starter account groups, accounts, and journals. Fiscal years and accounting periods are not created automatically; add them before entering transactions.

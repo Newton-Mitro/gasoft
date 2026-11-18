@@ -1,5 +1,6 @@
 using System.Net.Mail;
 using Gasoft.Application.Abstractions;
+using Gasoft.Domain.Entities;
 using Gasoft.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,16 @@ public sealed class AuthService(
         if (user is null ||
             !(await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true)).Succeeded)
         {
+            if (user is not null)
+            {
+                var tenantIds = await dbContext.TenantUsers.IgnoreQueryFilters()
+                    .Where(membership => membership.UserId == user.Id && membership.IsActive)
+                    .Select(membership => membership.TenantId)
+                    .ToListAsync(cancellationToken);
+                foreach (var tenantId in tenantIds)
+                    await RecordAuthenticationEventAsync(
+                        tenantId, user.Id, "AuthenticationFailed", true, cancellationToken);
+            }
             return null;
         }
 
@@ -56,6 +67,7 @@ public sealed class AuthService(
         if (user is null ||
             !(await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true)).Succeeded)
         {
+            await RecordAuthenticationEventAsync(tenantId, user?.Id, "AuthenticationFailed", true, cancellationToken);
             return null;
         }
 
@@ -71,7 +83,11 @@ public sealed class AuthService(
                 tenant => tenant.Id,
                 (membership, tenant) => new { membership.Role, tenant.Slug })
             .SingleOrDefaultAsync(cancellationToken);
-        if (tenantMembership is null) return null;
+        if (tenantMembership is null)
+        {
+            await RecordAuthenticationEventAsync(tenantId, user.Id, "AuthenticationFailed", true, cancellationToken);
+            return null;
+        }
 
         var companyId = await dbContext.Companies
             .IgnoreQueryFilters()
@@ -79,7 +95,13 @@ public sealed class AuthService(
             .OrderBy(company => company.Id)
             .Select(company => (long?)company.Id)
             .FirstOrDefaultAsync(cancellationToken);
-        if (companyId is null) return null;
+        if (companyId is null)
+        {
+            await RecordAuthenticationEventAsync(tenantId, user.Id, "AuthenticationFailed", true, cancellationToken);
+            return null;
+        }
+
+        await RecordAuthenticationEventAsync(tenantId, user.Id, "AuthenticationSucceeded", false, cancellationToken);
 
         var accessToken = tokenService.CreateToken(
             user.Id,
@@ -151,7 +173,36 @@ public sealed class AuthService(
             user,
             token ?? string.Empty,
             newPassword ?? string.Empty);
-        if (result.Succeeded) return null;
+        if (result.Succeeded)
+        {
+            var memberships = await dbContext.TenantUsers.IgnoreQueryFilters()
+                .Where(membership => membership.UserId == user.Id && membership.IsActive)
+                .Select(membership => membership.TenantId)
+                .ToListAsync(cancellationToken);
+            foreach (var tenantId in memberships)
+            {
+                dbContext.AuditLogs.Add(new AuditLog
+                {
+                    TenantId = tenantId,
+                    ActorUserId = user.Id,
+                    Action = "PasswordReset",
+                    EntityType = "Authentication",
+                    DetailsJson = "{\"result\":\"succeeded\"}",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+                dbContext.Notifications.Add(new AppNotification
+                {
+                    TenantId = tenantId,
+                    UserId = user.Id,
+                    Title = "Password changed",
+                    Message = "Your account password was changed.",
+                    Category = "security",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+            }
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return null;
+        }
 
         return result.Errors
             .Select(error => error.Code == "InvalidToken"
@@ -159,5 +210,58 @@ public sealed class AuthService(
                 : ("newPassword", error.Description))
             .GroupBy(error => error.Item1)
             .ToDictionary(group => group.Key, group => group.Select(error => error.Item2).ToArray());
+    }
+
+    private async Task RecordAuthenticationEventAsync(
+        long tenantId,
+        long? userId,
+        string action,
+        bool notifyAdministrators,
+        CancellationToken cancellationToken)
+    {
+        var tenantExists = await dbContext.Tenants.IgnoreQueryFilters()
+            .AnyAsync(tenant => tenant.Id == tenantId, cancellationToken);
+        if (!tenantExists) return;
+        if (action == "AuthenticationFailed" &&
+            (!userId.HasValue || !await dbContext.TenantUsers.IgnoreQueryFilters()
+                .AnyAsync(membership => membership.TenantId == tenantId &&
+                    membership.UserId == userId.Value && membership.IsActive, cancellationToken)))
+            return;
+
+        dbContext.AuditLogs.Add(new AuditLog
+        {
+            TenantId = tenantId,
+            ActorUserId = action == "AuthenticationSucceeded" ? userId : null,
+            Action = action,
+            EntityType = "Authentication",
+            DetailsJson = action == "AuthenticationSucceeded"
+                ? "{\"result\":\"succeeded\"}"
+                : "{\"result\":\"rejected\"}",
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+
+        if (notifyAdministrators)
+        {
+            var administratorIds = await dbContext.TenantUsers.IgnoreQueryFilters()
+                .Where(membership => membership.TenantId == tenantId &&
+                    membership.IsActive &&
+                    (membership.Role == "Owner" || membership.Role == "Admin"))
+                .Select(membership => membership.UserId)
+                .ToListAsync(cancellationToken);
+            foreach (var administratorId in administratorIds)
+            {
+                dbContext.Notifications.Add(new AppNotification
+                {
+                    TenantId = tenantId,
+                    UserId = administratorId,
+                    Title = "Sign-in attempt rejected",
+                    Message = "A sign-in attempt for this workspace was rejected.",
+                    Category = "security",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+            }
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

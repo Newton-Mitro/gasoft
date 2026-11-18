@@ -94,6 +94,12 @@ type InputType =
       height: 42px;
     }
 
+    :host-context(.audit-filters) .app-input-control:not([type='checkbox']):not([type='radio']) {
+      width: 100%;
+      min-width: 0;
+      height: 40px;
+    }
+
     :host-context(.document-line) .app-input-control:not([type='checkbox']):not([type='radio']) {
       width: 100%;
       min-width: 0;

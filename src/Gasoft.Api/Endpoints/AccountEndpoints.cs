@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Gasoft.Application.Abstractions;
 using Gasoft.Application.Authentication;
+using Gasoft.Domain.Entities;
+using Gasoft.Infrastructure.Persistence;
 
 namespace Gasoft.Api.Endpoints;
 
@@ -27,13 +29,28 @@ public static class AccountEndpoints
             UpdateProfileRequest request,
             ClaimsPrincipal principal,
             IAccountService service,
+            AppDbContext db,
+            ICurrentTenant currentTenant,
             CancellationToken cancellationToken) =>
         {
             if (!TryGetUserId(principal, out var userId)) return Results.Unauthorized();
             try
             {
                 var profile = await service.UpdateProfileAsync(userId, request.DisplayName, cancellationToken);
-                return profile is null ? Results.Unauthorized() : Results.Ok(profile);
+                if (profile is null || currentTenant.TenantId is not long tenantId)
+                    return Results.Unauthorized();
+                db.AuditLogs.Add(new AuditLog
+                {
+                    TenantId = tenantId,
+                    ActorUserId = userId,
+                    Action = "ProfileUpdated",
+                    EntityType = "UserProfile",
+                    EntityId = userId.ToString(),
+                    DetailsJson = "{\"fields\":[\"displayName\"]}",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+                await db.SaveChangesAsync(cancellationToken);
+                return Results.Ok(profile);
             }
             catch (AccountValidationException exception) { return ValidationProblem(exception); }
         })
@@ -65,6 +82,8 @@ public static class AccountEndpoints
             IFormFile image,
             ClaimsPrincipal principal,
             IAccountService service,
+            AppDbContext db,
+            ICurrentTenant currentTenant,
             IWebHostEnvironment environment,
             CancellationToken cancellationToken) =>
         {
@@ -85,6 +104,22 @@ public static class AccountEndpoints
                     ImageUpload.Delete(environment, savedImage.Url);
                     return Results.Unauthorized();
                 }
+                if (currentTenant.TenantId is not long tenantId)
+                {
+                    ImageUpload.Delete(environment, savedImage.Url);
+                    return Results.Unauthorized();
+                }
+                db.AuditLogs.Add(new AuditLog
+                {
+                    TenantId = tenantId,
+                    ActorUserId = userId,
+                    Action = "ProfileUpdated",
+                    EntityType = "UserProfile",
+                    EntityId = userId.ToString(),
+                    DetailsJson = "{\"fields\":[\"profileImageUrl\"]}",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+                await db.SaveChangesAsync(cancellationToken);
                 ImageUpload.Delete(environment, currentProfile.ProfileImageUrl);
                 return Results.Ok(profile);
             }
@@ -100,7 +135,10 @@ public static class AccountEndpoints
         account.MapPost("/password", async (
             ChangePasswordRequest request,
             ClaimsPrincipal principal,
-            IAccountService service) =>
+            IAccountService service,
+            AppDbContext db,
+            ICurrentTenant currentTenant,
+            CancellationToken cancellationToken) =>
         {
             if (string.IsNullOrEmpty(request.CurrentPassword) || string.IsNullOrEmpty(request.NewPassword))
                 return Results.ValidationProblem(new Dictionary<string, string[]>
@@ -110,7 +148,29 @@ public static class AccountEndpoints
             if (!TryGetUserId(principal, out var userId)) return Results.Unauthorized();
 
             var errors = await service.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
-            return errors is null ? Results.NoContent() : Results.ValidationProblem(errors);
+            if (errors is not null) return Results.ValidationProblem(errors);
+            if (currentTenant.TenantId is not long tenantId) return Results.Unauthorized();
+
+            db.AuditLogs.Add(new AuditLog
+            {
+                TenantId = tenantId,
+                ActorUserId = userId,
+                Action = "PasswordChanged",
+                EntityType = "Authentication",
+                DetailsJson = "{\"result\":\"succeeded\"}",
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+            db.Notifications.Add(new AppNotification
+            {
+                TenantId = tenantId,
+                UserId = userId,
+                Title = "Password changed",
+                Message = "Your account password was changed.",
+                Category = "security",
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+            await db.SaveChangesAsync(cancellationToken);
+            return Results.NoContent();
         })
         .RequireRateLimiting("public-auth")
         .WithName("ChangeAccountPassword");

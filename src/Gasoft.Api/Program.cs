@@ -94,6 +94,7 @@ app.MapConsolidationEndpoints();
 app.MapPurchaseOrderEndpoints();
 app.MapBudgetEndpoints();
 app.MapFixedAssetEndpoints();
+app.MapNotificationAndAuditEndpoints();
 
 app.Run();
 

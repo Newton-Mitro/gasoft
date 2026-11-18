@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { OptionDataCacheService } from '../shared/data/option-data-cache.service';
@@ -50,6 +50,8 @@ export class AuthService {
   readonly workspaceSlug = signal(localStorage.getItem(this.workspaceSlugKey) ?? '');
   readonly profile = signal<AccountProfile | null>(null);
   readonly companyLogoUrl = signal<string | null>(null);
+  readonly role = signal(this.readRole(this.accessToken()));
+  readonly isAdministrator = computed(() => this.role() === 'Owner' || this.role() === 'Admin');
 
   constructor(
     private readonly http: HttpClient,
@@ -132,6 +134,7 @@ export class AuthService {
     this.workspaceSlug.set('');
     this.profile.set(null);
     this.companyLogoUrl.set(null);
+    this.role.set(null);
   }
 
   private save(token: string, tenantId: number, companyId: number, workspaceSlug: string): void {
@@ -141,6 +144,7 @@ export class AuthService {
     localStorage.setItem(this.companyKey, String(companyId));
     localStorage.setItem(this.workspaceSlugKey, workspaceSlug);
     this.accessToken.set(token);
+    this.role.set(this.readRole(token));
     this.tenantId.set(tenantId);
     this.companyId.set(companyId);
     this.workspaceSlug.set(workspaceSlug);
@@ -149,5 +153,20 @@ export class AuthService {
   private readId(key: string): number | null {
     const value = Number(localStorage.getItem(key));
     return Number.isSafeInteger(value) && value > 0 ? value : null;
+  }
+
+  private readRole(token: string | null): string | null {
+    if (!token) return null;
+    try {
+      const payload = token.split('.')[1];
+      if (!payload) return null;
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+      const decoded = JSON.parse(atob(padded)) as Record<string, unknown>;
+      const role = decoded['role'] ?? decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      return typeof role === 'string' ? role : Array.isArray(role) && typeof role[0] === 'string' ? role[0] : null;
+    } catch {
+      return null;
+    }
   }
 }

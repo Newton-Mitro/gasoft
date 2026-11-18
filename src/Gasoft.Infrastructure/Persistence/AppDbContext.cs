@@ -4,6 +4,8 @@ using Gasoft.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Text.Json;
 
 namespace Gasoft.Infrastructure.Persistence;
 
@@ -13,6 +15,8 @@ public sealed class AppDbContext(
     : IdentityDbContext<ApplicationUser, IdentityRole<long>, long>(options)
 {
     public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<AppNotification> Notifications => Set<AppNotification>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<TenantUser> TenantUsers => Set<TenantUser>();
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<CompanyUser> CompanyUsers => Set<CompanyUser>();
@@ -71,10 +75,107 @@ public sealed class AppDbContext(
     public DbSet<ConsolidationJournalLine> ConsolidationJournalLines => Set<ConsolidationJournalLine>();
     public DbSet<ConsolidationTranslationRate> ConsolidationTranslationRates => Set<ConsolidationTranslationRate>();
     public long? CurrentTenantId => currentTenant.TenantId;
+    public long? CurrentUserId => currentTenant.UserId;
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        var pendingAudits = CaptureAuditEntries();
+        if (pendingAudits.Count == 0)
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        using var transaction = Database.CurrentTransaction is null
+            ? Database.BeginTransaction()
+            : null;
+        var entriesNormalized = false;
+        try
+        {
+            var result = base.SaveChanges(acceptAllChangesOnSuccess);
+            if (!acceptAllChangesOnSuccess)
+            {
+                NormalizeEntriesForAuditSave(pendingAudits);
+                entriesNormalized = true;
+            }
+            PersistAuditEntries(pendingAudits);
+            base.SaveChanges();
+            if (!acceptAllChangesOnSuccess)
+                RestoreEntriesAfterAuditSave(pendingAudits);
+            transaction?.Commit();
+            return result;
+        }
+        catch
+        {
+            transaction?.Rollback();
+            if (entriesNormalized)
+                RestoreEntriesAfterAuditSave(pendingAudits);
+            throw;
+        }
+    }
+
+    public override async Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        var pendingAudits = CaptureAuditEntries();
+        if (pendingAudits.Count == 0)
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        await using var transaction = Database.CurrentTransaction is null
+            ? await Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        var entriesNormalized = false;
+        try
+        {
+            var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            if (!acceptAllChangesOnSuccess)
+            {
+                NormalizeEntriesForAuditSave(pendingAudits);
+                entriesNormalized = true;
+            }
+            await PersistAuditEntriesAsync(pendingAudits, cancellationToken);
+            await base.SaveChangesAsync(cancellationToken);
+            if (!acceptAllChangesOnSuccess)
+                RestoreEntriesAfterAuditSave(pendingAudits);
+            if (transaction is not null)
+                await transaction.CommitAsync(cancellationToken);
+            return result;
+        }
+        catch
+        {
+            if (transaction is not null)
+                await transaction.RollbackAsync(cancellationToken);
+            if (entriesNormalized)
+                RestoreEntriesAfterAuditSave(pendingAudits);
+            throw;
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<AppNotification>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(1000).IsRequired();
+            entity.Property(x => x.Category).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.Link).HasMaxLength(500);
+            entity.HasIndex(x => new { x.TenantId, x.UserId, x.DismissedAt, x.CreatedAt });
+            entity.HasQueryFilter(x =>
+                CurrentTenantId.HasValue &&
+                x.TenantId == CurrentTenantId.Value &&
+                CurrentUserId.HasValue &&
+                x.UserId == CurrentUserId.Value);
+        });
+
+        builder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Action).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.EntityId).HasMaxLength(200);
+            entity.Property(x => x.DetailsJson).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+            entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
+        });
 
         builder.Entity<Tenant>(entity =>
         {
@@ -1358,4 +1459,258 @@ public sealed class AppDbContext(
             entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
         });
     }
+
+    private List<PendingAuditEntry> CaptureAuditEntries()
+    {
+        ChangeTracker.DetectChanges();
+        return ChangeTracker.Entries()
+            .Where(entry =>
+                entry.Entity is not AuditLog &&
+                entry.Entity is not AppNotification &&
+                entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted &&
+                entry.Metadata.FindProperty(nameof(TenantOwnedEntity.TenantId)) is not null)
+            .Select(entry =>
+            {
+                var tenantValue = entry.Property(nameof(TenantOwnedEntity.TenantId)).CurrentValue;
+                var tenantId = tenantValue is long value ? value : (long?)null;
+                if (!tenantId.HasValue || tenantId != CurrentTenantId)
+                    return null;
+
+                var entityType = entry.Metadata.ClrType.Name;
+                var statusChange = entityType switch
+                {
+                    nameof(FiscalYearStatusChange) => ("Fiscal year", "FiscalYearId"),
+                    nameof(AccountingPeriodStatusChange) => ("Accounting period", "AccountingPeriodId"),
+                    _ => ((string Name, string IdProperty)?)null
+                };
+                var action = statusChange.HasValue
+                    ? "StatusChanged"
+                    : entry.State switch
+                    {
+                        EntityState.Added => "Created",
+                        EntityState.Modified => "Updated",
+                        _ => "Deleted"
+                    };
+                var changes = entry.Properties
+                    .Where(property => !IsSensitiveProperty(property.Metadata.Name))
+                    .Where(property => entry.State != EntityState.Modified || property.IsModified)
+                    .ToDictionary(
+                        property => property.Metadata.Name,
+                        property => entry.State == EntityState.Added
+                            ? new { oldValue = (object?)null, newValue = AuditValue(property.CurrentValue) }
+                            : entry.State == EntityState.Deleted
+                                ? new { oldValue = AuditValue(property.OriginalValue), newValue = (object?)null }
+                                : new { oldValue = AuditValue(property.OriginalValue), newValue = AuditValue(property.CurrentValue) });
+                var key = entry.Metadata.FindPrimaryKey();
+                var entityId = statusChange.HasValue
+                    ? entry.Property(statusChange.Value.IdProperty).CurrentValue?.ToString()
+                    : key is null
+                        ? null
+                        : string.Join(
+                            ":",
+                            key.Properties.Select(property => entry.Property(property.Name).CurrentValue?.ToString() ?? string.Empty));
+                var entityName = statusChange?.Name ?? entityType;
+                var postsRecord = entry.Properties.Any(property =>
+                    property.Metadata.Name.Equals("Status", StringComparison.OrdinalIgnoreCase) &&
+                    property.CurrentValue is string status &&
+                    status.Equals("Posted", StringComparison.OrdinalIgnoreCase) &&
+                    (entry.State == EntityState.Added ||
+                     !string.Equals(property.OriginalValue as string, status, StringComparison.OrdinalIgnoreCase)));
+                var statusValue = statusChange.HasValue
+                    ? entry.Property("ToStatus").CurrentValue?.ToString()
+                    : null;
+                return new PendingAuditEntry(
+                    entry.Entity,
+                    entry.State,
+                    entry.Properties.Where(property => property.IsModified)
+                        .Select(property => property.Metadata.Name)
+                        .ToArray(),
+                    entry.Properties.ToDictionary(
+                        property => property.Metadata.Name,
+                        property => property.OriginalValue),
+                    tenantId.Value,
+                    currentTenant.UserId,
+                    postsRecord ? "Posted" : action,
+                    entityName,
+                    entityId,
+                    JsonSerializer.Serialize(changes),
+                    postsRecord ? $"{entityName} posted" : statusChange.HasValue ? $"{entityName} status changed" : null,
+                    postsRecord
+                        ? $"A {entityName} record was posted."
+                        : statusChange.HasValue && !string.IsNullOrWhiteSpace(statusValue)
+                            ? $"A {entityName} was {statusValue}."
+                            : null);
+            })
+            .Where(entry => entry is not null)
+            .Select(entry => entry!)
+            .ToList();
+    }
+
+    private void PersistAuditEntries(IReadOnlyCollection<PendingAuditEntry> pendingAudits)
+    {
+        if (pendingAudits.Count == 0) return;
+        AddAuditEntries(pendingAudits);
+        AddWorkflowNotifications(pendingAudits);
+    }
+
+    private async Task PersistAuditEntriesAsync(
+        IReadOnlyCollection<PendingAuditEntry> pendingAudits,
+        CancellationToken cancellationToken)
+    {
+        if (pendingAudits.Count == 0) return;
+        AddAuditEntries(pendingAudits);
+        await AddWorkflowNotificationsAsync(pendingAudits, cancellationToken);
+    }
+
+    private void AddAuditEntries(IEnumerable<PendingAuditEntry> pendingAudits)
+    {
+        foreach (var pending in pendingAudits)
+        {
+            var entry = Entry(pending.Entity);
+            var primaryKey = entry.Metadata.FindPrimaryKey();
+            var entityId = primaryKey is null
+                ? pending.EntityId
+                : string.Join(":", primaryKey.Properties.Select(property =>
+                    entry.Property(property.Name).CurrentValue?.ToString() ?? string.Empty));
+            AuditLogs.Add(new AuditLog
+            {
+                TenantId = pending.TenantId,
+                ActorUserId = pending.ActorUserId,
+                Action = pending.Action,
+                EntityType = pending.EntityType,
+                EntityId = entityId,
+                DetailsJson = pending.DetailsJson,
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+        }
+    }
+
+    private void NormalizeEntriesForAuditSave(IEnumerable<PendingAuditEntry> pendingAudits)
+    {
+        foreach (var pending in pendingAudits)
+        {
+            var entry = Entry(pending.Entity);
+            entry.State = pending.State == EntityState.Deleted
+                ? EntityState.Detached
+                : EntityState.Unchanged;
+        }
+    }
+
+    private void RestoreEntriesAfterAuditSave(IEnumerable<PendingAuditEntry> pendingAudits)
+    {
+        foreach (var pending in pendingAudits)
+        {
+            var entry = Entry(pending.Entity);
+            if (pending.State == EntityState.Deleted)
+            {
+                entry.State = EntityState.Deleted;
+                RestoreOriginalValues(entry, pending.OriginalValues);
+            }
+            else if (pending.State == EntityState.Added)
+            {
+                entry.State = EntityState.Added;
+            }
+            else
+            {
+                entry.State = EntityState.Unchanged;
+                RestoreOriginalValues(entry, pending.OriginalValues);
+                foreach (var property in pending.ModifiedProperties)
+                    entry.Property(property).IsModified = true;
+            }
+        }
+    }
+
+    private static void RestoreOriginalValues(
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry,
+        IReadOnlyDictionary<string, object?> originalValues)
+    {
+        foreach (var (name, value) in originalValues)
+            entry.Property(name).OriginalValue = value;
+    }
+
+    private void AddWorkflowNotifications(IEnumerable<PendingAuditEntry> pendingAudits)
+    {
+        var workflowEvents = pendingAudits
+            .Where(entry => entry.NotificationTitle is not null && entry.ActorUserId.HasValue)
+            .ToArray();
+        foreach (var group in workflowEvents.GroupBy(entry => entry.TenantId))
+        {
+            var recipientIds = TenantUsers.IgnoreQueryFilters()
+                .Where(user => user.TenantId == group.Key &&
+                    user.IsActive &&
+                    (user.Role == "Owner" || user.Role == "Admin") &&
+                    user.UserId != currentTenant.UserId)
+                .Select(user => user.UserId)
+                .ToArray();
+            AddNotifications(group, recipientIds);
+        }
+    }
+
+    private async Task AddWorkflowNotificationsAsync(
+        IEnumerable<PendingAuditEntry> pendingAudits,
+        CancellationToken cancellationToken)
+    {
+        var workflowEvents = pendingAudits
+            .Where(entry => entry.NotificationTitle is not null && entry.ActorUserId.HasValue)
+            .ToArray();
+        foreach (var group in workflowEvents.GroupBy(entry => entry.TenantId))
+        {
+            var recipientIds = await TenantUsers.IgnoreQueryFilters()
+                .Where(user => user.TenantId == group.Key &&
+                    user.IsActive &&
+                    (user.Role == "Owner" || user.Role == "Admin") &&
+                    user.UserId != currentTenant.UserId)
+                .Select(user => user.UserId)
+                .ToListAsync(cancellationToken);
+            AddNotifications(group, recipientIds);
+        }
+    }
+
+    private void AddNotifications(IEnumerable<PendingAuditEntry> workflowEvents, IEnumerable<long> recipientIds)
+    {
+        foreach (var workflowEvent in workflowEvents)
+        foreach (var recipientId in recipientIds)
+        {
+            Notifications.Add(new AppNotification
+            {
+                TenantId = workflowEvent.TenantId,
+                UserId = recipientId,
+                Title = workflowEvent.NotificationTitle!,
+                Message = workflowEvent.NotificationMessage!,
+                Category = "workflow",
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+        }
+    }
+
+    private static bool IsSensitiveProperty(string name) =>
+        name.Contains("password", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("token", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("secret", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("credential", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("accountnumber", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("iban", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("routingnumber", StringComparison.OrdinalIgnoreCase) ||
+        name.Contains("cardnumber", StringComparison.OrdinalIgnoreCase);
+
+    private static object? AuditValue(object? value)
+    {
+        if (value is null) return null;
+        if (value is byte[] || value is Stream) return "[binary]";
+        return value is string text && text.Length > 512 ? text[..512] : value;
+    }
+
+    private sealed record PendingAuditEntry(
+        object Entity,
+        EntityState State,
+        string[] ModifiedProperties,
+        IReadOnlyDictionary<string, object?> OriginalValues,
+        long TenantId,
+        long? ActorUserId,
+        string Action,
+        string EntityType,
+        string? EntityId,
+        string DetailsJson,
+        string? NotificationTitle,
+        string? NotificationMessage);
 }

@@ -1,0 +1,90 @@
+<section class="audit-page">
+  <header class="audit-heading">
+    <div>
+      <p class="eyebrow">ADMINISTRATION</p>
+      <h1>Audit history</h1>
+      <p class="page-description">Review changes, posting activity, and security events in this workspace.</p>
+    </div>
+    <span class="audit-total">{{ totalCount }} records</span>
+  </header>
+
+  <form class="audit-filters" (ngSubmit)="applyFilters()">
+    <label>
+      <span>Action</span>
+      <select appSearchableSelect name="action" [(ngModel)]="action">
+        @for (option of actions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      <span>Record type</span>
+      <app-input type="search" name="entity" placeholder="Search record type" [(ngModel)]="entity" />
+    </label>
+    <label>
+      <span>From</span>
+      <app-input type="date" name="from" [(ngModel)]="from" />
+    </label>
+    <label>
+      <span>To</span>
+      <app-input type="date" name="to" [(ngModel)]="to" />
+    </label>
+    <button class="button primary" type="submit" [disabled]="loading">
+      <i class="fa-solid fa-filter" aria-hidden="true"></i> Apply filters
+    </button>
+  </form>
+
+  @if (error) {
+    <p class="audit-error" role="alert">{{ error }}</p>
+  }
+
+  <div class="audit-table-wrap">
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th scope="col">Date and time</th>
+          <th scope="col">Action</th>
+          <th scope="col">Record</th>
+          <th scope="col">Actor</th>
+          <th scope="col">Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading) {
+          <tr><td class="audit-empty" colspan="5">Loading audit history…</td></tr>
+        } @else if (records.length === 0) {
+          <tr><td class="audit-empty" colspan="5">No audit records match these filters.</td></tr>
+        } @else {
+          @for (record of records; track record.id) {
+            <tr>
+              <td class="audit-date">{{ record.createdAt | date: 'medium' }}</td>
+              <td><span class="audit-action" [class.posted]="record.action === 'Posted'">{{ record.action }}</span></td>
+              <td>
+                <strong>{{ record.entityType }}</strong>
+                @if (record.entityId) {
+                  <small>#{{ record.entityId }}</small>
+                }
+              </td>
+              <td>{{ record.actorName }}</td>
+              <td>
+                <details class="audit-details">
+                  <summary>View changes</summary>
+                  <pre>{{ formatDetails(record.detailsJson) }}</pre>
+                </details>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-pagination
+    [page]="page"
+    [pageSize]="pageSize"
+    [totalCount]="totalCount"
+    [totalPages]="totalPages"
+    [loading]="loading"
+    (pageChange)="onPageChange($event)"
+  />
+</section>

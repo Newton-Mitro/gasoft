@@ -72,16 +72,18 @@
         <div class="nav-section">
           <span class="nav-heading">{{ section.label }}</span>
           @for (link of section.links; track link.path) {
-            <a
-              class="nav-link"
-              [routerLink]="link.path"
-              routerLinkActive="active"
-              [routerLinkActiveOptions]="{ exact: false }"
-              ariaCurrentWhenActive="page"
-              (click)="mobileNavOpen = false"
-            >
-              <i class="nav-icon fa-solid {{ link.icon }}" aria-hidden="true"></i>{{ link.label }}
-            </a>
+            @if (link.path !== '/settings/audit-history' || auth.isAdministrator()) {
+              <a
+                class="nav-link"
+                [routerLink]="link.path"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: false }"
+                ariaCurrentWhenActive="page"
+                (click)="mobileNavOpen = false"
+              >
+                <i class="nav-icon fa-solid {{ link.icon }}" aria-hidden="true"></i>{{ link.label }}
+              </a>
+            }
           }
         </div>
       }
@@ -149,8 +151,9 @@
         <strong>{{ currentCompany?.legalName ?? 'Company workspace' }}</strong></span
       >
       <div class="topbar-right">
-        <span class="status-pill"><span></span> All systems ready</span
-        ><span class="avatar-small">
+        <span class="status-pill"><span></span> All systems ready</span>
+        <app-notification-inbox />
+        <span class="avatar-small">
           @if (auth.profile()?.profileImageUrl; as profileImageUrl) {
             <app-authenticated-image
               [src]="profileImageUrl"

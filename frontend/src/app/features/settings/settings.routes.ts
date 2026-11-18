@@ -12,6 +12,7 @@ export const SETTINGS_ROUTES: Routes = [
   { path: 'settings/company/create', loadComponent: () => import('./company/company-settings.page').then(module => module.CompanySettingsPageComponent), data: { page: 'company', view: 'create' } },
   { path: 'settings/company/edit', loadComponent: () => import('./company/company-settings.page').then(module => module.CompanySettingsPageComponent), data: { page: 'company', view: 'edit' } },
   { path: 'settings/company', loadComponent: () => import('./company/company-settings.page').then(module => module.CompanySettingsPageComponent), data: { page: 'company' } },
+  { path: 'settings/audit-history', loadComponent: () => import('./audit-history/audit-history.page').then(module => module.AuditHistoryPageComponent), data: { page: 'audit-history' } },
   { path: 'users/create', loadComponent: () => import('./users/users.page').then(module => module.UsersPageComponent), data: { page: 'users', view: 'create' } },
   { path: 'users/:recordId/edit', loadComponent: () => import('./users/users.page').then(module => module.UsersPageComponent), data: { page: 'users', view: 'edit' } },
   { path: 'users', loadComponent: () => import('./users/users.page').then(module => module.UsersPageComponent), data: { page: 'users' } },
