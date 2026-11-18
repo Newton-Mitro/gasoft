@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, timeout } from 'rxjs';
 import { ApiService } from '../../../../core/api.service';
@@ -12,6 +13,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { FieldValidationDirective } from '../../../../shared/directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../../../shared/directives/searchable-select.directive';
 import { InputComponent } from '../../../../shared/components/input/input.component';
+import { FormValidationErrors, FormValidationService } from '../../../../shared/services/form-validation.service';
 
 interface CustomerOption {
   id: number;
@@ -29,6 +31,7 @@ interface CustomerOption {
 })
 export class SalesQuotesPageComponent implements OnInit {
   readonly notifications = inject(NotificationService);
+  private readonly formValidation = inject(FormValidationService);
   quotes: SalesQuote[] = [];
   totalCount = 0;
   page = 1;
@@ -95,6 +98,7 @@ export class SalesQuotesPageComponent implements OnInit {
 
   beginCreate(): void {
     if (this.supportDataLoading || this.supportDataError) return;
+    this.formValidation.clear();
     this.quoteId = null;
     this.customerId = null;
     this.quoteNumber = '';
@@ -110,6 +114,7 @@ export class SalesQuotesPageComponent implements OnInit {
 
   beginEdit(quote: SalesQuote): void {
     if (quote.status !== 'Draft' || this.supportDataLoading || this.supportDataError) return;
+    this.formValidation.clear();
     this.quoteId = quote.id;
     this.customerId = quote.customerId;
     this.quoteNumber = quote.quoteNumber;
@@ -129,22 +134,22 @@ export class SalesQuotesPageComponent implements OnInit {
   }
 
   addLine(): void {
+    this.formValidation.clear();
     this.lines = [...this.lines, emptyLine()];
   }
 
   removeLine(index: number): void {
-    if (this.lines.length > 1) this.lines = this.lines.filter((_, lineIndex) => lineIndex !== index);
+    if (this.lines.length > 1) {
+      this.formValidation.clear();
+      this.lines = this.lines.filter((_, lineIndex) => lineIndex !== index);
+    }
   }
 
   save(): void {
-    if (!this.customerId || !this.quoteNumber.trim() || !this.quoteDate || !this.validUntil ||
-      !this.currencyCode || !Number.isFinite(Number(this.exchangeRate)) || Number(this.exchangeRate) <= 0 ||
-      !this.lines.length || this.lines.some(line =>
-        !line.accountId || !line.description.trim() || !Number.isFinite(Number(line.quantity)) ||
-        Number(line.quantity) <= 0 || !Number.isFinite(Number(line.unitPrice)) || Number(line.unitPrice) < 0)) {
-      this.error = 'Complete the quote details and add valid lines.';
-      return;
-    }
+    const validationErrors = validateQuote(this);
+    this.formValidation.setErrors(validationErrors);
+    if (Object.keys(validationErrors).length || this.customerId === null) return;
+
     const payload: SalesQuotePayload = {
       customerId: this.customerId,
       quoteNumber: this.quoteNumber.trim(),
@@ -167,14 +172,23 @@ export class SalesQuotesPageComponent implements OnInit {
     this.error = '';
     request.subscribe({
       next: () => {
+        this.formValidation.clear();
         this.editing = false;
         this.saving = false;
         this.notifications.success(`Quote ${this.quoteNumber} ${this.quoteId === null ? 'created' : 'updated'} successfully.`);
         this.refresh();
       },
       error: error => {
-        this.error = '';
-        this.notifications.error(errorMessage(error, 'Could not save this sales quote.'));
+        const validationErrors = serverValidationErrors(error);
+        if (Object.keys(validationErrors).length) {
+          this.formValidation.setErrors(validationErrors);
+        } else {
+          this.formValidation.clear();
+          this.notifications.error(
+            errorMessage(error, 'Could not save this sales quote.') ||
+              'Please review the quote details and try again.',
+          );
+        }
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -224,6 +238,7 @@ export class SalesQuotesPageComponent implements OnInit {
   }
 
   beginConvert(quote: SalesQuote): void {
+    this.formValidation.clear();
     this.convertingQuote = quote;
     this.invoiceNumber = `INV-${quote.quoteNumber}`;
     this.invoiceDate = new Date().toISOString().slice(0, 10);
@@ -234,10 +249,15 @@ export class SalesQuotesPageComponent implements OnInit {
   convert(): void {
     if (!this.convertingQuote) return;
     const quote = this.convertingQuote;
+    const validationErrors = validateConversion(this);
+    this.formValidation.setErrors(validationErrors);
+    if (Object.keys(validationErrors).length) return;
+
     this.saving = true;
     this.error = '';
     this.service.convert(quote.id, this.invoiceNumber.trim(), this.invoiceDate, this.dueDate).subscribe({
       next: () => {
+        this.formValidation.clear();
         this.convertingQuote = null;
         this.saving = false;
         this.notifications.success(`Quote ${quote.quoteNumber} converted to invoice ${this.invoiceNumber}.`);
@@ -245,8 +265,16 @@ export class SalesQuotesPageComponent implements OnInit {
         this.refresh();
       },
       error: error => {
-        this.error = '';
-        this.notifications.error(errorMessage(error, 'Could not convert this quote to an invoice.'));
+        const validationErrors = serverValidationErrors(error);
+        if (Object.keys(validationErrors).length) {
+          this.formValidation.setErrors(validationErrors);
+        } else {
+          this.formValidation.clear();
+          this.notifications.error(
+            errorMessage(error, 'Could not convert this quote to an invoice.') ||
+              'Please review the invoice details and try again.',
+          );
+        }
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -254,6 +282,7 @@ export class SalesQuotesPageComponent implements OnInit {
   }
 
   cancelForm(): void {
+    this.formValidation.clear();
     this.editing = false;
     this.convertingQuote = null;
     this.error = '';
@@ -289,6 +318,86 @@ export class SalesQuotesPageComponent implements OnInit {
       },
     });
   }
+}
+
+function validateQuote(page: SalesQuotesPageComponent): FormValidationErrors {
+  const errors: FormValidationErrors = {};
+  const exchangeRate = Number(page.exchangeRate);
+  if (!Number.isSafeInteger(page.customerId) || !page.customerId || page.customerId < 1) {
+    errors['customer'] = ['Select a customer.'];
+  }
+  if (!page.quoteNumber.trim()) errors['quoteNumber'] = ['Enter a quote number.'];
+  else if (page.quoteNumber.trim().length > 40) {
+    errors['quoteNumber'] = ['Quote number must be 40 characters or fewer.'];
+  }
+  if (!isDateOnly(page.quoteDate)) errors['quoteDate'] = ['Enter a valid quote date.'];
+  if (!isDateOnly(page.validUntil)) {
+    errors['validUntil'] = ['Enter a valid expiration date.'];
+  } else if (isDateOnly(page.quoteDate) && page.validUntil < page.quoteDate) {
+    errors['validUntil'] = ['Expiration date must be on or after the quote date.'];
+  }
+  if (!page.currencyCode) errors['currency'] = ['Select a currency.'];
+  if (!Number.isFinite(exchangeRate) || exchangeRate <= 0) {
+    errors['exchangeRate'] = ['Exchange rate must be greater than zero.'];
+  }
+  if (!page.lines.length) errors['description-0'] = ['Add at least one quote line.'];
+  page.lines.forEach((line, index) => {
+    if (!Number.isSafeInteger(Number(line.accountId)) || Number(line.accountId) < 1) {
+      errors[`account-${index}`] = ['Select a revenue account.'];
+    }
+    if (!line.description.trim()) errors[`description-${index}`] = ['Enter a line description.'];
+    if (line.description.length > 500) {
+      errors[`description-${index}`] = ['Description must be 500 characters or fewer.'];
+    }
+    if (!Number.isFinite(Number(line.quantity)) || Number(line.quantity) <= 0) {
+      errors[`quantity-${index}`] = ['Quantity must be greater than zero.'];
+    }
+    if (!Number.isFinite(Number(line.unitPrice)) || Number(line.unitPrice) < 0) {
+      errors[`price-${index}`] = ['Unit price cannot be negative.'];
+    }
+  });
+  return errors;
+}
+
+function validateConversion(page: SalesQuotesPageComponent): FormValidationErrors {
+  const errors: FormValidationErrors = {};
+  if (!page.invoiceNumber.trim()) errors['invoiceNumber'] = ['Enter an invoice number.'];
+  else if (page.invoiceNumber.trim().length > 40) {
+    errors['invoiceNumber'] = ['Invoice number must be 40 characters or fewer.'];
+  }
+  if (!isDateOnly(page.invoiceDate)) errors['invoiceDate'] = ['Enter a valid invoice date.'];
+  if (!isDateOnly(page.dueDate)) {
+    errors['dueDate'] = ['Enter a valid due date.'];
+  } else if (isDateOnly(page.invoiceDate) && page.dueDate < page.invoiceDate) {
+    errors['dueDate'] = ['Due date must be on or after the invoice date.'];
+  }
+  return errors;
+}
+
+function serverValidationErrors(error: unknown): FormValidationErrors {
+  if (!(error instanceof HttpErrorResponse) ||
+    (error.status !== 400 && error.status !== 422) ||
+    !error.error || typeof error.error !== 'object' ||
+    !('errors' in error.error) || !error.error.errors || typeof error.error.errors !== 'object') {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(error.error.errors).flatMap(([field, messages]) => {
+      const fieldMessages = Array.isArray(messages)
+        ? messages.filter((message): message is string => typeof message === 'string' && !!message.trim())
+        : typeof messages === 'string' && messages.trim()
+          ? [messages]
+          : [];
+      return fieldMessages.length ? [[field, fieldMessages]] : [];
+    }),
+  );
+}
+
+function isDateOnly(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
 }
 
 function emptyLine(): DocumentLineForm {

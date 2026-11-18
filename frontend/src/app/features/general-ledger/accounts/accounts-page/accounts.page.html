@@ -160,7 +160,7 @@
                       <ng-container
                         *ngTemplateOutlet="
                           accountTree;
-                          context: { $implicit: group.trees, level: 0 }
+                          context: { $implicit: group.trees }
                         "
                       />
                     }
@@ -183,12 +183,14 @@
   }
 }
 
-<ng-template #accountTree let-nodes let-level="level">
+<ng-template #accountTree let-nodes>
   @for (node of nodes; track node.account.id) {
-    <div class="account-tree-item" [style.padding-left.px]="level * 24">
+    <div class="account-tree-item" [class.last-tree-child]="$last">
       <article
         class="account-tree-row"
         [attr.draggable]="reparentingAccountId === null"
+        [class.account-header-node]="!node.account.allowPosting"
+        [class.account-posting-node]="node.account.allowPosting"
         [class.account-dragging]="draggedAccountId === node.account.id"
         [class.account-drop-target]="dropTargetAccountId === node.account.id"
         [class.account-drop-available]="draggedAccountId !== null && canDropOnAccount(node.account)"
@@ -254,7 +256,7 @@
       @if (node.children.length && !isAccountCollapsed(node.account.id)) {
         <div class="account-tree-children">
           <ng-container
-            *ngTemplateOutlet="accountTree; context: { $implicit: node.children, level: level + 1 }"
+            *ngTemplateOutlet="accountTree; context: { $implicit: node.children }"
           />
         </div>
       }

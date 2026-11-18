@@ -66,7 +66,12 @@ export class FieldValidationDirective {
 
   private render(messages: string[]): void {
     const control = this.element.nativeElement;
-    const parent = control.parentElement;
+    const controlParent = control.parentElement;
+    const searchableSelectWrapper =
+      control.tagName === 'SELECT' && controlParent?.classList.contains('searchable-select')
+        ? controlParent
+        : null;
+    const parent = searchableSelectWrapper?.parentElement ?? controlParent;
     if (!parent) return;
     const validationTarget = control.querySelector('input') ?? control;
 
@@ -83,7 +88,8 @@ export class FieldValidationDirective {
       );
       this.renderer.setProperty(this.errorElement, 'textContent', messages.join(' '));
       if (!this.errorElement.parentElement) {
-        this.renderer.insertBefore(parent, this.errorElement, control.nextSibling);
+        const anchor = searchableSelectWrapper?.nextSibling ?? control.nextSibling;
+        this.renderer.insertBefore(parent, this.errorElement, anchor);
       }
       return;
     }

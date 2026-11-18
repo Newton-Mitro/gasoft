@@ -46,6 +46,7 @@
 .editable-line label {
   display: grid;
   min-width: 0;
+  grid-template-rows: auto 38px minmax(1.4em, auto);
   gap: 6px;
   color: var(--text);
   font-size: 11px;
@@ -93,6 +94,10 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface-muted);
+}
+
+.editable-line > label {
+  align-self: start;
 }
 
 .remove-line {

@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../core/api.service';
 import { InputComponent } from '../../../../shared/components/input/input.component';
@@ -52,7 +52,10 @@ export class AuditHistoryPageComponent implements OnInit {
   loading = false;
   error = '';
 
-  constructor(private readonly api: ApiService) {}
+  constructor(
+    private readonly api: ApiService,
+    private readonly changeDetector: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.load();
@@ -75,10 +78,12 @@ export class AuditHistoryPageComponent implements OnInit {
         this.totalCount = result.totalCount;
         this.totalPages = result.totalPages;
         this.loading = false;
+        this.changeDetector.markForCheck();
       },
       error: error => {
         this.error = errorMessage(error, 'Could not load audit history.');
         this.loading = false;
+        this.changeDetector.markForCheck();
       },
     });
   }

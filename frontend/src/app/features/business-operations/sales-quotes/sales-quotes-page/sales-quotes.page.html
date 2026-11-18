@@ -22,23 +22,23 @@
     </div>
     <div class="header-fields">
       <label><span>Customer</span>
-        <select appSearchableSelect name="customer" [(ngModel)]="customerId">
+        <select appSearchableSelect name="customer" required [(ngModel)]="customerId">
           <option [ngValue]="null" disabled>Select customer</option>
           @for (customer of customers; track customer.id) {
             <option [ngValue]="customer.id">{{ customer.partyNo }} · {{ customer.displayName }}</option>
           }
         </select>
       </label>
-      <label><span>Quote number</span><app-input name="quoteNumber" maxlength="40" [(ngModel)]="quoteNumber" /></label>
-      <label><span>Quote date</span><app-input name="quoteDate" type="date" [(ngModel)]="quoteDate" /></label>
-      <label><span>Valid until</span><app-input name="validUntil" type="date" [(ngModel)]="validUntil" /></label>
+      <label><span>Quote number</span><app-input name="quoteNumber" required maxlength="40" [(ngModel)]="quoteNumber" /></label>
+      <label><span>Quote date</span><app-input name="quoteDate" type="date" required [(ngModel)]="quoteDate" /></label>
+      <label><span>Valid until</span><app-input name="validUntil" type="date" required [(ngModel)]="validUntil" /></label>
       <label><span>Currency</span>
-        <select appSearchableSelect name="currency" [(ngModel)]="currencyCode">
+        <select appSearchableSelect name="currency" required [(ngModel)]="currencyCode">
           <option value="" disabled>Select currency</option>
           @for (currency of currencies; track currency.value) { <option [value]="currency.value">{{ currency.label }}</option> }
         </select>
       </label>
-      <label><span>Exchange rate</span><app-input name="exchangeRate" type="number" min="0.0000000001" step="0.0000000001" [(ngModel)]="exchangeRate" /></label>
+      <label><span>Exchange rate</span><app-input name="exchangeRate" type="number" required min="0.0000000001" step="0.0000000001" [(ngModel)]="exchangeRate" /></label>
     </div>
     <div class="lines-heading"><div><h3>Quote lines</h3><span>{{ lines.length }} {{ lines.length === 1 ? 'line' : 'lines' }}</span></div>
       <button class="button secondary" type="button" (click)="addLine()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add line</button>
@@ -47,20 +47,20 @@
       @for (line of lines; track $index; let index = $index) {
         <div class="editable-line">
           <label><span>Revenue account</span>
-            <select appSearchableSelect [(ngModel)]="line.accountId" [name]="'account-' + index">
+            <select appSearchableSelect required [(ngModel)]="line.accountId" [name]="'account-' + index">
               <option [ngValue]="null" disabled>Select account</option>
               @for (account of accounts; track account.value) { <option [ngValue]="account.value">{{ account.label }}</option> }
             </select>
           </label>
-          <label class="line-description"><span>Description</span><app-input [(ngModel)]="line.description" [name]="'description-' + index" maxlength="500" /></label>
+          <label class="line-description"><span>Description</span><app-input required [(ngModel)]="line.description" [name]="'description-' + index" maxlength="500" /></label>
           <label><span>Tax code</span>
             <select appSearchableSelect [(ngModel)]="line.taxCodeId" [name]="'tax-' + index">
               <option [ngValue]="null">No tax</option>
               @for (taxCode of taxCodes; track taxCode.value) { <option [ngValue]="taxCode.value">{{ taxCode.label }}</option> }
             </select>
           </label>
-          <label><span>Quantity</span><app-input type="number" min="0.000001" step="0.000001" [(ngModel)]="line.quantity" [name]="'quantity-' + index" /></label>
-          <label><span>Unit price</span><app-input type="number" min="0" step="0.000001" [(ngModel)]="line.unitPrice" [name]="'price-' + index" /></label>
+          <label><span>Quantity</span><app-input type="number" required min="0.000001" step="0.000001" [(ngModel)]="line.quantity" [name]="'quantity-' + index" /></label>
+          <label><span>Unit price</span><app-input type="number" required min="0" step="0.000001" [(ngModel)]="line.unitPrice" [name]="'price-' + index" /></label>
           <button class="remove-line" type="button" aria-label="Remove line" [disabled]="lines.length < 2" (click)="removeLine(index)"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </div>
       }
@@ -76,9 +76,9 @@
   <section class="convert-form panel">
     <div class="section-heading"><div><h2>Convert {{ convertingQuote.quoteNumber }} to invoice</h2><p>Line items and tax codes will be copied; tax is recalculated at the invoice date.</p></div></div>
     <div class="header-fields">
-      <label><span>Invoice number</span><app-input name="invoiceNumber" maxlength="40" [(ngModel)]="invoiceNumber" /></label>
-      <label><span>Invoice date</span><app-input name="invoiceDate" type="date" [(ngModel)]="invoiceDate" /></label>
-      <label><span>Due date</span><app-input name="dueDate" type="date" [(ngModel)]="dueDate" /></label>
+      <label><span>Invoice number</span><app-input name="invoiceNumber" required maxlength="40" [(ngModel)]="invoiceNumber" /></label>
+      <label><span>Invoice date</span><app-input name="invoiceDate" type="date" required [(ngModel)]="invoiceDate" /></label>
+      <label><span>Due date</span><app-input name="dueDate" type="date" required [(ngModel)]="dueDate" /></label>
     </div>
     <div class="form-actions">
       <button class="button primary" type="button" [disabled]="saving" (click)="convert()">{{ saving ? 'Converting…' : 'Create invoice' }}</button>
