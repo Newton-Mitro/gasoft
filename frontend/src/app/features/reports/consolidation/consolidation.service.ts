@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { ApiService } from '../../core/api.service';
+import { ApiService } from '../../../core/api.service';
 import {
   ConsolidationCompany,
   ConsolidationElimination,

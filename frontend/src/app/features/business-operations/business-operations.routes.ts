@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-export const BUSINESS_ROUTES: Routes = [
+export const BUSINESS_OPERATIONS_ROUTES: Routes = [
   { path: 'fixed-assets', loadComponent: () => import('./fixed-assets/fixed-assets.page').then(module => module.FixedAssetsPageComponent), data: { page: 'fixed-assets' } },
   { path: 'purchase-orders/create', loadComponent: () => import('./purchase-orders/purchase-orders.page').then(module => module.PurchaseOrdersPageComponent), data: { page: 'purchase-orders', view: 'create' } },
   { path: 'purchase-orders', loadComponent: () => import('./purchase-orders/purchase-orders.page').then(module => module.PurchaseOrdersPageComponent), data: { page: 'purchase-orders' } },

@@ -2,12 +2,12 @@ import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
-import { errorMessage } from '../../shared/utils/page-utils';
-import { AgingReport } from './report.model';
-import { FinancialReportService } from './report.service';
-import { NotificationService } from '../../shared/services/notification.service';
-import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
-import { InputComponent } from '../../shared/components/input/input.component';
+import { errorMessage } from '../../../shared/utils/page-utils';
+import { AgingReport } from '../data-access/report.model';
+import { FinancialReportService } from '../data-access/report.service';
+import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 type AgingReportKind = 'receivables' | 'payables';
 
@@ -22,7 +22,7 @@ interface AgingSegment {
   selector: 'app-aging-report-page',
   imports: [FormsModule, FieldValidationDirective, InputComponent],
   templateUrl: './aging-report.page.html',
-  styleUrls: ['../../shared/styles/feature-page.css', './aging-report.page.css'],
+  styleUrls: ['../../../shared/styles/feature-page.css', './aging-report.page.css'],
 })
 export class AgingReportPageComponent implements OnInit {
   readonly notifications = inject(NotificationService);

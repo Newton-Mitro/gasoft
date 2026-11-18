@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { errorMessage } from '../../shared/utils/page-utils';
+import { errorMessage } from '../../../shared/utils/page-utils';
 import {
   BudgetAccount,
   BudgetChoice,
@@ -11,10 +11,10 @@ import {
   BudgetVsActualReport,
 } from './budget.model';
 import { BudgetService } from './budget.service';
-import { NotificationService } from '../../shared/services/notification.service';
-import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
-import { SearchableSelectDirective } from '../../shared/directives/searchable-select.directive';
-import { InputComponent } from '../../shared/components/input/input.component';
+import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { SearchableSelectDirective } from '../../../shared/directives/searchable-select.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 interface EditableBudgetAccount extends BudgetAccount {
   amounts: Record<number, number>;
@@ -24,7 +24,7 @@ interface EditableBudgetAccount extends BudgetAccount {
   selector: 'app-budget-page',
   imports: [FormsModule, FieldValidationDirective, SearchableSelectDirective, InputComponent],
   templateUrl: './budget.page.html',
-  styleUrls: ['../../shared/styles/feature-page.css', './budget.page.css'],
+  styleUrls: ['../../../shared/styles/feature-page.css', './budget.page.css'],
 })
 export class BudgetPageComponent implements OnInit {
   readonly notifications = inject(NotificationService);

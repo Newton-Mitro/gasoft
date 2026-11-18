@@ -1,41 +1,41 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
-import { BusinessService } from '../business.service';
-import { SalesInvoicePostingPayload, TaxAccountMapping } from '../business.models';
+import { BusinessService } from '../data-access/business.service';
+import { PurchaseBillPostingPayload, TaxAccountMapping } from '../data-access/business.models';
 import { errorMessage } from '../../../shared/utils/page-utils';
-import { DocumentLineForm, Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
+import { Choice, DocumentLineForm, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';
 import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { OptionDataService } from '../../../shared/data/option-data.service';
-import { SalesInvoice, SalesInvoicePayload } from './sales-invoice.model';
-import { SalesInvoiceService } from './sales-invoice.service';
+import { PurchaseBill, PurchaseBillPayload } from './purchase-bill.model';
+import { PurchaseBillService } from './purchase-bill.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 
 const DOCUMENT_OPTIONS = ['parties', 'currencies', 'accounts', 'taxCodes'];
 const POSTING_OPTIONS = ['journals', 'periods', 'accounts'];
 
 @Component({
-  selector: 'app-sales-invoices-page',
+  selector: 'app-purchase-bills-page',
   imports: [RouterLink, RecordFormComponent, PaginationComponent],
-  templateUrl: './sales-invoices.page.html',
+  templateUrl: './purchase-bills.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
-export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
+export class PurchaseBillsPageComponent implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
-  readonly pageKey = 'sales-invoices';
-  readonly title = 'Sales invoices';
-  readonly description = 'Create customer invoices and track their accounting status.';
+  readonly pageKey = 'purchase-bills';
+  readonly title = 'Purchase bills';
+  readonly description = 'Record supplier bills and the expense or asset account for each item.';
   readonly fields: Field[] = [
-    { key: 'partyId', label: 'Customer', type: 'select', required: true, optionSource: 'parties' },
-    { key: 'invoiceNumber', label: 'Invoice number', required: true },
-    { key: 'invoiceDate', label: 'Invoice date', type: 'date', required: true },
+    { key: 'partyId', label: 'Supplier', type: 'select', required: true, optionSource: 'parties' },
+    { key: 'billNumber', label: 'Bill number', required: true },
+    { key: 'billDate', label: 'Bill date', type: 'date', required: true },
     { key: 'dueDate', label: 'Due date', type: 'date', required: true },
     { key: 'currencyCode', label: 'Currency code', type: 'select', required: true, optionSource: 'currencies' },
     { key: 'exchangeRate', label: 'Exchange rate', type: 'number', required: true },
   ];
-  readonly indexPath = '/sales-invoices';
-  rows: SalesInvoice[] = [];
+  readonly indexPath = '/purchase-bills';
+  rows: PurchaseBill[] = [];
   totalCount = 0;
   page = 1;
   pageSize = 25;
@@ -45,7 +45,7 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
   documentLines: DocumentLineForm[] = [];
   postingFields: Field[] = [];
   postingTaxCodeIds: number[] = [];
-  postingInvoiceId: number | null = null;
+  postingBillId: number | null = null;
   postingLoading = false;
   loading = false;
   saving = false;
@@ -57,7 +57,7 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly invoices: SalesInvoiceService,
+    private readonly bills: PurchaseBillService,
     private readonly business: BusinessService,
     private readonly optionData: OptionDataService,
     private readonly changeDetector: ChangeDetectorRef,
@@ -69,7 +69,7 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
       this.view = view === 'create' || view === 'edit' ? view : 'index';
       this.currentRecordId = toRecordId(params);
       this.error = '';
-      this.postingInvoiceId = null;
+      this.postingBillId = null;
       if (this.view === 'create') {
         this.form = { exchangeRate: 1 };
         this.documentLines = [newDocumentLine()];
@@ -103,8 +103,8 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
   submit(): void {
     const partyId = Number(this.form['partyId']);
     const exchangeRate = Number(this.form['exchangeRate']);
-    if (!isPositiveId(partyId) || !String(this.form['invoiceNumber'] ?? '').trim() ||
-      !String(this.form['invoiceDate'] ?? '') || !String(this.form['dueDate'] ?? '') ||
+    if (!isPositiveId(partyId) || !String(this.form['billNumber'] ?? '').trim() ||
+      !String(this.form['billDate'] ?? '') || !String(this.form['dueDate'] ?? '') ||
       !String(this.form['currencyCode'] ?? '').trim() || !Number.isFinite(exchangeRate) || exchangeRate <= 0 ||
       !this.documentLines.length || this.documentLines.some(line =>
         !isPositiveId(Number(line.accountId)) ||
@@ -112,14 +112,14 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
         !Number.isFinite(Number(line.quantity)) || Number(line.quantity) <= 0 ||
         !Number.isFinite(Number(line.unitPrice)) || Number(line.unitPrice) < 0 ||
         (line.taxCodeId !== null && line.taxCodeId !== undefined && !isPositiveId(Number(line.taxCodeId))))) {
-      this.error = 'Complete the invoice details and add valid invoice lines.';
+      this.error = 'Complete the bill details and add valid bill lines.';
       return;
     }
 
-    const payload: SalesInvoicePayload = {
+    const payload: PurchaseBillPayload = {
       partyId,
-      invoiceNumber: String(this.form['invoiceNumber']).trim(),
-      invoiceDate: String(this.form['invoiceDate']),
+      billNumber: String(this.form['billNumber']).trim(),
+      billDate: String(this.form['billDate']),
       dueDate: String(this.form['dueDate']),
       currencyCode: String(this.form['currencyCode']),
       exchangeRate,
@@ -135,12 +135,12 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
     let request;
     if (this.view === 'edit') {
       if (this.currentRecordId === null) {
-        this.error = 'A valid sales invoice ID is required to update this record.';
+        this.error = 'A valid purchase bill ID is required to update this record.';
         return;
       }
-      request = this.invoices.update(this.currentRecordId, payload);
+      request = this.bills.update(this.currentRecordId, payload);
     } else {
-      request = this.invoices.create(payload);
+      request = this.bills.create(payload);
     }
     this.saving = true;
     this.error = '';
@@ -152,7 +152,7 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.error = '';
-        this.notifications.error(errorMessage(error, 'Could not save this sales invoice.'));
+        this.notifications.error(errorMessage(error, 'Could not save this purchase bill.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -160,23 +160,28 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
   }
 
   closeForm(): void {
-    void this.router.navigateByUrl(this.indexPath);
+    if (this.view !== 'index') {
+      void this.router.navigateByUrl(this.indexPath);
+      return;
+    }
+    this.postingBillId = null;
+    this.error = '';
   }
 
-  openPostForm(invoice: SalesInvoice): void {
-    if (invoice.status !== 'Draft') return;
-    this.postingInvoiceId = invoice.id;
+  openPostForm(bill: PurchaseBill): void {
+    if (bill.status !== 'Draft') return;
+    this.postingBillId = bill.id;
     this.postingLoading = true;
     this.error = '';
-    this.invoices.getById(invoice.id).subscribe({
+    this.bills.getById(bill.id).subscribe({
       next: detail => {
         this.postingTaxCodeIds = [...new Set((detail.lines ?? [])
           .map(line => Number(line.taxCodeId))
-          .filter(id => isPositiveId(id)))];
+          .filter(isPositiveId))];
         this.postingFields = [
           { key: 'journalId', label: 'Journal', type: 'select', required: true, optionSource: 'journals' },
           { key: 'accountingPeriodId', label: 'Accounting period', type: 'select', required: true, optionSource: 'periods' },
-          { key: 'receivableAccountId', label: 'Receivable account', type: 'select', required: true, optionSource: 'accounts' },
+          { key: 'payableAccountId', label: 'Payable account', type: 'select', required: true, optionSource: 'accounts' },
           ...this.postingTaxCodeIds.map(id => ({
             key: `taxAccount_${id}`,
             label: `Tax account for code ${id}`,
@@ -192,8 +197,8 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.error = '';
-        this.notifications.error(errorMessage(error, 'Could not load sales invoice posting details.'));
-        this.postingInvoiceId = null;
+        this.notifications.error(errorMessage(error, 'Could not load purchase bill posting details.'));
+        this.postingBillId = null;
         this.postingLoading = false;
         this.changeDetector.markForCheck();
       },
@@ -201,34 +206,34 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
   }
 
   submitPost(): void {
-    if (this.postingInvoiceId === null) return;
-    const payload: SalesInvoicePostingPayload = {
+    if (this.postingBillId === null) return;
+    const payload: PurchaseBillPostingPayload = {
       journalId: Number(this.form['journalId']),
       accountingPeriodId: Number(this.form['accountingPeriodId']),
-      receivableAccountId: Number(this.form['receivableAccountId']),
+      payableAccountId: Number(this.form['payableAccountId']),
       taxAccounts: this.postingTaxCodeIds.map(taxCodeId => ({
         taxCodeId,
         accountId: Number(this.form[`taxAccount_${taxCodeId}`]),
       } satisfies TaxAccountMapping)),
     };
-    if (![payload.journalId, payload.accountingPeriodId, payload.receivableAccountId,
+    if (![payload.journalId, payload.accountingPeriodId, payload.payableAccountId,
       ...payload.taxAccounts.map(mapping => mapping.accountId)].every(isPositiveId)) {
-      this.error = 'Choose a journal, accounting period, receivable account, and all required tax accounts.';
+      this.error = 'Choose a journal, accounting period, payable account, and all required tax accounts.';
       return;
     }
-    const invoiceId = this.postingInvoiceId;
+    const billId = this.postingBillId;
     this.saving = true;
     this.error = '';
-    this.business.postSalesInvoice(invoiceId, payload).subscribe({
+    this.business.postPurchaseBill(billId, payload).subscribe({
       next: () => {
-        this.postingInvoiceId = null;
+        this.postingBillId = null;
         this.saving = false;
-        this.notifications.success('Sales invoice posted successfully.');
+        this.notifications.success('Purchase bill posted successfully.');
         this.loadRows();
       },
       error: error => {
         this.error = '';
-        this.notifications.error(errorMessage(error, 'Could not post this sales invoice.'));
+        this.notifications.error(errorMessage(error, 'Could not post this purchase bill.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
@@ -254,7 +259,7 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.invoices.getPage(this.page, this.pageSize).subscribe({
+    this.bills.getPage(this.page, this.pageSize).subscribe({
       next: result => {
         this.rows = result.items;
         this.page = result.page;
@@ -266,7 +271,7 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.error = '';
-        this.notifications.error(errorMessage(error, 'Could not load sales invoices.'));
+        this.notifications.error(errorMessage(error, 'Could not load purchase bills.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -281,33 +286,33 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
 
   private loadRecord(): void {
     if (this.currentRecordId === null) {
-      this.error = 'A valid sales invoice ID is required to edit this record.';
+      this.error = 'A valid purchase bill ID is required to edit this record.';
       return;
     }
     this.loading = true;
-    this.invoices.getById(this.currentRecordId).subscribe({
-      next: invoice => {
-        if (invoice.status !== 'Draft') {
-          this.error = 'Only draft sales invoices can be edited.';
+    this.bills.getById(this.currentRecordId).subscribe({
+      next: bill => {
+        if (bill.status !== 'Draft') {
+          this.error = 'Only draft purchase bills can be edited.';
           this.loading = false;
           this.changeDetector.markForCheck();
           return;
         }
-        if (!invoice.lines?.length) {
-          this.error = 'This draft has no editable invoice lines.';
+        if (!bill.lines?.length) {
+          this.error = 'This draft has no editable bill lines.';
           this.loading = false;
           this.changeDetector.markForCheck();
           return;
         }
         this.form = {
-          partyId: invoice.partyId,
-          invoiceNumber: invoice.invoiceNumber,
-          invoiceDate: invoice.invoiceDate,
-          dueDate: invoice.dueDate,
-          currencyCode: invoice.currencyCode,
-          exchangeRate: invoice.exchangeRate,
+          partyId: bill.partyId,
+          billNumber: bill.billNumber,
+          billDate: bill.billDate,
+          dueDate: bill.dueDate,
+          currencyCode: bill.currencyCode,
+          exchangeRate: bill.exchangeRate,
         };
-        this.documentLines = invoice.lines.map(line => ({
+        this.documentLines = bill.lines.map(line => ({
           accountId: line.accountId,
           taxCodeId: line.taxCodeId,
           description: line.description,
@@ -319,7 +324,7 @@ export class SalesInvoicesPageComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.error = '';
-        this.notifications.error(errorMessage(error, 'Could not load this sales invoice.'));
+        this.notifications.error(errorMessage(error, 'Could not load this purchase bill.'));
         this.loading = false;
         this.changeDetector.markForCheck();
       },

@@ -6,8 +6,8 @@ import { RecordFormComponent } from '../../../shared/components/record-form/reco
 import { PageChange, PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { OptionDataService } from '../../../shared/data/option-data.service';
-import { InventoryIssuePayload, InventoryReceiptPayload } from '../inventory.models';
-import { InventoryService } from '../inventory.service';
+import { InventoryIssuePayload, InventoryReceiptPayload } from '../data-access/inventory.models';
+import { InventoryService } from '../data-access/inventory.service';
 import { InventoryMovement } from './inventory-movement.model';
 import { InventoryMovementService } from './inventory-movement.service';
 import { NotificationService } from '../../../shared/services/notification.service';

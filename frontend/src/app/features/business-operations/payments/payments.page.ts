@@ -1,8 +1,8 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { combineLatest, Subscription } from 'rxjs';
-import { BusinessService } from '../business.service';
-import { PaymentAllocationPayload, PaymentPostingPayload } from '../business.models';
+import { BusinessService } from '../data-access/business.service';
+import { PaymentAllocationPayload, PaymentPostingPayload } from '../data-access/business.models';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.models';
 import { RecordFormComponent } from '../../../shared/components/record-form/record-form.component';

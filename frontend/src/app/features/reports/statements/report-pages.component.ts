@@ -1,8 +1,8 @@
 import { ChangeDetectorRef, Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
-import { errorMessage } from '../../shared/utils/page-utils';
-import { FinancialReportService } from './report.service';
+import { errorMessage } from '../../../shared/utils/page-utils';
+import { FinancialReportService } from '../data-access/report.service';
 import {
   BalanceSheetReport,
   FinancialReport,
@@ -10,10 +10,10 @@ import {
   ReportAccount,
   ReportType,
   TrialBalanceReport,
-} from './report.model';
-import { NotificationService } from '../../shared/services/notification.service';
-import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
-import { InputComponent } from '../../shared/components/input/input.component';
+} from '../data-access/report.model';
+import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 interface SummaryCard {
   label: string;
@@ -41,7 +41,7 @@ interface ReportVisualMetric {
   imports: [FormsModule, FieldValidationDirective, InputComponent],
   templateUrl: './report-pages.component.html',
   styleUrls: [
-    '../../shared/styles/feature-page.css',
+    '../../../shared/styles/feature-page.css',
     './report-pages.component.css',
   ],
 })

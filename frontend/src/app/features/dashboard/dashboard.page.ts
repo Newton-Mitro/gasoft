@@ -7,8 +7,8 @@ import { ApiService } from '../../core/api.service';
 import { errorMessage } from '../../shared/utils/page-utils';
 import { DataRow } from '../../shared/models/shared.models';
 import { NotificationService } from '../../shared/services/notification.service';
-import { FinancialReportService } from '../reports/report.service';
-import { IncomeStatementReport } from '../reports/report.model';
+import { FinancialReportService } from '../reports/data-access/report.service';
+import { IncomeStatementReport } from '../reports/data-access/report.model';
 
 interface DashboardSummary {
   currencyCode: string;

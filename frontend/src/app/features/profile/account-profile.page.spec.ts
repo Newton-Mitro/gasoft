@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { AuthService } from '../../../core/auth.service';
-import { NotificationService } from '../../../shared/services/notification.service';
+import { AuthService } from '../../core/auth.service';
+import { NotificationService } from '../../shared/services/notification.service';
 import { AccountProfilePage } from './account-profile.page';
 
 describe('AccountProfilePage', () => {

@@ -1,5 +1,5 @@
 import { of } from 'rxjs';
-import { ApiService } from '../../core/api.service';
+import { ApiService } from '../../../core/api.service';
 import { FinancialReportService } from './report.service';
 
 describe('FinancialReportService', () => {

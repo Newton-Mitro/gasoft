@@ -1,7 +1,7 @@
 import { HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { ApiService } from '../../core/api.service';
+import { ApiService } from '../../../core/api.service';
 import {
   BalanceSheetReport,
   AgingReport,

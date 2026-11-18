@@ -1,13 +1,27 @@
-import { BUSINESS_ROUTES } from './business/business.routes';
+import { BUSINESS_OPERATIONS_ROUTES } from './business-operations/business-operations.routes';
+import { AUTH_ROUTES } from './auth/auth.routes';
+import { DASHBOARD_ROUTES } from './dashboard/dashboard.routes';
 import { GENERAL_LEDGER_ROUTES } from './general-ledger/general-ledger.routes';
 import { INVENTORY_ROUTES } from './inventory/inventory.routes';
+import { PROFILE_ROUTES } from './profile/profile.routes';
 import { SETTINGS_ROUTES } from './settings/settings.routes';
 
 describe('feature routes', () => {
+  it('keeps auth, dashboard, and profile routes in their feature definitions', () => {
+    expect(AUTH_ROUTES.map(route => route.path)).toEqual([
+      'login',
+      'register',
+      'forgot-password',
+      'reset-password',
+    ]);
+    expect(DASHBOARD_ROUTES.map(route => route.path)).toEqual(['dashboard']);
+    expect(PROFILE_ROUTES.map(route => route.path)).toEqual(['account/profile']);
+  });
+
   it('keeps the existing report and resource routes reachable', () => {
     const routes = [
       ...GENERAL_LEDGER_ROUTES,
-      ...BUSINESS_ROUTES,
+      ...BUSINESS_OPERATIONS_ROUTES,
       ...INVENTORY_ROUTES,
       ...SETTINGS_ROUTES,
     ];
@@ -29,7 +43,7 @@ describe('feature routes', () => {
   it('routes resource pages through distinct feature components', () => {
     const routes = [
       ...GENERAL_LEDGER_ROUTES,
-      ...BUSINESS_ROUTES,
+      ...BUSINESS_OPERATIONS_ROUTES,
       ...INVENTORY_ROUTES,
       ...SETTINGS_ROUTES,
     ];

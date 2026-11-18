@@ -1,11 +1,11 @@
 import { Component, OnDestroy, OnInit, signal, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AccountProfile, AuthService } from '../../../core/auth.service';
-import { errorMessage } from '../../../shared/utils/page-utils';
-import { AuthenticatedImageComponent } from '../../../shared/components/authenticated-image/authenticated-image.component';
-import { NotificationService } from '../../../shared/services/notification.service';
-import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
-import { InputComponent } from '../../../shared/components/input/input.component';
+import { AccountProfile, AuthService } from '../../core/auth.service';
+import { errorMessage } from '../../shared/utils/page-utils';
+import { AuthenticatedImageComponent } from '../../shared/components/authenticated-image/authenticated-image.component';
+import { NotificationService } from '../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
+import { InputComponent } from '../../shared/components/input/input.component';
 
 @Component({
   selector: 'app-account-profile-page',

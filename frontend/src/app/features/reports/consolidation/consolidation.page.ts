@@ -1,8 +1,8 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { ApiService } from '../../core/api.service';
-import { errorMessage } from '../../shared/utils/page-utils';
+import { ApiService } from '../../../core/api.service';
+import { errorMessage } from '../../../shared/utils/page-utils';
 import {
   ConsolidationElimination,
   ConsolidationCompany,
@@ -12,16 +12,16 @@ import {
   ConsolidationRunSummary,
 } from './consolidation.model';
 import { ConsolidationService } from './consolidation.service';
-import { NotificationService } from '../../shared/services/notification.service';
-import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
-import { SearchableSelectDirective } from '../../shared/directives/searchable-select.directive';
-import { InputComponent } from '../../shared/components/input/input.component';
+import { NotificationService } from '../../../shared/services/notification.service';
+import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { SearchableSelectDirective } from '../../../shared/directives/searchable-select.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 @Component({
   selector: 'app-consolidation-page',
   imports: [FormsModule, FieldValidationDirective, SearchableSelectDirective, InputComponent],
   templateUrl: './consolidation.page.html',
-  styleUrls: ['../../shared/styles/feature-page.css', './consolidation.page.css'],
+  styleUrls: ['../../../shared/styles/feature-page.css', './consolidation.page.css'],
 })
 export class ConsolidationPageComponent implements OnInit {
   readonly notifications = inject(NotificationService);
