@@ -58,6 +58,25 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AuditLogs",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    TenantId = table.Column<long>(type: "bigint", nullable: true),
+                    ActorUserId = table.Column<long>(type: "bigint", nullable: true),
+                    Action = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
+                    EntityType = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    EntityId = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    DetailsJson = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Currencies",
                 columns: table => new
                 {
@@ -69,6 +88,27 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_Currencies", x => x.Code);
                     table.CheckConstraint("CK_Currencies_DecimalPlaces", "\"DecimalPlaces\" <= 4");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Message = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    Category = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
+                    Link = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ReadAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    DismissedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    TenantId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -2169,6 +2209,262 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "TaxJurisdictions",
+                columns: new[] { "Id", "Code", "CountryCode" },
+                values: new object[,]
+                {
+                    { 4L, "AF", "AF" },
+                    { 8L, "AL", "AL" },
+                    { 10L, "AQ", "AQ" },
+                    { 12L, "DZ", "DZ" },
+                    { 16L, "AS", "AS" },
+                    { 20L, "AD", "AD" },
+                    { 24L, "AO", "AO" },
+                    { 28L, "AG", "AG" },
+                    { 31L, "AZ", "AZ" },
+                    { 32L, "AR", "AR" },
+                    { 36L, "AU", "AU" },
+                    { 40L, "AT", "AT" },
+                    { 44L, "BS", "BS" },
+                    { 48L, "BH", "BH" },
+                    { 50L, "BD", "BD" },
+                    { 51L, "AM", "AM" },
+                    { 52L, "BB", "BB" },
+                    { 56L, "BE", "BE" },
+                    { 60L, "BM", "BM" },
+                    { 64L, "BT", "BT" },
+                    { 68L, "BO", "BO" },
+                    { 70L, "BA", "BA" },
+                    { 72L, "BW", "BW" },
+                    { 74L, "BV", "BV" },
+                    { 76L, "BR", "BR" },
+                    { 84L, "BZ", "BZ" },
+                    { 86L, "IO", "IO" },
+                    { 90L, "SB", "SB" },
+                    { 92L, "VG", "VG" },
+                    { 96L, "BN", "BN" },
+                    { 100L, "BG", "BG" },
+                    { 104L, "MM", "MM" },
+                    { 108L, "BI", "BI" },
+                    { 112L, "BY", "BY" },
+                    { 116L, "KH", "KH" },
+                    { 120L, "CM", "CM" },
+                    { 124L, "CA", "CA" },
+                    { 132L, "CV", "CV" },
+                    { 136L, "KY", "KY" },
+                    { 140L, "CF", "CF" },
+                    { 144L, "LK", "LK" },
+                    { 148L, "TD", "TD" },
+                    { 152L, "CL", "CL" },
+                    { 156L, "CN", "CN" },
+                    { 158L, "TW", "TW" },
+                    { 162L, "CX", "CX" },
+                    { 166L, "CC", "CC" },
+                    { 170L, "CO", "CO" },
+                    { 174L, "KM", "KM" },
+                    { 175L, "YT", "YT" },
+                    { 178L, "CG", "CG" },
+                    { 180L, "CD", "CD" },
+                    { 184L, "CK", "CK" },
+                    { 188L, "CR", "CR" },
+                    { 191L, "HR", "HR" },
+                    { 192L, "CU", "CU" },
+                    { 196L, "CY", "CY" },
+                    { 203L, "CZ", "CZ" },
+                    { 204L, "BJ", "BJ" },
+                    { 208L, "DK", "DK" },
+                    { 212L, "DM", "DM" },
+                    { 214L, "DO", "DO" },
+                    { 218L, "EC", "EC" },
+                    { 222L, "SV", "SV" },
+                    { 226L, "GQ", "GQ" },
+                    { 231L, "ET", "ET" },
+                    { 232L, "ER", "ER" },
+                    { 233L, "EE", "EE" },
+                    { 234L, "FO", "FO" },
+                    { 238L, "FK", "FK" },
+                    { 239L, "GS", "GS" },
+                    { 242L, "FJ", "FJ" },
+                    { 246L, "FI", "FI" },
+                    { 248L, "AX", "AX" },
+                    { 250L, "FR", "FR" },
+                    { 254L, "GF", "GF" },
+                    { 258L, "PF", "PF" },
+                    { 260L, "TF", "TF" },
+                    { 262L, "DJ", "DJ" },
+                    { 266L, "GA", "GA" },
+                    { 268L, "GE", "GE" },
+                    { 270L, "GM", "GM" },
+                    { 275L, "PS", "PS" },
+                    { 276L, "DE", "DE" },
+                    { 288L, "GH", "GH" },
+                    { 292L, "GI", "GI" },
+                    { 296L, "KI", "KI" },
+                    { 300L, "GR", "GR" },
+                    { 304L, "GL", "GL" },
+                    { 308L, "GD", "GD" },
+                    { 312L, "GP", "GP" },
+                    { 316L, "GU", "GU" },
+                    { 320L, "GT", "GT" },
+                    { 324L, "GN", "GN" },
+                    { 328L, "GY", "GY" },
+                    { 332L, "HT", "HT" },
+                    { 334L, "HM", "HM" },
+                    { 336L, "VA", "VA" },
+                    { 340L, "HN", "HN" },
+                    { 344L, "HK", "HK" },
+                    { 348L, "HU", "HU" },
+                    { 352L, "IS", "IS" },
+                    { 356L, "IN", "IN" },
+                    { 360L, "ID", "ID" },
+                    { 364L, "IR", "IR" },
+                    { 368L, "IQ", "IQ" },
+                    { 372L, "IE", "IE" },
+                    { 376L, "IL", "IL" },
+                    { 380L, "IT", "IT" },
+                    { 384L, "CI", "CI" },
+                    { 388L, "JM", "JM" },
+                    { 392L, "JP", "JP" },
+                    { 398L, "KZ", "KZ" },
+                    { 400L, "JO", "JO" },
+                    { 404L, "KE", "KE" },
+                    { 408L, "KP", "KP" },
+                    { 410L, "KR", "KR" },
+                    { 414L, "KW", "KW" },
+                    { 417L, "KG", "KG" },
+                    { 418L, "LA", "LA" },
+                    { 422L, "LB", "LB" },
+                    { 426L, "LS", "LS" },
+                    { 428L, "LV", "LV" },
+                    { 430L, "LR", "LR" },
+                    { 434L, "LY", "LY" },
+                    { 438L, "LI", "LI" },
+                    { 440L, "LT", "LT" },
+                    { 442L, "LU", "LU" },
+                    { 446L, "MO", "MO" },
+                    { 450L, "MG", "MG" },
+                    { 454L, "MW", "MW" },
+                    { 458L, "MY", "MY" },
+                    { 462L, "MV", "MV" },
+                    { 466L, "ML", "ML" },
+                    { 470L, "MT", "MT" },
+                    { 474L, "MQ", "MQ" },
+                    { 478L, "MR", "MR" },
+                    { 480L, "MU", "MU" },
+                    { 484L, "MX", "MX" },
+                    { 492L, "MC", "MC" },
+                    { 496L, "MN", "MN" },
+                    { 498L, "MD", "MD" },
+                    { 499L, "ME", "ME" },
+                    { 500L, "MS", "MS" },
+                    { 504L, "MA", "MA" },
+                    { 508L, "MZ", "MZ" },
+                    { 512L, "OM", "OM" },
+                    { 516L, "NA", "NA" },
+                    { 520L, "NR", "NR" },
+                    { 524L, "NP", "NP" },
+                    { 528L, "NL", "NL" },
+                    { 531L, "CW", "CW" },
+                    { 533L, "AW", "AW" },
+                    { 534L, "SX", "SX" },
+                    { 535L, "BQ", "BQ" },
+                    { 540L, "NC", "NC" },
+                    { 548L, "VU", "VU" },
+                    { 554L, "NZ", "NZ" },
+                    { 558L, "NI", "NI" },
+                    { 562L, "NE", "NE" },
+                    { 566L, "NG", "NG" },
+                    { 570L, "NU", "NU" },
+                    { 574L, "NF", "NF" },
+                    { 578L, "NO", "NO" },
+                    { 580L, "MP", "MP" },
+                    { 581L, "UM", "UM" },
+                    { 583L, "FM", "FM" },
+                    { 584L, "MH", "MH" },
+                    { 585L, "PW", "PW" },
+                    { 586L, "PK", "PK" },
+                    { 591L, "PA", "PA" },
+                    { 598L, "PG", "PG" },
+                    { 600L, "PY", "PY" },
+                    { 604L, "PE", "PE" },
+                    { 608L, "PH", "PH" },
+                    { 612L, "PN", "PN" },
+                    { 616L, "PL", "PL" },
+                    { 620L, "PT", "PT" },
+                    { 624L, "GW", "GW" },
+                    { 626L, "TL", "TL" },
+                    { 630L, "PR", "PR" },
+                    { 634L, "QA", "QA" },
+                    { 638L, "RE", "RE" },
+                    { 642L, "RO", "RO" },
+                    { 643L, "RU", "RU" },
+                    { 646L, "RW", "RW" },
+                    { 652L, "BL", "BL" },
+                    { 654L, "SH", "SH" },
+                    { 659L, "KN", "KN" },
+                    { 660L, "AI", "AI" },
+                    { 662L, "LC", "LC" },
+                    { 663L, "MF", "MF" },
+                    { 666L, "PM", "PM" },
+                    { 670L, "VC", "VC" },
+                    { 674L, "SM", "SM" },
+                    { 678L, "ST", "ST" },
+                    { 682L, "SA", "SA" },
+                    { 686L, "SN", "SN" },
+                    { 688L, "RS", "RS" },
+                    { 690L, "SC", "SC" },
+                    { 694L, "SL", "SL" },
+                    { 702L, "SG", "SG" },
+                    { 703L, "SK", "SK" },
+                    { 704L, "VN", "VN" },
+                    { 705L, "SI", "SI" },
+                    { 706L, "SO", "SO" },
+                    { 710L, "ZA", "ZA" },
+                    { 716L, "ZW", "ZW" },
+                    { 724L, "ES", "ES" },
+                    { 728L, "SS", "SS" },
+                    { 729L, "SD", "SD" },
+                    { 732L, "EH", "EH" },
+                    { 740L, "SR", "SR" },
+                    { 744L, "SJ", "SJ" },
+                    { 748L, "SZ", "SZ" },
+                    { 752L, "SE", "SE" },
+                    { 756L, "CH", "CH" },
+                    { 760L, "SY", "SY" },
+                    { 762L, "TJ", "TJ" },
+                    { 764L, "TH", "TH" },
+                    { 768L, "TG", "TG" },
+                    { 772L, "TK", "TK" },
+                    { 776L, "TO", "TO" },
+                    { 780L, "TT", "TT" },
+                    { 784L, "AE", "AE" },
+                    { 788L, "TN", "TN" },
+                    { 792L, "TR", "TR" },
+                    { 795L, "TM", "TM" },
+                    { 796L, "TC", "TC" },
+                    { 798L, "TV", "TV" },
+                    { 800L, "UG", "UG" },
+                    { 804L, "UA", "UA" },
+                    { 807L, "MK", "MK" },
+                    { 818L, "EG", "EG" },
+                    { 826L, "GB", "GB" },
+                    { 831L, "GG", "GG" },
+                    { 832L, "JE", "JE" },
+                    { 833L, "IM", "IM" },
+                    { 834L, "TZ", "TZ" },
+                    { 840L, "US", "US" },
+                    { 850L, "VI", "VI" },
+                    { 854L, "BF", "BF" },
+                    { 858L, "UY", "UY" },
+                    { 860L, "UZ", "UZ" },
+                    { 862L, "VE", "VE" },
+                    { 876L, "WF", "WF" },
+                    { 882L, "WS", "WS" },
+                    { 887L, "YE", "YE" },
+                    { 894L, "ZM", "ZM" }
+                });
+
+            migrationBuilder.InsertData(
                 table: "UnitsOfMeasure",
                 columns: new[] { "Code", "DecimalPlaces", "Name" },
                 values: new object[,]
@@ -2240,6 +2536,11 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AuditLogs_TenantId_CreatedAt",
+                table: "AuditLogs",
+                columns: new[] { "TenantId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_BankAccounts_CurrencyCode",
@@ -2598,6 +2899,11 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Notifications_TenantId_UserId_DismissedAt_CreatedAt",
+                table: "Notifications",
+                columns: new[] { "TenantId", "UserId", "DismissedAt", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Parties_DefaultCurrencyCode",
                 table: "Parties",
                 column: "DefaultCurrencyCode");
@@ -2945,6 +3251,9 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "AuditLogs");
+
+            migrationBuilder.DropTable(
                 name: "BankReconciliationMatches");
 
             migrationBuilder.DropTable(
@@ -2982,6 +3291,9 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "InventoryValuationLayers");
+
+            migrationBuilder.DropTable(
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "PartyAddresses");
