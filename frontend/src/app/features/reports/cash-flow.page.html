@@ -8,8 +8,8 @@
 @if (error) { <div class="alert error" role="alert">{{ error }}</div> }
 
 <section class="cash-flow-filter panel">
-  <label><span>From</span><input type="date" name="fromDate" [(ngModel)]="fromDate" (ngModelChange)="onDateChange()" /></label>
-  <label><span>To</span><input type="date" name="toDate" [(ngModel)]="toDate" (ngModelChange)="onDateChange()" /></label>
+  <label><span>From</span><app-input type="date" name="fromDate" [(ngModel)]="fromDate" (ngModelChange)="onDateChange()" /></label>
+  <label><span>To</span><app-input type="date" name="toDate" [(ngModel)]="toDate" (ngModelChange)="onDateChange()" /></label>
   <p>Posted journal activity in company functional currency.</p>
 </section>
 

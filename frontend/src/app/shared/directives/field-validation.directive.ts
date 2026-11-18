@@ -1,10 +1,20 @@
-import { Directive, DestroyRef, ElementRef, HostListener, Input, Renderer2, effect, inject, signal } from '@angular/core';
+import {
+  Directive,
+  DestroyRef,
+  ElementRef,
+  HostListener,
+  Input,
+  Renderer2,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormValidationService } from '../services/form-validation.service';
 
 let nextFieldErrorId = 0;
 
 @Directive({
-  selector: 'input[name], select[name], textarea[name]',
+  selector: 'input[name], app-input[name], select[name], textarea[name]',
   standalone: true,
 })
 export class FieldValidationDirective {
@@ -28,6 +38,9 @@ export class FieldValidationDirective {
 
   constructor() {
     this.renderer.addClass(this.errorElement, 'field-validation-error');
+    if (this.element.nativeElement.tagName === 'APP-INPUT') {
+      this.renderer.addClass(this.errorElement, 'app-input-validation-error');
+    }
     this.renderer.setAttribute(this.errorElement, 'role', 'alert');
     this.renderer.setAttribute(this.errorElement, 'id', this.errorId);
     this.destroyRef.onDestroy(() => {
@@ -55,14 +68,19 @@ export class FieldValidationDirective {
     const control = this.element.nativeElement;
     const parent = control.parentElement;
     if (!parent) return;
+    const validationTarget = control.querySelector('input') ?? control;
 
     if (messages.length) {
-      this.renderer.setAttribute(control, 'aria-invalid', 'true');
-      const describedBy = (control.getAttribute('aria-describedby') ?? '')
+      this.renderer.setAttribute(validationTarget, 'aria-invalid', 'true');
+      const describedBy = (validationTarget.getAttribute('aria-describedby') ?? '')
         .split(/\s+/)
         .filter(Boolean)
         .filter((id: string) => id !== this.errorId);
-      this.renderer.setAttribute(control, 'aria-describedby', [...describedBy, this.errorId].join(' '));
+      this.renderer.setAttribute(
+        validationTarget,
+        'aria-describedby',
+        [...describedBy, this.errorId].join(' '),
+      );
       this.renderer.setProperty(this.errorElement, 'textContent', messages.join(' '));
       if (!this.errorElement.parentElement) {
         this.renderer.insertBefore(parent, this.errorElement, control.nextSibling);
@@ -70,12 +88,13 @@ export class FieldValidationDirective {
       return;
     }
 
-    this.renderer.removeAttribute(control, 'aria-invalid');
-    const describedBy = (control.getAttribute('aria-describedby') ?? '')
+    this.renderer.removeAttribute(validationTarget, 'aria-invalid');
+    const describedBy = (validationTarget.getAttribute('aria-describedby') ?? '')
       .split(/\s+/)
       .filter((id: string) => id && id !== this.errorId);
-    if (describedBy.length) this.renderer.setAttribute(control, 'aria-describedby', describedBy.join(' '));
-    else this.renderer.removeAttribute(control, 'aria-describedby');
+    if (describedBy.length)
+      this.renderer.setAttribute(validationTarget, 'aria-describedby', describedBy.join(' '));
+    else this.renderer.removeAttribute(validationTarget, 'aria-describedby');
     if (this.errorElement.parentElement) {
       this.renderer.removeChild(this.errorElement.parentElement, this.errorElement);
     }

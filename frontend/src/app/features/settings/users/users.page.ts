@@ -16,6 +16,7 @@ import { TenantUserService } from './user.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../../shared/directives/searchable-select.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 const ROLE_OPTIONS: Choice[] = [
   { label: 'Admin', value: 'Admin' },
@@ -25,7 +26,7 @@ const ROLE_OPTIONS: Choice[] = [
 
 @Component({
   selector: 'app-users-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent, FieldValidationDirective, SearchableSelectDirective],
+  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent, FieldValidationDirective, SearchableSelectDirective, InputComponent],
   templateUrl: './users.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './users.page.css'],
 })

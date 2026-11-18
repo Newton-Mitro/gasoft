@@ -28,9 +28,9 @@
           }
         </select>
       </label>
-      <label><span>Credit note number</span><input name="creditNoteNumber" maxlength="40" [(ngModel)]="creditNoteNumber" /></label>
-      <label><span>Credit note date</span><input name="creditNoteDate" type="date" [(ngModel)]="creditNoteDate" /></label>
-      <label class="reason-field"><span>Reason</span><input name="reason" maxlength="500" [(ngModel)]="reason" placeholder="Returned items, pricing adjustment…" /></label>
+      <label><span>Credit note number</span><app-input name="creditNoteNumber" maxlength="40" [(ngModel)]="creditNoteNumber" /></label>
+      <label><span>Credit note date</span><app-input name="creditNoteDate" type="date" [(ngModel)]="creditNoteDate" /></label>
+      <label class="reason-field"><span>Reason</span><app-input name="reason" maxlength="500" [(ngModel)]="reason" placeholder="Returned items, pricing adjustment…" /></label>
     </div>
     @if (selectedInvoiceId) {
       <div class="table-scroll"><table>
@@ -39,7 +39,7 @@
           @for (line of lines; track line.invoiceLineId; let index = $index) {
             <tr>
               <td>{{ line.description }}</td><td>{{ line.originalQuantity }}</td>
-              <td><input class="quantity-input" type="number" min="0" [max]="line.originalQuantity" step="0.000001"
+              <td><app-input class="quantity-input" type="number" min="0" [max]="line.originalQuantity" step="0.000001"
                 [(ngModel)]="line.quantity" [name]="'quantity-' + index" /></td>
               <td>{{ selectedInvoice()?.currencyCode }} {{ sourceUnitPrice(line.invoiceLineId) }}</td>
             </tr>
@@ -94,10 +94,10 @@
       </div>
     </div>
     <div class="header-fields">
-      <label><span>Refund number</span><input name="refundNumber" maxlength="40" [(ngModel)]="refundNumber" /></label>
-      <label><span>Refund date</span><input name="refundDate" type="date" [(ngModel)]="refundDate" /></label>
+      <label><span>Refund number</span><app-input name="refundNumber" maxlength="40" [(ngModel)]="refundNumber" /></label>
+      <label><span>Refund date</span><app-input name="refundDate" type="date" [(ngModel)]="refundDate" /></label>
       <label><span>Amount ({{ refundingNote.currencyCode }})</span>
-        <input name="refundAmount" type="number" min="0.000001" [max]="refundingNote.refundableAmount" step="any" [(ngModel)]="refundAmount" />
+        <app-input name="refundAmount" type="number" min="0.000001" [max]="refundingNote.refundableAmount" step="any" [(ngModel)]="refundAmount" />
       </label>
       <label><span>Journal</span><select appSearchableSelect name="refundJournal" [(ngModel)]="refundJournalId">
         <option [ngValue]="null" disabled>Select journal</option>

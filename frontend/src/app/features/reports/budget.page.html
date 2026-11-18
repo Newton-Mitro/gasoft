@@ -24,7 +24,7 @@
     </select>
   </label>
   <div class="create-budget">
-    <label>New budget name<input name="newBudgetName" [(ngModel)]="newBudgetName" maxlength="120" placeholder="e.g. FY2027 Base plan" /></label>
+    <label>New budget name<app-input name="newBudgetName" [(ngModel)]="newBudgetName" maxlength="120" placeholder="e.g. FY2027 Base plan" /></label>
     <button class="primary-button" type="button" [disabled]="saving || selectedFiscalYearId === null" (click)="createBudget()">Create budget</button>
   </div>
 </section>
@@ -72,7 +72,7 @@
             @for (account of accounts; track account.accountId) {
               <tr><td><strong>{{ account.code }} · {{ account.name }}</strong></td><td>{{ account.accountType }}</td>
                 @for (period of periods; track period.id) {
-                  <td><input type="number" min="0" step="0.01" [name]="'budgetLine' + budgetLineIndex(account.accountId, period.id) + 'Amount'" [(ngModel)]="account.amounts[period.id]" /></td>
+                  <td><app-input type="number" min="0" step="0.01" [name]="'budgetLine' + budgetLineIndex(account.accountId, period.id) + 'Amount'" [(ngModel)]="account.amounts[period.id]" /></td>
                 }
               </tr>
             }

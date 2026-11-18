@@ -5,10 +5,11 @@ import { AuthService, WorkspaceOption } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 @Component({
   selector: 'app-login-page',
-  imports: [FormsModule, RouterLink, FieldValidationDirective],
+  imports: [FormsModule, RouterLink, FieldValidationDirective, InputComponent],
   styles: [`
     .auth-card {
       width: min(100%, 440px);
@@ -180,19 +181,20 @@ import { FieldValidationDirective } from '../../../shared/directives/field-valid
           </p>
           @if (error) { <div class="alert error" role="alert">{{ error }}</div> }
           @if (!availableWorkspaces) {
-            <label>Email address<input name="email" type="email" [(ngModel)]="email" autocomplete="email" required /></label>
-            <label>Password<input name="password" type="password" [(ngModel)]="password" autocomplete="current-password" required /></label>
+            <label>Email address<app-input name="email" type="email" [(ngModel)]="email" autocomplete="email" required /></label>
+            <label>Password<app-input name="password" type="password" [(ngModel)]="password" autocomplete="current-password" required /></label>
             <p class="auth-forgot"><a routerLink="/forgot-password">Forgot password?</a></p>
             <button class="button primary full" [disabled]="busy">{{ busy ? 'Signing in…' : 'Continue' }}</button>
           } @else {
             <div class="workspace-list" role="radiogroup" aria-label="Available workspaces">
               @for (workspace of availableWorkspaces; track workspace.tenantId) {
                 <label class="workspace-choice" [class.selected]="selectedTenantId === workspace.tenantId">
-                <input
+                <app-input
                   type="radio"
                   name="tenantId"
                   [value]="workspace.tenantId"
                   [(ngModel)]="selectedTenantId"
+                  [ngModelOptions]="{ standalone: true }"
                   required
                 />
                   <span class="workspace-avatar" aria-hidden="true">{{ workspace.name.charAt(0).toUpperCase() }}</span>

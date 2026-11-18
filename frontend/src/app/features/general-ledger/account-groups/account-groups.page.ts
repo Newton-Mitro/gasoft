@@ -9,13 +9,14 @@ import { Choice, Field, RecordFormMode } from '../../../shared/models/shared.mod
 import { AccountGroup, AccountGroupPayload, AccountType } from './account-group.model';
 import { AccountGroupService } from './account-group.service';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 const ACCOUNT_TYPES: Choice[] = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense']
   .map(value => ({ label: value, value }));
 
 @Component({
   selector: 'app-account-groups-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent],
+  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent, InputComponent],
   templateUrl: './account-groups.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })

@@ -5,10 +5,11 @@ import { errorMessage } from '../../../shared/utils/page-utils';
 import { AuthenticatedImageComponent } from '../../../shared/components/authenticated-image/authenticated-image.component';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 @Component({
   selector: 'app-account-profile-page',
-  imports: [FormsModule, AuthenticatedImageComponent, FieldValidationDirective],
+  imports: [FormsModule, AuthenticatedImageComponent, FieldValidationDirective, InputComponent],
   templateUrl: './account-profile.page.html',
   styleUrl: './account-profile.page.css',
 })

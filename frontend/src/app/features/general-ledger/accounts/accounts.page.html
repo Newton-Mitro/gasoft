@@ -30,77 +30,58 @@
 } @else {
   <div class="page-heading accounts-page-heading">
     <div>
-      <p class="eyebrow"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i> GENERAL LEDGER</p>
+      <p class="eyebrow">
+        <i class="fa-solid fa-diagram-project" aria-hidden="true"></i> GENERAL LEDGER
+      </p>
       <h1>{{ title }}</h1>
-      <p class="page-description">{{ description }}</p>
+      <p class="page-description">Manage your ledger hierarchy and account groups.</p>
     </div>
-    <a class="button primary accounts-create-button" [routerLink]="[indexPath, 'create']">
-      <i class="fa-solid fa-plus" aria-hidden="true"></i>
-      <span>New account</span>
-    </a>
+    <div class="accounts-page-actions">
+      <button type="button" class="button secondary" (click)="expandAll()">
+        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i> Expand all
+      </button>
+      <button type="button" class="button secondary" (click)="collapseAll()">
+        <i class="fa-solid fa-chevron-up" aria-hidden="true"></i> Collapse all
+      </button>
+
+      <a class="button primary accounts-create-button" [routerLink]="[indexPath, 'create']">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        <span>Add account</span>
+      </a>
+    </div>
   </div>
-  @if (!loading && rows.length) {
-    <section class="account-overview" aria-label="Chart of accounts overview">
-      <article class="account-overview-card overview-total">
-        <span class="overview-icon"><i class="fa-solid fa-list-ol" aria-hidden="true"></i></span>
-        <div><span class="overview-label">Total accounts</span><strong>{{ rows.length }}</strong></div>
-      </article>
-      <article class="account-overview-card">
-        <span class="overview-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
-        <div><span class="overview-label">Account groups</span><strong>{{ groupCount }}</strong></div>
-      </article>
-      <article class="account-overview-card">
-        <span class="overview-icon"><i class="fa-solid fa-sitemap" aria-hidden="true"></i></span>
-        <div><span class="overview-label">Top-level accounts</span><strong>{{ rootAccountCount }}</strong></div>
-      </article>
-      <article class="account-overview-card">
-        <span class="overview-icon"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></span>
-        <div><span class="overview-label">Postable accounts</span><strong>{{ postableAccountCount }}</strong></div>
-      </article>
-    </section>
-  }
   @if (error) {
     <div class="alert error">{{ error }}</div>
   }
-  <div class="toolbar accounts-toolbar">
+  <div class="accounts-search-toolbar">
     <label class="search-box">
       <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-      <input
+      <app-input
         name="search"
-        placeholder="Find an account by code or name…"
+        placeholder="Search by account code or name…"
         [ngModel]="search"
         (ngModelChange)="onSearchChange($event)"
       />
       @if (search) {
-        <button type="button" class="search-clear" aria-label="Clear account search" (click)="onSearchChange('')">
+        <button
+          type="button"
+          class="search-clear"
+          aria-label="Clear account search"
+          (click)="onSearchChange('')"
+        >
           <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
       }
     </label>
-    <div class="tree-view-actions" aria-label="Tree view controls">
-      <button type="button" class="button secondary" (click)="expandAll()">
-        <i class="fa-solid fa-angles-down" aria-hidden="true"></i> Expand all
-      </button>
-      <button type="button" class="button secondary" (click)="collapseAll()">
-        <i class="fa-solid fa-angles-up" aria-hidden="true"></i> Collapse all
-      </button>
-    </div>
+    <span class="account-search-count"
+      >{{ rows.length }} {{ rows.length === 1 ? 'account' : 'accounts' }}</span
+    >
   </div>
   @if (loading) {
     <div class="loading-card"><span class="spinner"></span> Loading accounts…</div>
   }
   @if (!loading) {
     <section class="account-tree-panel panel">
-      <div class="table-header">
-        <div class="account-tree-heading">
-          <span class="account-tree-heading-icon"><i class="fa-solid fa-folder-tree" aria-hidden="true"></i></span>
-          <div>
-            <h2>Account structure</h2>
-            <span>Drag an account row onto another account in the same group to make it a child. If the target allows postings, that setting will be turned off automatically. Drop onto a group heading to make it top-level in that group.</span>
-          </div>
-        </div>
-        <span class="account-total-pill">{{ rows.length }} {{ rows.length === 1 ? 'account' : 'accounts' }}</span>
-      </div>
       @if (!rows.length) {
         <div class="empty-state">
           <span class="empty-icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span>
@@ -122,29 +103,48 @@
         @if (accountGroups.length) {
           <div class="account-tree-groups">
             @for (group of accountGroups; track group.id) {
-              <section class="account-group-tree">
-                <header
-                  class="account-group-heading"
-                  [class.root-drop-target]="dropTargetGroupId === group.id"
-                  [class.root-drop-available]="draggedAccountId !== null && canDropToGroupRoot(group.id)"
-                  (dragover)="onGroupDragOver($event, group.id)"
-                  (dragleave)="dropTargetGroupId = null"
-                  (drop)="onGroupDrop($event, group.id)"
-                >
+              <section
+                class="account-group-tree"
+                [class.root-drop-target]="dropTargetGroupId === group.id"
+                [class.root-drop-available]="
+                  draggedAccountId !== null && canDropToGroupRoot(group.id)
+                "
+                (dragover)="onGroupDragOver($event, group.id)"
+                (dragleave)="onGroupDragLeave($event, group.id)"
+                (drop)="onGroupDrop($event, group.id)"
+              >
+                <header class="account-group-heading">
                   <div class="account-group-title">
                     <button
                       type="button"
                       class="account-tree-toggle group-tree-toggle"
                       [attr.aria-expanded]="!isGroupCollapsed(group.id)"
-                      [attr.aria-label]="(isGroupCollapsed(group.id) ? 'Expand ' : 'Collapse ') + group.label"
+                      [attr.aria-label]="
+                        (isGroupCollapsed(group.id) ? 'Expand ' : 'Collapse ') + group.label
+                      "
                       (click)="toggleGroup(group.id)"
                     >
-                      <i class="fa-solid" [class.fa-chevron-right]="isGroupCollapsed(group.id)" [class.fa-chevron-down]="!isGroupCollapsed(group.id)" aria-hidden="true"></i>
+                      <i
+                        class="fa-solid"
+                        [class.fa-chevron-right]="isGroupCollapsed(group.id)"
+                        [class.fa-chevron-down]="!isGroupCollapsed(group.id)"
+                        aria-hidden="true"
+                      ></i>
                     </button>
-                    <span class="account-group-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
-                    <div>
-                      <h3>{{ group.label }}</h3>
-                      <span>{{ accountCountForGroup(group.id) }} {{ accountCountForGroup(group.id) === 1 ? 'account' : 'accounts' }}</span>
+                    <span class="account-group-icon"
+                      ><i class="fa-solid fa-layer-group" aria-hidden="true"></i
+                    ></span>
+                    <div class="account-group-copy">
+                      <div class="account-group-name">
+                        @if (group.code) {
+                          <span class="account-group-code">{{ group.code }}</span>
+                        }
+                        <h3>{{ group.name }}</h3>
+                      </div>
+                      <span
+                        >{{ accountCountForGroup(group.id) }}
+                        {{ accountCountForGroup(group.id) === 1 ? 'account' : 'accounts' }}</span
+                      >
                     </div>
                   </div>
                   <span class="account-root-drop-hint">
@@ -154,13 +154,16 @@
                 </header>
                 @if (!isGroupCollapsed(group.id)) {
                   <div class="account-tree-body">
-                  @if (!group.trees.length) {
-                    <p class="account-tree-empty">No accounts in this group yet.</p>
-                  } @else {
-                    <ng-container
-                      *ngTemplateOutlet="accountTree; context: { $implicit: group.trees, level: 0 }"
-                    />
-                  }
+                    @if (!group.trees.length) {
+                      <p class="account-tree-empty">No accounts in this group yet.</p>
+                    } @else {
+                      <ng-container
+                        *ngTemplateOutlet="
+                          accountTree;
+                          context: { $implicit: group.trees, level: 0 }
+                        "
+                      />
+                    }
                   </div>
                 }
               </section>
@@ -198,7 +201,11 @@
         (dragleave)="dropTargetAccountId = null"
         (drop)="onAccountDrop($event, node.account)"
       >
-        <span class="account-drag-handle" aria-hidden="true" title="Drag this account to change its parent">
+        <span
+          class="account-drag-handle"
+          aria-hidden="true"
+          title="Drag this account to change its parent"
+        >
           <i class="fa-solid fa-grip-vertical" aria-hidden="true"></i>
         </span>
         @if (node.children.length) {
@@ -206,10 +213,17 @@
             type="button"
             class="account-tree-toggle account-node-toggle"
             [attr.aria-expanded]="!isAccountCollapsed(node.account.id)"
-            [attr.aria-label]="(isAccountCollapsed(node.account.id) ? 'Expand ' : 'Collapse ') + node.account.code"
+            [attr.aria-label]="
+              (isAccountCollapsed(node.account.id) ? 'Expand ' : 'Collapse ') + node.account.code
+            "
             (click)="toggleAccount(node.account.id)"
           >
-            <i class="fa-solid" [class.fa-chevron-right]="isAccountCollapsed(node.account.id)" [class.fa-chevron-down]="!isAccountCollapsed(node.account.id)" aria-hidden="true"></i>
+            <i
+              class="fa-solid"
+              [class.fa-chevron-right]="isAccountCollapsed(node.account.id)"
+              [class.fa-chevron-down]="!isAccountCollapsed(node.account.id)"
+              aria-hidden="true"
+            ></i>
           </button>
         } @else {
           <span class="account-tree-toggle-spacer" aria-hidden="true"></span>
@@ -231,7 +245,8 @@
           draggable="false"
           [routerLink]="[indexPath, node.account.id, 'edit']"
           [attr.aria-label]="'Edit ' + node.account.code + ' ' + node.account.name"
-        >Edit</a>
+          >Edit</a
+        >
         @if (reparentingAccountId === node.account.id) {
           <span class="account-moving-indicator"><span class="spinner"></span></span>
         }

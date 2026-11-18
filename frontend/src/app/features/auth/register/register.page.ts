@@ -7,6 +7,7 @@ import { errorMessage, registrationError } from '../../../shared/utils/page-util
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../../shared/directives/searchable-select.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 interface Currency {
   code: string;
@@ -15,7 +16,7 @@ interface Currency {
 
 @Component({
   selector: 'app-register-page',
-  imports: [FormsModule, RouterLink, FieldValidationDirective, SearchableSelectDirective],
+  imports: [FormsModule, RouterLink, FieldValidationDirective, SearchableSelectDirective, InputComponent],
   template: `
     <main class="auth-page">
       <section class="auth-brand">
@@ -35,12 +36,12 @@ interface Currency {
           @if (error()) { <div class="alert error" role="alert" aria-live="polite">{{ error() }}</div> }
           @if (showSignIn()) { <p class="auth-switch">Already have an account? <a routerLink="/login">Sign in to your workspace</a>.</p> }
           <div class="form-row">
-            <label>Workspace name<input name="tenantName" [(ngModel)]="tenantName" (ngModelChange)="onTenantNameChange($event)" required /></label>
-            <label>Workspace URL<input name="slug" [(ngModel)]="slug" (ngModelChange)="slugEdited = true" required /></label>
+            <label>Workspace name<app-input name="tenantName" [(ngModel)]="tenantName" (ngModelChange)="onTenantNameChange($event)" required /></label>
+            <label>Workspace URL<app-input name="slug" [(ngModel)]="slug" (ngModelChange)="slugEdited = true" required /></label>
           </div>
           <div class="form-row">
-            <label>Company code<input name="companyCode" [(ngModel)]="companyCode" required /></label>
-            <label>Legal name<input name="legalName" [(ngModel)]="legalName" required /></label>
+            <label>Company code<app-input name="companyCode" [(ngModel)]="companyCode" required /></label>
+            <label>Legal name<app-input name="legalName" [(ngModel)]="legalName" required /></label>
           </div>
           <label>Functional currency
             <select appSearchableSelect name="functionalCurrencyCode" [(ngModel)]="currencyCode" [disabled]="currencyLoading() || currencyLoadFailed()" required>
@@ -56,10 +57,10 @@ interface Currency {
             }
           </label>
           <div class="form-row">
-            <label>Your name<input name="ownerDisplayName" [(ngModel)]="ownerDisplayName" required /></label>
-            <label>Email address<input name="email" type="email" [(ngModel)]="email" autocomplete="email" required /></label>
+            <label>Your name<app-input name="ownerDisplayName" [(ngModel)]="ownerDisplayName" required /></label>
+            <label>Email address<app-input name="email" type="email" [(ngModel)]="email" autocomplete="email" required /></label>
           </div>
-          <label>Password<input name="password" type="password" [(ngModel)]="password" minlength="12" autocomplete="new-password" required /></label>
+          <label>Password<app-input name="password" type="password" [(ngModel)]="password" minlength="12" autocomplete="new-password" required /></label>
           <button class="button primary full" [disabled]="busy() || currencyLoading() || currencyLoadFailed() || !currencies().length">{{ busy() ? 'Creating workspace…' : 'Create workspace' }}</button>
           <p class="auth-switch">Already have an account? <a routerLink="/login">Sign in</a></p>
         </form>

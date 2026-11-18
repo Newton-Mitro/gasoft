@@ -55,7 +55,7 @@
             @if (accountMode === 'new') {
               <label>
                 <span>Full name <span class="required-marker" aria-hidden="true">*</span></span>
-                <input
+                <app-input
                   name="displayName"
                   autocomplete="name"
                   required
@@ -71,7 +71,7 @@
                 >{{ accountMode === 'new' ? 'Email address' : 'Existing account email' }}
                 <span class="required-marker" aria-hidden="true">*</span></span
               >
-              <input
+              <app-input
                 name="email"
                 type="email"
                 autocomplete="email"
@@ -102,7 +102,7 @@
                   >Temporary password
                   <span class="required-marker" aria-hidden="true">*</span></span
                 >
-                <input
+                <app-input
                   name="temporaryPassword"
                   type="password"
                   autocomplete="new-password"

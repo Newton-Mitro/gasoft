@@ -5,10 +5,11 @@ import { AuthService } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 @Component({
   selector: 'app-reset-password-page',
-  imports: [FormsModule, RouterLink, FieldValidationDirective],
+  imports: [FormsModule, RouterLink, FieldValidationDirective, InputComponent],
   template: `
     <main class="auth-page">
       <section class="auth-brand">
@@ -34,13 +35,13 @@ import { FieldValidationDirective } from '../../../shared/directives/field-valid
             <p class="auth-switch"><a routerLink="/forgot-password">Request another reset link</a></p>
           } @else {
             <label>Email address
-              <input name="email" type="email" [ngModel]="email" readonly autocomplete="email" />
+              <app-input name="email" type="email" [ngModel]="email" readonly autocomplete="email" />
             </label>
             <label>New password
-              <input name="newPassword" type="password" [(ngModel)]="newPassword" minlength="12" autocomplete="new-password" required />
+              <app-input name="newPassword" type="password" [(ngModel)]="newPassword" minlength="12" autocomplete="new-password" required />
             </label>
             <label>Confirm new password
-              <input name="confirmPassword" type="password" [(ngModel)]="confirmPassword" minlength="12" autocomplete="new-password" required />
+              <app-input name="confirmPassword" type="password" [(ngModel)]="confirmPassword" minlength="12" autocomplete="new-password" required />
             </label>
             <button class="button primary full" [disabled]="busy()">{{ busy() ? 'Updating…' : 'Update password' }}</button>
           }

@@ -7,10 +7,11 @@ import {
 import { Choice, JournalEntryLineForm } from '../../models/shared.models';
 import { FieldValidationDirective } from '../../directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../directives/searchable-select.directive';
+import { InputComponent } from '../input/input.component';
 
 @Component({
   selector: 'app-journal-entry-lines-editor',
-  imports: [FieldValidationDirective, SearchableSelectDirective],
+  imports: [FieldValidationDirective, SearchableSelectDirective, InputComponent],
   styleUrl: './journal-entry-lines-editor.component.css',
   templateUrl: './journal-entry-lines-editor.component.html',
 })

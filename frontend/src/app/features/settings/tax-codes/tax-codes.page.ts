@@ -12,12 +12,13 @@ import { TaxCode, TaxCodePayload, TaxRate, TaxRatePayload } from './tax-code.mod
 import { TaxCodeService } from './tax-code.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 const TAX_CODE_OPTIONS = ['jurisdictions', 'taxCategories'];
 
 @Component({
   selector: 'app-tax-codes-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent, FieldValidationDirective],
+  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent, FieldValidationDirective, InputComponent],
   templateUrl: './tax-codes.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './tax-codes.page.css'],
 })

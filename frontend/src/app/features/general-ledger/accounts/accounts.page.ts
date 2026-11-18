@@ -10,11 +10,12 @@ import { OptionDataService } from '../../../shared/data/option-data.service';
 import { Account, AccountPayload } from './account.model';
 import { AccountService } from './account.service';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { InputComponent } from '../../../shared/components/input/input.component';
 import { accountDescendantIds, buildAccountTree, filterAccountTree } from './account-tree';
 
 @Component({
   selector: 'app-accounts-page',
-  imports: [FormsModule, RouterLink, NgTemplateOutlet, RecordFormComponent],
+  imports: [FormsModule, RouterLink, NgTemplateOutlet, RecordFormComponent, InputComponent],
   templateUrl: './accounts.page.html',
   styleUrl: '../../../shared/styles/feature-page.css',
 })
@@ -103,30 +104,25 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
       : fields;
   }
 
-  get accountGroups(): { id: number; label: string; trees: ReturnType<typeof buildAccountTree> }[] {
+  get accountGroups(): { id: number; label: string; code: string; name: string; trees: ReturnType<typeof buildAccountTree> }[] {
     return this.options['groups']
       ?.map(group => {
         const id = Number(group.value);
+        const separator = group.label.indexOf(' · ');
         const trees = filterAccountTree(buildAccountTree(this.rows, id), this.search);
-        return { id, label: group.label, trees };
+        return {
+          id,
+          label: group.label,
+          code: separator < 0 ? '' : group.label.slice(0, separator),
+          name: separator < 0 ? group.label : group.label.slice(separator + 3),
+          trees,
+        };
       })
       .filter(group => !this.search.trim() || group.trees.length > 0) ?? [];
   }
 
   accountCountForGroup(groupId: number): number {
     return this.rows.filter(account => account.accountGroupId === groupId).length;
-  }
-
-  get groupCount(): number {
-    return this.options['groups']?.length ?? 0;
-  }
-
-  get rootAccountCount(): number {
-    return this.rows.filter(account => account.parentId === null).length;
-  }
-
-  get postableAccountCount(): number {
-    return this.rows.filter(account => account.allowPosting).length;
   }
 
   expandAll(): void {
@@ -266,7 +262,9 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
     if (!dragged) return;
     const blockedReason = this.accountDropBlockReason(dragged, target);
     if (blockedReason) {
+      event.stopPropagation();
       this.dropTargetAccountId = null;
+      this.dropTargetGroupId = null;
       this.dropBlockedAccountId = target.id;
       this.dragStatus = blockedReason;
       return;
@@ -301,13 +299,24 @@ export class AccountsPageComponent implements OnInit, OnDestroy {
     if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
     this.dropTargetGroupId = groupId;
     this.dropTargetAccountId = null;
+    this.dropBlockedAccountId = null;
     const dragged = this.rows.find(account => account.id === this.draggedAccountId);
     const group = this.options['groups']?.find(option => Number(option.value) === groupId);
     if (dragged && group) this.dragStatus = `Drop to move ${dragged.code} to ${group.label} as a top-level account.`;
   }
 
+  onGroupDragLeave(event: DragEvent, groupId: number): void {
+    const groupElement = event.currentTarget;
+    const nextTarget = event.relatedTarget;
+    if (groupElement instanceof HTMLElement && nextTarget instanceof Node && groupElement.contains(nextTarget)) {
+      return;
+    }
+    if (this.dropTargetGroupId === groupId) this.dropTargetGroupId = null;
+  }
+
   onGroupDrop(event: DragEvent, groupId: number): void {
     event.preventDefault();
+    event.stopPropagation();
     if (!this.canDropToGroupRoot(groupId)) return;
     this.moveAccount(this.draggedAccountId!, null, groupId);
   }

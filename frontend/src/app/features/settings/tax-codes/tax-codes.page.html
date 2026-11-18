@@ -162,7 +162,7 @@
                 <h4>{{ editingRateId === null ? 'Add effective rate' : 'Edit effective rate' }}</h4>
                 <label>
                   <span>Rate (%)</span>
-                  <input
+                  <app-input
                     name="ratePercent"
                     type="number"
                     min="0"
@@ -174,11 +174,11 @@
                 </label>
                 <label>
                   <span>Valid from</span>
-                  <input name="validFrom" type="date" required [(ngModel)]="validFrom" />
+                  <app-input name="validFrom" type="date" required [(ngModel)]="validFrom" />
                 </label>
                 <label>
                   <span>Valid to <small>(optional)</small></span>
-                  <input name="validTo" type="date" [(ngModel)]="validTo" />
+                  <app-input name="validTo" type="date" [(ngModel)]="validTo" />
                 </label>
                 <div class="rate-form-actions">
                   @if (editingRateId !== null) {

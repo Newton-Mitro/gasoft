@@ -13,6 +13,7 @@ import {
 } from './report.model';
 import { NotificationService } from '../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../shared/directives/field-validation.directive';
+import { InputComponent } from '../../shared/components/input/input.component';
 
 interface SummaryCard {
   label: string;
@@ -37,7 +38,7 @@ interface ReportVisualMetric {
 
 @Component({
   selector: 'app-financial-report',
-  imports: [FormsModule, FieldValidationDirective],
+  imports: [FormsModule, FieldValidationDirective, InputComponent],
   templateUrl: './report-pages.component.html',
   styleUrls: [
     '../../shared/styles/feature-page.css',

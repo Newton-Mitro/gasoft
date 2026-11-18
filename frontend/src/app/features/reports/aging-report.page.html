@@ -14,7 +14,7 @@
 <section class="aging-filter panel">
   <label>
     <span>Age outstanding balances as of</span>
-    <input type="date" name="asOfDate" [(ngModel)]="asOfDate" (ngModelChange)="onDateChange()" />
+    <app-input type="date" name="asOfDate" [(ngModel)]="asOfDate" (ngModelChange)="onDateChange()" />
   </label>
   <p>Only posted documents and payments dated on or before this day are included.</p>
 </section>

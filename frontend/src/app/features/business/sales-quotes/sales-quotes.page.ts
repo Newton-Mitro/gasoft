@@ -11,6 +11,7 @@ import { SalesQuotesService } from './sales-quotes.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../../shared/directives/searchable-select.directive';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 interface CustomerOption {
   id: number;
@@ -22,7 +23,7 @@ interface CustomerOption {
 
 @Component({
   selector: 'app-sales-quotes-page',
-  imports: [FormsModule, PaginationComponent, FieldValidationDirective, SearchableSelectDirective],
+  imports: [FormsModule, PaginationComponent, FieldValidationDirective, SearchableSelectDirective, InputComponent],
   templateUrl: './sales-quotes.page.html',
   styleUrls: ['../../../shared/styles/feature-page.css', './sales-quotes.page.css'],
 })

@@ -512,6 +512,9 @@ html[data-theme='dark'] .app-toast .hot-toast-close-btn {
   font-weight: 550;
   line-height: 1.4;
 }
+.field-grid .app-input-validation-error {
+  margin-top: -4px;
+}
 input[aria-invalid='true'],
 select[aria-invalid='true'],
 textarea[aria-invalid='true'] {
@@ -1820,84 +1823,48 @@ html[data-accent]
   border-radius: 9px;
   box-shadow: 0 5px 14px color-mix(in srgb, var(--accent) 22%, transparent);
 }
-.account-overview {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 17px;
-}
-.account-overview-card {
-  display: flex;
-  min-width: 0;
-  min-height: 78px;
+.accounts-page-heading {
   align-items: center;
-  gap: 12px;
-  padding: 13px 15px;
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  background: var(--surface);
-  box-shadow: 0 3px 12px color-mix(in srgb, var(--text-strong) 4%, transparent);
+  gap: 20px;
 }
-.account-overview-card.overview-total {
-  border-color: color-mix(in srgb, var(--accent) 26%, var(--border));
-  background: linear-gradient(120deg, var(--accent-soft), var(--surface) 88%);
+.accounts-page-actions {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
 }
-.overview-icon {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  flex: 0 0 38px;
-  place-items: center;
-  border-radius: 10px;
-  color: var(--accent-text);
-  background: var(--accent-soft);
-  font-size: 14px;
-}
-.overview-total .overview-icon {
-  color: var(--accent-contrast);
-  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
-}
-.account-overview-card > div {
-  display: grid;
-  min-width: 0;
-  gap: 4px;
-}
-.overview-label {
-  overflow: hidden;
-  color: var(--text-muted);
+.accounts-page-actions .button {
+  min-height: 36px;
+  gap: 7px;
+  padding-inline: 12px;
+  border-radius: 8px;
   font-size: 10px;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.account-overview-card strong {
-  color: var(--text-strong);
-  font-size: 20px;
-  font-weight: 720;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.accounts-toolbar {
+.accounts-search-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 14px;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--surface-muted) 50%, var(--surface));
+  gap: 16px;
+  margin-bottom: 12px;
 }
-.accounts-toolbar .search-box {
+.accounts-search-toolbar .search-box {
   min-width: min(100%, 300px);
-  max-width: 440px;
-  flex: 1 1 340px;
-  border-color: transparent;
+  max-width: 390px;
+  flex: 1 1 390px;
   background: var(--surface);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-strong) 7%, transparent);
 }
-.accounts-toolbar .search-box:focus-within {
+.accounts-search-toolbar .search-box:focus-within {
   border-color: var(--focus-color);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-color) 17%, transparent);
+}
+.account-search-count {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 .search-clear {
   width: 27px;
@@ -1915,100 +1882,50 @@ html[data-accent]
   color: var(--text-strong);
   background: var(--surface-muted);
 }
-.tree-view-actions {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 7px;
-}
-.tree-view-actions .button {
-  min-height: 34px;
-  padding-inline: 11px;
-  border-radius: 7px;
-  font-size: 10px;
-}
-.tree-view-actions .button i {
-  margin-right: 5px;
-  color: var(--accent-text);
-}
 .account-tree-panel {
   overflow: hidden;
   border-radius: 13px;
   box-shadow: 0 5px 18px color-mix(in srgb, var(--text-strong) 5%, transparent);
 }
-.account-tree-panel > .table-header {
-  min-height: 70px;
-  padding: 14px 18px;
-}
-.account-tree-heading {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-.account-tree-heading-icon {
-  width: 38px;
-  height: 38px;
-  display: grid;
-  flex: 0 0 38px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
-  border-radius: 10px;
-  color: var(--accent-text);
-  background: var(--accent-soft);
-  font-size: 15px;
-}
-.account-tree-heading h2 {
-  margin-bottom: 3px;
-}
-.account-total-pill {
-  flex: 0 0 auto;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--text-muted);
-  background: var(--surface-muted);
-  font-size: 10px;
-  font-weight: 650;
-}
-.account-tree-panel > .table-header > div > span {
-  max-width: 760px;
-  line-height: 1.5;
-}
 .account-tree-groups {
   display: grid;
-  gap: 14px;
-  padding: 14px;
+  gap: 10px;
+  padding: 12px;
 }
 .account-group-tree {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--surface-muted) 50%, var(--surface));
+  border-radius: 10px;
+  background: var(--surface);
   box-shadow: 0 2px 6px color-mix(in srgb, var(--text-strong) 3%, transparent);
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+.account-group-tree.root-drop-target {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 26%, var(--surface));
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 72%, transparent);
+}
+.account-group-tree.root-drop-available {
+  outline: 1px dashed var(--accent);
+  outline-offset: -4px;
 }
 .account-group-heading {
   display: flex;
-  min-height: 64px;
+  min-height: 58px;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 11px 15px;
+  gap: 12px;
+  padding: 9px 13px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent) 8%, var(--surface)),
-    var(--surface) 70%
-  );
+  background: var(--surface);
   transition:
     background-color 140ms ease,
     box-shadow 140ms ease;
 }
-.account-group-heading.root-drop-target {
-  background: color-mix(in srgb, var(--accent-soft) 84%, var(--surface));
-  box-shadow: inset 0 0 0 2px var(--accent);
-}
-.account-group-heading.root-drop-available {
-  outline: 1px dashed var(--accent);
-  outline-offset: -4px;
+.account-group-tree.root-drop-available {
   cursor: copy;
 }
 .account-drag-status {
@@ -2072,9 +1989,26 @@ html[data-accent]
   color: var(--accent-text);
   background: var(--surface);
 }
+.account-group-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+.account-group-name {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 8px;
+}
+.account-group-code {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
 .account-group-title h3 {
   overflow: hidden;
-  margin: 0 0 3px;
+  margin: 0;
   color: var(--text-strong);
   font-size: 13px;
   font-weight: 700;
@@ -2092,12 +2026,18 @@ html[data-accent]
   color: var(--text-muted);
   font-size: 10px;
   white-space: nowrap;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+.account-group-tree.root-drop-available .account-root-drop-hint,
+.account-group-tree.root-drop-target .account-root-drop-hint {
+  opacity: 1;
 }
 .account-root-drop-hint i {
   color: var(--accent-text);
 }
 .account-tree-body {
-  padding: 8px 12px 12px;
+  padding: 6px 12px 10px;
 }
 .account-tree-item {
   min-width: 0;
@@ -2105,14 +2045,14 @@ html[data-accent]
 .account-tree-row {
   position: relative;
   display: flex;
-  min-height: 48px;
+  min-height: 44px;
   align-items: center;
   gap: 11px;
   margin-top: 5px;
   padding: 7px 10px;
-  border: 1px solid transparent;
+  border: 1px solid color-mix(in srgb, #c99e32 48%, var(--border));
   border-radius: 9px;
-  background: color-mix(in srgb, var(--surface) 96%, var(--accent-soft));
+  background: color-mix(in srgb, #c99e32 4%, var(--surface));
   box-shadow: 0 1px 2px color-mix(in srgb, var(--text-strong) 5%, transparent);
   transition:
     border-color 140ms ease,
@@ -2125,7 +2065,8 @@ html[data-accent]
   cursor: grabbing;
 }
 .account-tree-row:hover {
-  border-color: var(--border);
+  border-color: color-mix(in srgb, #c99e32 78%, var(--border));
+  background: color-mix(in srgb, #c99e32 8%, var(--surface));
   box-shadow: 0 3px 9px color-mix(in srgb, var(--text-strong) 8%, transparent);
 }
 .account-tree-row.account-dragging,
@@ -2179,7 +2120,7 @@ html[data-accent]
 }
 .account-tree-code {
   flex: 0 0 auto;
-  color: var(--accent-text);
+  color: var(--text-muted);
   font-size: 11px;
   font-weight: 750;
   font-variant-numeric: tabular-nums;
@@ -2347,45 +2288,33 @@ html[data-accent] .account-page .image-hint {
 @media (max-width: 600px) {
   .accounts-page-heading {
     align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .accounts-page-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .accounts-page-actions .button {
+    justify-content: center;
   }
   .accounts-create-button {
     min-height: 38px;
     padding-inline: 11px;
   }
-  .account-overview {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .account-overview-card {
-    min-height: 67px;
-    gap: 9px;
-    padding: 10px;
-  }
-  .overview-icon {
-    width: 32px;
-    height: 32px;
-    flex-basis: 32px;
-    border-radius: 8px;
-    font-size: 12px;
-  }
-  .account-overview-card strong {
-    font-size: 18px;
-  }
-  .accounts-toolbar {
+  .accounts-search-toolbar {
     align-items: stretch;
     flex-direction: column;
-    gap: 8px;
-    padding: 8px;
+    gap: 6px;
   }
-  .accounts-toolbar .search-box {
+  .accounts-search-toolbar .search-box {
     min-width: 0;
     max-width: none;
     flex-basis: auto;
   }
-  .tree-view-actions .button {
-    flex: 1 1 50%;
-    justify-content: center;
+  .account-search-count {
+    align-self: flex-end;
   }
   .company-branding {
     align-items: flex-start;
@@ -2417,25 +2346,16 @@ html[data-accent] .account-page .image-hint {
   .data-export-action .button {
     width: 100%;
   }
-  .account-tree-panel > .table-header {
-    padding: 12px 14px;
-  }
-  .account-total-pill {
-    display: none;
-  }
   .account-tree-groups {
-    gap: 10px;
-    padding: 10px;
+    gap: 8px;
+    padding: 8px;
   }
   .account-group-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px 12px;
+    gap: 7px;
+    padding: 8px;
   }
   .account-root-drop-hint {
-    padding-left: 47px;
-    white-space: normal;
+    display: none;
   }
   .account-tree-body {
     padding: 7px 8px 10px;

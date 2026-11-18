@@ -26,15 +26,15 @@
       <form class="account-form" (ngSubmit)="createAccount()">
         <label>
           <span>Account name</span>
-          <input name="name" type="text" maxlength="120" required [(ngModel)]="name" placeholder="Operating account" />
+          <app-input name="name" type="text" maxlength="120" required [(ngModel)]="name" placeholder="Operating account" />
         </label>
         <label>
           <span>Bank name</span>
-          <input name="bankName" type="text" maxlength="120" required [(ngModel)]="bankName" placeholder="Example Bank" />
+          <app-input name="bankName" type="text" maxlength="120" required [(ngModel)]="bankName" placeholder="Example Bank" />
         </label>
         <label>
           <span>Last four digits</span>
-          <input name="lastFour" type="text" minlength="4" maxlength="4" required [(ngModel)]="accountNumberLastFour" placeholder="1234" />
+          <app-input name="lastFour" type="text" minlength="4" maxlength="4" required [(ngModel)]="accountNumberLastFour" placeholder="1234" />
         </label>
         <label>
           <span>Ledger asset account</span>
@@ -181,7 +181,7 @@
                           @for (candidate of candidates; track candidate.journalLineId) {
                             <div class="candidate-item">
                               <div><strong>{{ candidate.entryDate }} · available {{ formatAmount(candidate.amount) }}</strong><span>{{ candidate.description }}</span></div>
-                              <label class="allocation-input"><span>Allocate</span><input type="number" min="0.01" [max]="absoluteAmount(candidate.amount)" step="0.01"
+                              <label class="allocation-input"><span>Allocate</span><app-input type="number" min="0.01" [max]="absoluteAmount(candidate.amount)" step="0.01"
                                 [name]="'allocation-' + candidate.journalLineId" [(ngModel)]="allocationAmounts[candidate.journalLineId]" /></label>
                               <button class="button primary table-action" type="button" [disabled]="saving" (click)="matchTransaction(transaction, candidate)">Allocate</button>
                             </div>
@@ -198,8 +198,8 @@
                               <option [ngValue]="account.value">{{ account.label }}</option>
                             }
                           </select></label>
-                          <label><span>Posting date</span><input name="adjustmentDate" type="date" [(ngModel)]="adjustmentEntryDate" /></label>
-                          <label class="adjustment-description"><span>Description</span><input name="adjustmentDescription" maxlength="500" [(ngModel)]="adjustmentDescription" /></label>
+                          <label><span>Posting date</span><app-input name="adjustmentDate" type="date" [(ngModel)]="adjustmentEntryDate" /></label>
+                          <label class="adjustment-description"><span>Description</span><app-input name="adjustmentDescription" maxlength="500" [(ngModel)]="adjustmentDescription" /></label>
                           <div class="adjustment-actions">
                             <button class="button secondary" type="button" (click)="adjustmentTransactionId = null">Cancel</button>
                             <button class="button primary" type="button" [disabled]="saving || !adjustmentAccountId" (click)="recordAdjustment(transaction)">Post and match {{ formatAmount(transaction.remainingAmount) }}</button>

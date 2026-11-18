@@ -5,10 +5,11 @@ import { FieldValidationDirective } from '../../../shared/directives/field-valid
 import { AuthService } from '../../../core/auth.service';
 import { errorMessage } from '../../../shared/utils/page-utils';
 import { NotificationService } from '../../../shared/services/notification.service';
+import { InputComponent } from '../../../shared/components/input/input.component';
 
 @Component({
   selector: 'app-forgot-password-page',
-  imports: [FormsModule, RouterLink, FieldValidationDirective],
+  imports: [FormsModule, RouterLink, FieldValidationDirective, InputComponent],
   template: `
     <main class="auth-page">
       <section class="auth-brand">
@@ -32,7 +33,7 @@ import { NotificationService } from '../../../shared/services/notification.servi
             </div>
           } @else {
             <label>Email address
-              <input name="email" type="email" [(ngModel)]="email" autocomplete="email" required />
+              <app-input name="email" type="email" [(ngModel)]="email" autocomplete="email" required />
             </label>
             <button class="button primary full" [disabled]="busy()">{{ busy() ? 'Sending…' : 'Send reset link' }}</button>
           }

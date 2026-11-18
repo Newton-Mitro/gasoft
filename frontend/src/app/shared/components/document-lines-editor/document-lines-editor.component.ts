@@ -2,10 +2,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Choice, DocumentLineForm } from '../../models/shared.models';
 import { FieldValidationDirective } from '../../directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../directives/searchable-select.directive';
+import { InputComponent } from '../input/input.component';
 
 @Component({
   selector: 'app-document-lines-editor',
-  imports: [FieldValidationDirective, SearchableSelectDirective],
+  imports: [FieldValidationDirective, SearchableSelectDirective, InputComponent],
   styleUrl: './document-lines-editor.component.css',
   templateUrl: './document-lines-editor.component.html',
 })

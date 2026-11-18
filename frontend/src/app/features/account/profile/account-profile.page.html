@@ -41,10 +41,10 @@
         </div>
         <form (ngSubmit)="updateProfile()">
           <label>Display name
-            <input name="displayName" [(ngModel)]="displayName" maxlength="200" autocomplete="name" required />
+            <app-input name="displayName" [(ngModel)]="displayName" maxlength="200" autocomplete="name" required />
           </label>
           <label>Email address
-            <input name="email" type="email" [ngModel]="profile()?.email" readonly autocomplete="email" />
+            <app-input name="email" type="email" [ngModel]="profile()?.email" readonly autocomplete="email" />
             <small>Email changes require verification and aren’t available here yet.</small>
           </label>
           <div class="form-actions">
@@ -60,13 +60,13 @@
         </div>
         <form (ngSubmit)="updatePassword()">
           <label>Current password
-            <input name="currentPassword" type="password" [(ngModel)]="currentPassword" autocomplete="current-password" required />
+            <app-input name="currentPassword" type="password" [(ngModel)]="currentPassword" autocomplete="current-password" required />
           </label>
           <label>New password
-            <input name="newPassword" type="password" [(ngModel)]="newPassword" minlength="12" autocomplete="new-password" required />
+            <app-input name="newPassword" type="password" [(ngModel)]="newPassword" minlength="12" autocomplete="new-password" required />
           </label>
           <label>Confirm new password
-            <input name="confirmPassword" type="password" [(ngModel)]="confirmPassword" minlength="12" autocomplete="new-password" required />
+            <app-input name="confirmPassword" type="password" [(ngModel)]="confirmPassword" minlength="12" autocomplete="new-password" required />
           </label>
           <p class="password-hint">At least 12 characters, including a number and a symbol.</p>
           <div class="form-actions">

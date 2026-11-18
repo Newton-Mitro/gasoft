@@ -8,11 +8,11 @@
 @if (error) { <div class="alert error">{{ error }}</div> }
 <section class="report-filters panel">
   @if (reportType === 'balance-sheet') {
-    <div><label>As of date<input type="date" name="asOfDate" [(ngModel)]="asOfDate" (ngModelChange)="onDateChange()" /></label></div>
+    <div><label>As of date<app-input type="date" name="asOfDate" [(ngModel)]="asOfDate" (ngModelChange)="onDateChange()" /></label></div>
     <span class="filter-hint">Balances include posted journal entries through this date. Unclosed earnings are included in equity.</span>
   } @else {
-    <div><label>From date<input type="date" name="fromDate" [(ngModel)]="fromDate" (ngModelChange)="onDateChange()" /></label></div>
-    <div><label>To date<input type="date" name="toDate" [(ngModel)]="toDate" (ngModelChange)="onDateChange()" /></label></div>
+    <div><label>From date<app-input type="date" name="fromDate" [(ngModel)]="fromDate" (ngModelChange)="onDateChange()" /></label></div>
+    <div><label>To date<app-input type="date" name="toDate" [(ngModel)]="toDate" (ngModelChange)="onDateChange()" /></label></div>
     <span class="filter-hint">Only posted journal entries are included.</span>
   }
 </section>

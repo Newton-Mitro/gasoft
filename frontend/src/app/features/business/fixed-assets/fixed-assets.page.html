@@ -16,13 +16,13 @@
   <section class="asset-form panel">
     <div class="section-heading"><div><h2>Acquire fixed asset</h2><p>Acquisition posts a balanced journal entry in the company’s functional currency.</p></div></div>
     <div class="asset-fields">
-      <label><span>Asset number</span><input name="assetNumber" maxlength="40" [(ngModel)]="assetNumber" /></label>
-      <label><span>Asset name</span><input name="name" maxlength="160" [(ngModel)]="name" /></label>
-      <label><span>Acquisition date</span><input name="acquisitionDate" type="date" [(ngModel)]="acquisitionDate" /></label>
-      <label><span>In-service date</span><input name="inServiceDate" type="date" [(ngModel)]="inServiceDate" /></label>
-      <label><span>Acquisition cost ({{ currencyCode }})</span><input name="acquisitionCost" type="number" min="0.01" step="0.01" [(ngModel)]="acquisitionCost" /></label>
-      <label><span>Residual value ({{ currencyCode }})</span><input name="residualValue" type="number" min="0" step="0.01" [(ngModel)]="residualValue" /></label>
-      <label><span>Useful life (months)</span><input name="usefulLifeMonths" type="number" min="1" max="1200" step="1" [(ngModel)]="usefulLifeMonths" /></label>
+      <label><span>Asset number</span><app-input name="assetNumber" maxlength="40" [(ngModel)]="assetNumber" /></label>
+      <label><span>Asset name</span><app-input name="name" maxlength="160" [(ngModel)]="name" /></label>
+      <label><span>Acquisition date</span><app-input name="acquisitionDate" type="date" [(ngModel)]="acquisitionDate" /></label>
+      <label><span>In-service date</span><app-input name="inServiceDate" type="date" [(ngModel)]="inServiceDate" /></label>
+      <label><span>Acquisition cost ({{ currencyCode }})</span><app-input name="acquisitionCost" type="number" min="0.01" step="0.01" [(ngModel)]="acquisitionCost" /></label>
+      <label><span>Residual value ({{ currencyCode }})</span><app-input name="residualValue" type="number" min="0" step="0.01" [(ngModel)]="residualValue" /></label>
+      <label><span>Useful life (months)</span><app-input name="usefulLifeMonths" type="number" min="1" max="1200" step="1" [(ngModel)]="usefulLifeMonths" /></label>
       <label><span>Acquisition period</span><select appSearchableSelect name="acquisitionPeriod" [(ngModel)]="acquisitionPeriodId">
         <option [ngValue]="null" disabled>Select period</option>
         @for (period of openPeriods; track period.id) { <option [ngValue]="period.id">{{ period.startsOn }} – {{ period.endsOn }}</option> }
@@ -47,7 +47,7 @@
         <option [ngValue]="null" disabled>Select cash, bank, or payable account</option>
         @for (account of fundingAccounts; track account.accountId) { <option [ngValue]="account.accountId">{{ account.code }} · {{ account.name }} ({{ account.accountType }})</option> }
       </select></label>
-      <label class="description-field"><span>Description</span><input name="description" maxlength="500" [(ngModel)]="description" /></label>
+      <label class="description-field"><span>Description</span><app-input name="description" maxlength="500" [(ngModel)]="description" /></label>
     </div>
     <div class="form-actions">
       <button class="button primary" type="button" [disabled]="saving" (click)="create()">{{ saving ? 'Posting…' : 'Post acquisition' }}</button>
@@ -90,8 +90,8 @@
           @if (period.endsOn >= disposingAsset.inServiceDate) { <option [ngValue]="period.id">{{ period.startsOn }} – {{ period.endsOn }}</option> }
         }
       </select></label>
-      <label><span>Disposal date</span><input name="disposalDate" type="date" [value]="disposalDate" readonly /></label>
-      <label><span>Proceeds ({{ currencyCode }})</span><input name="disposalProceeds" type="number" min="0" step="0.01" [(ngModel)]="disposalProceeds" /></label>
+      <label><span>Disposal date</span><app-input name="disposalDate" type="date" [value]="disposalDate" readonly /></label>
+      <label><span>Proceeds ({{ currencyCode }})</span><app-input name="disposalProceeds" type="number" min="0" step="0.01" [(ngModel)]="disposalProceeds" /></label>
       <label><span>Journal</span><select appSearchableSelect name="disposalJournal" [(ngModel)]="disposalJournalId">
         <option [ngValue]="null" disabled>Select journal</option>
         @for (journal of journals; track journal.id) { <option [ngValue]="journal.id">{{ journal.code }} · {{ journal.name }}</option> }
