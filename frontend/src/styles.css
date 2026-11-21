@@ -2840,15 +2840,24 @@ html[data-accent] :is(.content-area, .auth-page) :is(.alert.error, .alert.succes
 :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody td,
 :root .content-area :is(.table-scroll, .detail-table, .table-panel) tfoot th,
 :root .content-area :is(.table-scroll, .detail-table, .table-panel) tfoot td {
-  padding: 11px 15px;
+  padding: 5px 15px;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
   color: var(--text);
-  line-height: 1.45;
+  line-height: 1.35;
   vertical-align: middle;
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) tfoot th,
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) tfoot td {
+  padding: 11px 15px;
 }
 
 :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr {
   transition: background-color 140ms ease;
+}
+
+:root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody td {
+  height: 32px;
 }
 
 :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr:nth-child(even) {
@@ -2905,7 +2914,7 @@ html[data-accent] :is(.content-area, .auth-page) :is(.alert.error, .alert.succes
   :root .content-area :is(.table-scroll, .detail-table, .table-panel) :is(tbody, tfoot) {
     display: grid;
     width: 100%;
-    gap: 10px;
+    gap: 6px;
   }
 
   :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr {
@@ -2928,8 +2937,8 @@ html[data-accent] :is(.content-area, .auth-page) :is(.alert.error, .alert.succes
     min-width: 0;
     grid-template-columns: minmax(5.5rem, 38%) minmax(0, 1fr);
     align-items: start;
-    gap: 10px;
-    padding: 9px 11px;
+    gap: 8px;
+    padding: 6px 9px;
     border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
     text-align: left;
   }

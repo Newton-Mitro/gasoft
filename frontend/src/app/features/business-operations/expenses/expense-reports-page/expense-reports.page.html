@@ -73,7 +73,7 @@
               <span>Expense date</span>
               <input
                 type="date"
-                [name]="'expenseDate-' + index"
+                [name]="'lines[' + index + '].expenseDate'"
                 required
                 [(ngModel)]="line.expenseDate"
               />
@@ -81,7 +81,7 @@
             <label>
               <span>Merchant</span>
               <input
-                [name]="'merchant-' + index"
+                [name]="'lines[' + index + '].merchant'"
                 maxlength="160"
                 required
                 [(ngModel)]="line.merchant"
@@ -94,7 +94,7 @@
                 type="number"
                 step="any"
                 min="0.01"
-                [name]="'amount-' + index"
+                [name]="'lines[' + index + '].amount'"
                 required
                 [(ngModel)]="line.amount"
               />
@@ -103,7 +103,7 @@
               <span>Expense account</span>
               <select
                 appSearchableSelect
-                [name]="'account-' + index"
+                [name]="'lines[' + index + '].accountId'"
                 [attr.aria-label]="'Expense account for expense ' + (index + 1)"
                 required
                 [(ngModel)]="line.accountId"
@@ -117,7 +117,7 @@
             <label class="description-field">
               <span>Description</span>
               <input
-                [name]="'description-' + index"
+                [name]="'lines[' + index + '].description'"
                 maxlength="500"
                 required
                 [(ngModel)]="line.description"
@@ -131,7 +131,7 @@
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,application/pdf"
-                [name]="'receipt-' + index"
+                [name]="'lines[' + index + '].receipt'"
                 (change)="selectReceipt(index, $event)"
               />
             </label>
@@ -208,7 +208,7 @@
         class="icon-button"
         type="button"
         aria-label="Close workflow panel"
-        (click)="workflowReportId = null; workflowMode = null"
+        (click)="cancelWorkflow()"
       >
         ×
       </button>
@@ -218,8 +218,10 @@
       <label class="workflow-note">
         <span>Reason for rejection</span>
         <textarea
+          name="workflowNote"
           rows="3"
           maxlength="1000"
+          required
           [(ngModel)]="workflowNote"
           placeholder="Explain what needs to be corrected"
         ></textarea>
@@ -246,7 +248,13 @@
       <div class="field-grid">
         <label>
           <span>Journal</span>
-          <select appSearchableSelect aria-label="Journal" [(ngModel)]="workflowJournalId">
+          <select
+            appSearchableSelect
+            name="workflowJournalId"
+            required
+            aria-label="Journal"
+            [(ngModel)]="workflowJournalId"
+          >
             <option [ngValue]="null" disabled>Select journal</option>
             @for (journal of journals; track journal.value) {
               <option [ngValue]="journal.value">{{ journal.label }}</option>
@@ -257,6 +265,8 @@
           <span>Open accounting period</span>
           <select
             appSearchableSelect
+            name="workflowPeriodId"
+            required
             aria-label="Open accounting period"
             [(ngModel)]="workflowPeriodId"
           >
@@ -271,6 +281,8 @@
             <span>Employee payable account</span>
             <select
               appSearchableSelect
+              name="workflowAccountId"
+              required
               aria-label="Employee payable account"
               [(ngModel)]="workflowAccountId"
             >
@@ -285,6 +297,8 @@
             <span>Cash or bank account</span>
             <select
               appSearchableSelect
+              name="workflowAccountId"
+              required
               aria-label="Cash or bank account"
               [(ngModel)]="workflowAccountId"
             >
@@ -302,7 +316,7 @@
       <button
         class="button secondary"
         type="button"
-        (click)="workflowReportId = null; workflowMode = null"
+        (click)="cancelWorkflow()"
       >
         Cancel
       </button>

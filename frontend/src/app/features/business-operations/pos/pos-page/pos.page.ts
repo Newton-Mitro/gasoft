@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../../core/api.service';
 import { AuthService } from '../../../../core/auth.service';
@@ -8,7 +9,12 @@ import { InventoryBalance } from '../../../inventory/balances/inventory-balance.
 import { Item } from '../../../inventory/items/item.model';
 import { ItemService } from '../../../inventory/items/item.service';
 import { Choice } from '../../../../shared/models/shared.models';
+import { FieldValidationDirective } from '../../../../shared/directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../../../shared/directives/searchable-select.directive';
+import {
+  FormValidationErrors,
+  FormValidationService,
+} from '../../../../shared/services/form-validation.service';
 import { OptionDataService } from '../../../../shared/data/option-data.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { errorMessage } from '../../../../shared/utils/page-utils';
@@ -26,17 +32,18 @@ interface CompanyOption {
 interface CartLine {
   item: Item;
   quantity: number;
-  unitPrice: number;
+  unitPrice: number | null;
 }
 
 @Component({
   selector: 'app-pos-page',
-  imports: [FormsModule, SearchableSelectDirective],
+  imports: [FormsModule, FieldValidationDirective, SearchableSelectDirective],
   templateUrl: './pos.page.html',
   styleUrl: './pos.page.css',
 })
 export class PosPageComponent implements OnInit {
   readonly notifications = inject(NotificationService);
+  private readonly formValidation = inject(FormValidationService);
   readonly title = 'Point of sale';
   items: Item[] = [];
   customers: Party[] = [];
@@ -142,7 +149,7 @@ export class PosPageComponent implements OnInit {
   }
 
   get subtotal(): number {
-    return this.cart.reduce((total, line) => total + line.quantity * line.unitPrice, 0);
+    return this.cart.reduce((total, line) => total + line.quantity * (line.unitPrice ?? 0), 0);
   }
 
   get setupComplete(): boolean {
@@ -170,6 +177,7 @@ export class PosPageComponent implements OnInit {
           Number.isFinite(Number(line.quantity)) &&
           Number(line.quantity) > 0 &&
           Number(line.quantity) <= this.availableQuantity(line.item.id) &&
+          line.unitPrice !== null &&
           Number.isFinite(Number(line.unitPrice)) &&
           Number(line.unitPrice) >= 0,
       )
@@ -192,6 +200,7 @@ export class PosPageComponent implements OnInit {
     }
     if (line) line.quantity += 1;
     else this.cart = [...this.cart, { item, quantity: 1, unitPrice: 0 }];
+    this.formValidation.clear();
     this.lastSale = null;
   }
 
@@ -199,7 +208,11 @@ export class PosPageComponent implements OnInit {
     const line = this.cart.find((candidate) => candidate.item.id === itemId);
     if (!line) return;
     const quantity = Number(line.quantity) + change;
-    if (Number.isFinite(quantity) && quantity > 0) line.quantity = quantity;
+    if (Number.isFinite(quantity) && quantity > 0) {
+      line.quantity = quantity;
+      const index = this.cart.indexOf(line);
+      this.formValidation.clearField(`lines[${index}].quantity`);
+    }
   }
 
   addFirstMatch(): void {
@@ -212,6 +225,12 @@ export class PosPageComponent implements OnInit {
 
   removeItem(itemId: number): void {
     this.cart = this.cart.filter((line) => line.item.id !== itemId);
+    this.formValidation.clear();
+  }
+
+  clearCart(): void {
+    this.cart = [];
+    this.formValidation.clear();
   }
 
   availableQuantity(itemId: number): number {
@@ -233,10 +252,19 @@ export class PosPageComponent implements OnInit {
     }).format(amount);
   }
 
+  fieldMessages(field: string): string[] {
+    return this.formValidation.messagesFor(field);
+  }
+
+  clearFieldError(field: string): void {
+    this.formValidation.clearField(field);
+  }
+
   checkout(): void {
-    if (!this.isCheckoutValid()) {
-      this.error =
-        'Complete checkout settings and enter a positive quantity and valid price for every item.';
+    this.formValidation.clear();
+    const validationErrors = this.validateCheckout();
+    this.formValidation.setErrors(validationErrors);
+    if (Object.keys(validationErrors).length) {
       return;
     }
 
@@ -270,6 +298,7 @@ export class PosPageComponent implements OnInit {
 
     this.saving = true;
     this.error = '';
+    this.formValidation.clear();
     this.pos.checkout(payload).subscribe({
       next: (result) => {
         this.lastSale = result;
@@ -293,10 +322,17 @@ export class PosPageComponent implements OnInit {
       },
       error: (error) => {
         this.saving = false;
-        this.error = errorMessage(
+        const details = errorMessage(
           error,
           'The sale could not be completed. No sale records were committed.',
         );
+        const validationErrors = serverValidationErrors(error);
+        if (Object.keys(validationErrors).length) {
+          this.formValidation.setErrors(validationErrors);
+          this.error = Object.keys(this.formValidation.unmatchedErrors()).length ? details : '';
+        } else {
+          this.error = details;
+        }
         this.changeDetector.markForCheck();
       },
     });
@@ -306,8 +342,97 @@ export class PosPageComponent implements OnInit {
     window.print();
   }
 
-  private isCheckoutValid(): boolean {
-    return this.canCheckout;
+  private validateCheckout(): FormValidationErrors {
+    const errors: FormValidationErrors = {};
+    if (!this.customers.some((customer) => customer.id === this.partyId)) {
+      errors['partyId'] = ['Select a customer.'];
+    }
+    if (!this.cart.length) errors['cart'] = ['Add at least one item to the sale.'];
+
+    const requiredSelections: Array<[string, number | null, string, Choice[]]> = [
+      ['warehouseId', this.warehouseId, 'Select a warehouse.', this.options['warehouses'] ?? []],
+      ['journalId', this.journalId, 'Select a journal.', this.options['journals'] ?? []],
+      [
+        'accountingPeriodId',
+        this.accountingPeriodId,
+        'Select an open accounting period.',
+        this.options['periods'] ?? [],
+      ],
+      [
+        'revenueAccountId',
+        this.revenueAccountId,
+        'Select a sales revenue account.',
+        this.options['revenueAccounts'] ?? [],
+      ],
+      [
+        'receivableAccountId',
+        this.receivableAccountId,
+        'Select a receivable account.',
+        this.options['assetAccounts'] ?? [],
+      ],
+      [
+        'settlementAccountId',
+        this.settlementAccountId,
+        'Select a cash or card account.',
+        this.options['assetAccounts'] ?? [],
+      ],
+      [
+        'inventoryAccountId',
+        this.inventoryAccountId,
+        'Select an inventory asset account.',
+        this.options['assetAccounts'] ?? [],
+      ],
+      [
+        'costOfGoodsSoldAccountId',
+        this.costOfGoodsSoldAccountId,
+        'Select a cost of goods sold account.',
+        this.options['expenseAccounts'] ?? [],
+      ],
+    ];
+    for (const [field, value, message, options] of requiredSelections) {
+      if (!isPositiveId(value) || !options.some((option) => Number(option.value) === value)) {
+        errors[field] = [message];
+      }
+    }
+
+    if (this.taxCodeId !== null) {
+      if (
+        !isPositiveId(this.taxCodeId) ||
+        !(this.options['taxCodes'] ?? []).some((option) => Number(option.value) === this.taxCodeId)
+      ) {
+        errors['taxCodeId'] = ['Select a valid tax code.'];
+      }
+      if (
+        !isPositiveId(this.taxAccountId) ||
+        !(this.options['taxAccounts'] ?? []).some(
+          (option) => Number(option.value) === this.taxAccountId,
+        )
+      ) {
+        errors['taxAccountId'] = ['Select a tax liability account.'];
+      }
+    }
+
+    this.cart.forEach((line, index) => {
+      if (!Number.isFinite(Number(line.quantity)) || Number(line.quantity) <= 0) {
+        errors[`lines[${index}].quantity`] = ['Quantity must be greater than zero.'];
+      } else {
+        const available = this.availableQuantity(line.item.id);
+        if (Number(line.quantity) > available) {
+          errors[`lines[${index}].quantity`] = [
+            `Quantity cannot exceed the ${available} units available in the selected warehouse.`,
+          ];
+        }
+      }
+      if (
+        line.unitPrice === null ||
+        !Number.isFinite(Number(line.unitPrice)) ||
+        Number(line.unitPrice) < 0
+      ) {
+        errors[`lines[${index}].unitPrice`] = ['Enter a valid unit price of zero or more.'];
+      }
+    });
+
+    return errors;
   }
 }
 
@@ -323,4 +448,31 @@ function localDate(): string {
 
 function createReference(): string {
   return `${localDate().replace(/-/g, '')}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
+function serverValidationErrors(error: unknown): FormValidationErrors {
+  if (
+    !(error instanceof HttpErrorResponse) ||
+    (error.status !== 400 && error.status !== 422) ||
+    !error.error ||
+    typeof error.error !== 'object' ||
+    !('errors' in error.error) ||
+    !error.error.errors ||
+    typeof error.error.errors !== 'object'
+  ) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(error.error.errors).flatMap(([field, messages]) => {
+      const fieldMessages = Array.isArray(messages)
+        ? messages.filter(
+            (message): message is string => typeof message === 'string' && !!message.trim(),
+          )
+        : typeof messages === 'string' && messages.trim()
+          ? [messages]
+          : [];
+      return fieldMessages.length ? [[field, fieldMessages]] : [];
+    }),
+  );
 }

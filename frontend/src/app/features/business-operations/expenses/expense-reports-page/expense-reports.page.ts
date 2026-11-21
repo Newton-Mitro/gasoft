@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CurrencyPipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { combineLatest, firstValueFrom, forkJoin, Observable, of, Subscription } from 'rxjs';
 import { ApiService } from '../../../../core/api.service';
@@ -9,7 +10,12 @@ import { Choice } from '../../../../shared/models/shared.models';
 import { OptionDataService } from '../../../../shared/data/option-data.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
 import { errorMessage } from '../../../../shared/utils/page-utils';
+import { FieldValidationDirective } from '../../../../shared/directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../../../shared/directives/searchable-select.directive';
+import {
+  FormValidationErrors,
+  FormValidationService,
+} from '../../../../shared/services/form-validation.service';
 import {
   AccountingPeriodOption,
   ExpenseReport,
@@ -39,12 +45,19 @@ type WorkflowMode = 'reject' | 'post' | 'reimburse';
 
 @Component({
   selector: 'app-expense-reports-page',
-  imports: [CurrencyPipe, FormsModule, SearchableSelectDirective, RouterLink],
+  imports: [
+    CurrencyPipe,
+    FormsModule,
+    FieldValidationDirective,
+    SearchableSelectDirective,
+    RouterLink,
+  ],
   templateUrl: './expense-reports.page.html',
   styleUrls: ['../../../../shared/styles/feature-page.css', './expense-reports.page.css'],
 })
 export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
+  private readonly formValidation = inject(FormValidationService);
   reports: ExpenseReport[] = [];
   expenseAccounts: Choice[] = [];
   payableAccounts: Choice[] = [];
@@ -87,6 +100,7 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
         const view = data['view'];
         this.view = view === 'create' || view === 'edit' ? view : 'index';
         this.error = '';
+        this.formValidation.clear();
         this.workflowReportId = null;
         this.workflowMode = null;
 
@@ -120,11 +134,13 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
   }
 
   addLine(): void {
+    this.formValidation.clear();
     this.expenseLines = [...this.expenseLines, this.newLine(new Date().toISOString().slice(0, 10))];
   }
 
   removeLine(index: number): void {
     if (this.expenseLines.length <= 1) return;
+    this.formValidation.clear();
     this.expenseLines = this.expenseLines.filter((_, lineIndex) => lineIndex !== index);
   }
 
@@ -132,13 +148,18 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
     const input = event.target;
     if (!(input instanceof HTMLInputElement)) return;
     const file = input.files?.[0] ?? null;
+    const field = `lines[${index}].receipt`;
     if (file && file.size > 5 * 1024 * 1024) {
-      this.error = 'Receipt files must be no larger than 5 MB.';
+      this.expenseLines[index].receiptFile = null;
       input.value = '';
+      this.formValidation.setErrors({
+        ...this.formValidation.errors(),
+        [field]: ['Receipt files must be no larger than 5 MB.'],
+      });
       return;
     }
     this.expenseLines[index].receiptFile = file;
-    this.error = '';
+    this.formValidation.clearField(field);
   }
 
   async saveReport(): Promise<void> {
@@ -187,6 +208,7 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
       this.replaceReport(report);
       this.editingReportId = null;
       this.expenseLines = [];
+      this.formValidation.clear();
       this.notifications.success(
         `Expense report ${wasCreate ? 'created' : 'updated'} successfully.`,
       );
@@ -197,7 +219,14 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
       this.error = savedReport
         ? `The report draft was saved, but a receipt could not be uploaded. ${details}`
         : details;
-      this.notifications.error(this.error);
+      if (!savedReport) {
+        const validationErrors = serverValidationErrors(error);
+        if (Object.keys(validationErrors).length) {
+          this.formValidation.setErrors(validationErrors);
+          this.error = Object.keys(this.formValidation.unmatchedErrors()).length ? details : '';
+        }
+      }
+      if (this.error) this.notifications.error(this.error);
       if (savedReport && wasCreate) {
         void this.router.navigateByUrl(`/expenses/${savedReport.id}/edit`);
       }
@@ -208,7 +237,14 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
   }
 
   cancelEdit(): void {
+    this.formValidation.clear();
     void this.router.navigateByUrl('/expenses');
+  }
+
+  cancelWorkflow(): void {
+    this.formValidation.clear();
+    this.workflowReportId = null;
+    this.workflowMode = null;
   }
 
   submitReport(report: ExpenseReport): void {
@@ -224,6 +260,7 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
   }
 
   beginWorkflow(report: ExpenseReport, mode: WorkflowMode): void {
+    this.formValidation.clear();
     this.workflowReportId = report.id;
     this.workflowMode = mode;
     this.workflowNote = '';
@@ -238,10 +275,19 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
     const mode = this.workflowMode;
     if (reportId === null || mode === null) return;
 
+    this.formValidation.clear();
     if (mode === 'reject') {
       const note = this.workflowNote.trim();
       if (!note) {
-        this.error = 'Enter a reason for rejecting this expense report.';
+        this.formValidation.setErrors({
+          workflowNote: ['Enter a reason for rejecting this expense report.'],
+        });
+        return;
+      }
+      if (note.length > 1000) {
+        this.formValidation.setErrors({
+          workflowNote: ['Reason must be 1,000 characters or fewer.'],
+        });
         return;
       }
       const report = this.findReport(reportId);
@@ -250,8 +296,36 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.workflowJournalId || !this.workflowPeriodId || !this.workflowAccountId) {
-      this.error = 'Choose a journal, an open accounting period, and the required account.';
+    const validationErrors: FormValidationErrors = {};
+    if (
+      !isPositiveId(this.workflowJournalId) ||
+      !this.journals.some((journal) => Number(journal.value) === this.workflowJournalId)
+    ) {
+      validationErrors['workflowJournalId'] = ['Select a journal.'];
+    }
+    if (!isPositiveId(this.workflowPeriodId)) {
+      validationErrors['workflowPeriodId'] = ['Select an open accounting period.'];
+    } else if (!this.periods.some((period) => period.id === this.workflowPeriodId)) {
+      validationErrors['workflowPeriodId'] = ['Select an open accounting period covering today.'];
+    }
+    const accounts = mode === 'post' ? this.payableAccounts : this.cashAccounts;
+    if (
+      !isPositiveId(this.workflowAccountId) ||
+      !accounts.some((account) => Number(account.value) === this.workflowAccountId)
+    ) {
+      validationErrors['workflowAccountId'] = [
+        mode === 'post' ? 'Select an employee payable account.' : 'Select a cash or bank account.',
+      ];
+    }
+    this.formValidation.setErrors(validationErrors);
+    if (Object.keys(validationErrors).length) {
+      return;
+    }
+    if (
+      !isPositiveId(this.workflowJournalId) ||
+      !isPositiveId(this.workflowPeriodId) ||
+      !isPositiveId(this.workflowAccountId)
+    ) {
       return;
     }
     const report = this.findReport(reportId);
@@ -315,8 +389,15 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
       error: (error) => {
-        this.error = errorMessage(error, 'Could not update this expense report.');
-        this.notifications.error(this.error);
+        const details = errorMessage(error, 'Could not update this expense report.');
+        const validationErrors = serverValidationErrors(error);
+        if (Object.keys(validationErrors).length) {
+          this.formValidation.setErrors(validationErrors);
+          this.error = Object.keys(this.formValidation.unmatchedErrors()).length ? details : '';
+        } else {
+          this.error = details;
+        }
+        if (this.error) this.notifications.error(this.error);
         this.busyReportId = null;
         this.changeDetector.markForCheck();
       },
@@ -324,22 +405,46 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
   }
 
   private validateDraft(): boolean {
-    const valid =
-      this.editingTitle.trim().length > 0 &&
-      this.expenseLines.length > 0 &&
-      this.expenseLines.every(
-        (line) =>
-          Boolean(line.expenseDate && line.merchant.trim() && line.description.trim()) &&
-          Number.isSafeInteger(Number(line.accountId)) &&
-          Number(line.accountId) > 0 &&
-          Number.isFinite(Number(line.amount)) &&
-          Number(line.amount) > 0 &&
-          (!line.receiptFile || line.receiptFile.size <= 5 * 1024 * 1024),
-      );
-    if (!valid)
-      this.error =
-        'Complete the report title and every expense line with a date, merchant, description, account, and positive amount.';
-    return valid;
+    this.formValidation.clear();
+    const errors: FormValidationErrors = {};
+    if (!this.editingTitle.trim()) errors['reportTitle'] = ['Enter a report title.'];
+    else if (this.editingTitle.trim().length > 200) {
+      errors['reportTitle'] = ['Report title must be 200 characters or fewer.'];
+    }
+    if (!this.expenseLines.length) errors['lines'] = ['Add at least one expense.'];
+
+    this.expenseLines.forEach((line, index) => {
+      const field = (name: string) => `lines[${index}].${name}`;
+      if (!isDateOnly(line.expenseDate)) {
+        errors[field('expenseDate')] = ['Enter a valid expense date.'];
+      }
+      if (!line.merchant.trim()) {
+        errors[field('merchant')] = ['Enter a merchant.'];
+      } else if (line.merchant.trim().length > 160) {
+        errors[field('merchant')] = ['Merchant must be 160 characters or fewer.'];
+      }
+      if (!line.description.trim()) {
+        errors[field('description')] = ['Enter an expense description.'];
+      } else if (line.description.trim().length > 500) {
+        errors[field('description')] = ['Description must be 500 characters or fewer.'];
+      }
+      if (!isPositiveId(line.accountId)) {
+        errors[field('accountId')] = ['Select an expense account.'];
+      }
+      if (line.amount === null || !Number.isFinite(Number(line.amount)) || line.amount <= 0) {
+        errors[field('amount')] = ['Amount must be greater than zero.'];
+      }
+      if (line.receiptFile && line.receiptFile.size > 5 * 1024 * 1024) {
+        errors[field('receipt')] = ['Receipt files must be no larger than 5 MB.'];
+      }
+    });
+
+    this.formValidation.setErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
+  fieldMessages(field: string): string[] {
+    return this.formValidation.messagesFor(field);
   }
 
   private replaceReport(report: ExpenseReport): void {
@@ -455,4 +560,41 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
       },
     });
   }
+}
+
+function isPositiveId(value: number | null): value is number {
+  return value !== null && Number.isSafeInteger(value) && value > 0;
+}
+
+function isDateOnly(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
+}
+
+function serverValidationErrors(error: unknown): FormValidationErrors {
+  if (
+    !(error instanceof HttpErrorResponse) ||
+    (error.status !== 400 && error.status !== 422) ||
+    !error.error ||
+    typeof error.error !== 'object' ||
+    !('errors' in error.error) ||
+    !error.error.errors ||
+    typeof error.error.errors !== 'object'
+  ) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(error.error.errors).flatMap(([field, messages]) => {
+      const fieldMessages = Array.isArray(messages)
+        ? messages.filter(
+            (message): message is string => typeof message === 'string' && !!message.trim(),
+          )
+        : typeof messages === 'string' && messages.trim()
+          ? [messages]
+          : [];
+      return fieldMessages.length ? [[field, fieldMessages]] : [];
+    }),
+  );
 }
