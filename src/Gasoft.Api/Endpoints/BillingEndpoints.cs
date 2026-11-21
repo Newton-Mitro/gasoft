@@ -1,5 +1,6 @@
 using Gasoft.Application.Abstractions;
 using Gasoft.Application.Billing;
+using Gasoft.Application.Inventory;
 
 namespace Gasoft.Api.Endpoints;
 
@@ -10,6 +11,26 @@ public static class BillingEndpoints
         var companies = app.MapGroup("/api/v1/companies/{companyId:long}")
             .RequireAuthorization()
             .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
+
+        companies.MapPost("/pos/checkout", async (
+            long companyId,
+            CheckoutPosSaleRequest request,
+            IBillingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                return Results.Ok(await service.CheckoutPosSaleAsync(companyId, request, cancellationToken));
+            }
+            catch (BillingValidationException exception) { return ValidationProblem(exception); }
+            catch (BillingConflictException exception) { return Results.Conflict(new { error = exception.Message }); }
+            catch (InventoryValidationException exception)
+            {
+                return Results.ValidationProblem(exception.Errors.ToDictionary(error => error.Key, error => error.Value));
+            }
+            catch (InventoryConflictException exception) { return Results.Conflict(new { error = exception.Message }); }
+            catch (KeyNotFoundException exception) { return Results.NotFound(new { error = exception.Message }); }
+        });
 
         companies.MapGet("/sales-invoices", async (
             long companyId,

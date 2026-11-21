@@ -236,6 +236,33 @@ public sealed record PostPaymentRequest(
     long CashAccountId,
     long ControlAccountId);
 
+public sealed record PosSaleLineRequest(
+    long ItemId,
+    string Description,
+    long RevenueAccountId,
+    long? TaxCodeId,
+    decimal Quantity,
+    decimal UnitPrice);
+
+public sealed record CheckoutPosSaleRequest(
+    long PartyId,
+    string InvoiceNumber,
+    string PaymentNumber,
+    DateOnly SaleDate,
+    string CurrencyCode,
+    decimal ExchangeRate,
+    IReadOnlyList<PosSaleLineRequest> Lines,
+    long WarehouseId,
+    long JournalId,
+    long AccountingPeriodId,
+    long ReceivableAccountId,
+    IReadOnlyList<TaxAccountMapping> TaxAccounts,
+    long SettlementAccountId,
+    long InventoryAccountId,
+    long CostOfGoodsSoldAccountId);
+
+public sealed record PosSaleDto(InvoiceDto Invoice, PaymentDto Payment);
+
 public sealed record PaymentDto(
     long Id,
     long CompanyId,

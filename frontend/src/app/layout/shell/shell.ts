@@ -60,6 +60,7 @@ export class Shell {
     {
       label: 'SALES & RECEIVABLES',
       links: [
+        { label: 'Point of sale', path: '/pos', icon: 'fa-cash-register' },
         { label: 'Sales quotes', path: '/sales-quotes', icon: 'fa-file-signature' },
         { label: 'Sales invoices', path: '/sales-invoices', icon: 'fa-file-invoice-dollar' },
         { label: 'Credit notes', path: '/sales-credit-notes', icon: 'fa-file-circle-minus' },

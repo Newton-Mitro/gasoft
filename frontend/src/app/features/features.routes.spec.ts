@@ -38,6 +38,7 @@ describe('feature routes', () => {
     expect(routedPages.has('balance-sheet')).toBe(true);
     expect(routedPages.has('budget-vs-actual')).toBe(true);
     expect(routedPages.has('fixed-assets')).toBe(true);
+    expect(routedPages.has('pos')).toBe(true);
   });
 
   it('routes resource pages through distinct feature components', () => {

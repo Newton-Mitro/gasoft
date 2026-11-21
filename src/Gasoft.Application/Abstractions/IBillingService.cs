@@ -29,4 +29,5 @@ public interface IBillingService
     Task<PagedResultDto<PaymentDto>> GetPaymentsPageAsync(long companyId, int page, int pageSize, CancellationToken cancellationToken);
     Task<PaymentDto?> AllocatePaymentAsync(long companyId, long paymentId, AllocatePaymentRequest request, CancellationToken cancellationToken);
     Task<PaymentDto?> PostPaymentAsync(long companyId, long paymentId, PostPaymentRequest request, CancellationToken cancellationToken);
+    Task<PosSaleDto> CheckoutPosSaleAsync(long companyId, CheckoutPosSaleRequest request, CancellationToken cancellationToken);
 }

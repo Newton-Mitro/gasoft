@@ -3063,3 +3063,194 @@ html[data-accent] :is(.content-area, .auth-page) :is(.alert.error, .alert.succes
     display: none;
   }
 }
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(
+    .currency-badge,
+    .pos-catalog,
+    .pos-checkout,
+    .pos-receipt,
+    .pos-item,
+    .pos-search kbd,
+    .pos-search button,
+    .add-item-icon,
+    .quantity-control,
+    .price-input,
+    .customer-field select,
+    .pos-settings-grid select
+  ) {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(.pos-catalog, .pos-checkout, .pos-receipt, .pos-item, .price-input, .pos-checkout select) {
+  color: var(--text);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(.pos-search, .pos-item:disabled, .pos-settings, .quantity-control button) {
+  border-color: var(--border);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(.pos-search button, .add-item-icon, .pos-item-icon, .settings-summary-icon) {
+  border-color: var(--border);
+  background: var(--surface-raised);
+  color: var(--accent-text);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(
+    .currency-badge,
+    .pos-search,
+    .search-hint,
+    .pos-item-copy small,
+    .pos-cart-item small,
+    .price-field,
+    .price-input,
+    .remove-item,
+    .settings-summary-copy small,
+    .settings-chevron,
+    .pos-total span,
+    .pos-total small,
+    .checkout-hint,
+    .receipt-lines > div
+  ) {
+  color: var(--text-muted);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(
+    .pos-page-heading h1,
+    .pos-panel-heading h2,
+    .pos-cart-heading h2,
+    .pos-item-copy strong,
+    .pos-cart-item strong,
+    .pos-line-total,
+    .price-input input,
+    .customer-field label,
+    .pos-settings-grid label,
+    .settings-summary-copy strong,
+    .pos-total strong,
+    .receipt-lines strong
+  ) {
+  color: var(--text-strong);
+}
+
+html[data-theme='dark'] .app-shell .main-content :is(.catalog-count, .cart-count, .pos-item-icon) {
+  color: var(--accent-text);
+}
+
+html[data-theme='dark'] .app-shell .main-content :is(.stock-pill, .settings-status.settings-ready) {
+  color: var(--success-text);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(
+    .catalog-count,
+    .cart-count,
+    .pos-item-icon,
+    .settings-summary-icon,
+    .pos-no-items .empty-icon,
+    .pos-empty-cart .empty-icon
+  ) {
+  background: var(--accent-soft);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(
+    .stock-pill.stock-empty,
+    .clear-cart,
+    .remove-item:hover,
+    .customer-field small,
+    .settings-status:not(.settings-ready)
+  ) {
+  color: var(--error-text);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(.pos-cart-heading, .pos-cart-line, .pos-total, .receipt-lines) {
+  border-color: var(--border);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(.pos-item:hover:not(:disabled), .quantity-control button:hover:not(:disabled)) {
+  border-color: var(--focus-color);
+  background: var(--accent-soft);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(
+    .pos-item:focus-visible,
+    .clear-cart:focus-visible,
+    .remove-item:focus-visible,
+    .quantity-control button:focus-visible
+  ) {
+  outline-color: var(--focus-color);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(
+    .pos-search:focus-within,
+    .price-input:focus-within,
+    .customer-field select:focus,
+    .pos-settings-grid select:focus
+  ) {
+  border-color: var(--focus-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-color) 20%, transparent);
+}
+
+html[data-theme='dark']
+  .app-shell
+  .main-content
+  :is(.pos-item:hover:not(:disabled) .add-item-icon, .pos-submit) {
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  color: var(--nav-active-text);
+}
+
+html[data-theme='dark'] .app-shell .main-content .pos-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-hover), var(--accent-dark));
+}
+
+html[data-theme='dark'] .app-shell .main-content .pos-submit:disabled {
+  background: var(--surface-raised);
+  color: var(--text-muted);
+}
+
+html[data-theme='dark'] .app-shell .main-content .clear-cart:hover:not(:disabled),
+html[data-theme='dark'] .app-shell .main-content .remove-item:hover {
+  background: color-mix(in srgb, var(--error-text) 14%, var(--surface));
+}
+
+html[data-theme='dark'] .app-shell .main-content .pos-search kbd {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--nav-active-text);
+}

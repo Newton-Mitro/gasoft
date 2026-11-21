@@ -87,6 +87,26 @@ describe('OptionDataService', () => {
     expect(options).toEqual([{ label: '3100 · Retained earnings', value: 3 }]);
   });
 
+  it('filters posting accounts by account type', () => {
+    const api = {
+      get: (endpoint: string) => of(endpoint === 'accounts'
+        ? [
+            { id: 3, accountGroupId: 10, code: '4000', name: 'Sales', allowPosting: true, isActive: true },
+            { id: 4, accountGroupId: 20, code: '1000', name: 'Cash', allowPosting: true, isActive: true },
+          ]
+        : [
+            { id: 10, accountType: 'Revenue' },
+            { id: 20, accountType: 'Asset' },
+          ]),
+    } as unknown as ApiService;
+    const service = new OptionDataService(api, new OptionDataCacheService());
+    let options: { label: string; value: string | number }[] = [];
+
+    service.getAccountOptionsByType('Revenue').subscribe(result => options = result);
+
+    expect(options).toEqual([{ label: '4000 · Sales', value: 3 }]);
+  });
+
   it('reuses loaded option data until the cache is cleared', () => {
     let requestCount = 0;
     const api = {

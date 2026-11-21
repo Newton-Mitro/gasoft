@@ -1251,7 +1251,9 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             TotalCost = totalCost
         };
 
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
         db.JournalEntries.Add(journalEntry);
         try
         {
@@ -1309,12 +1311,12 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             }
             else
             {
-                await transaction.CommitAsync(cancellationToken);
+                if (transaction is not null) await transaction.CommitAsync(cancellationToken);
                 return ToDto(movement);
             }
 
             await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
         {

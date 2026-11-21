@@ -1,13 +1,17 @@
 using Gasoft.Application.Abstractions;
 using Gasoft.Application.Billing;
 using Gasoft.Application.Common;
+using Gasoft.Application.Inventory;
 using Gasoft.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace Gasoft.Infrastructure.Persistence;
 
-public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant) : IBillingService
+public sealed class BillingService(
+    AppDbContext db,
+    ICurrentTenant currentTenant,
+    IInventoryService inventory) : IBillingService
 {
     private const decimal MaximumAmount = 99_999_999_999_999.999999m;
 
@@ -170,7 +174,9 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
     {
         var tenantId = EnsureTenant();
         var company = await EnsureCompanyAsync(companyId, cancellationToken);
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
         var invoice = await db.SalesInvoices
             .Include(item => item.Lines)
             .SingleOrDefaultAsync(item => item.CompanyId == companyId && item.Id == invoiceId, cancellationToken);
@@ -200,7 +206,7 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
             invoice.Status = "Posted";
             invoice.Revision++;
             await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -819,6 +825,98 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
         return ToDto(payment);
     }
 
+    public async Task<PosSaleDto> CheckoutPosSaleAsync(
+        long companyId,
+        CheckoutPosSaleRequest request,
+        CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        if (request.Lines is null || request.Lines.Count is < 1 or > 100)
+            throw Validation("lines", "A POS sale must contain 1–100 lines.");
+        if (request.ReceivableAccountId == request.SettlementAccountId)
+            throw Validation("settlementAccountId", "Choose a settlement account different from the receivable account.");
+
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var invoiceLines = request.Lines.Select(line => new CreateDocumentLineRequest(
+            line.RevenueAccountId,
+            line.TaxCodeId,
+            line.Description,
+            line.Quantity,
+            line.UnitPrice)).ToArray();
+        var invoice = await CreateInvoiceAsync(
+            companyId,
+            new CreateInvoiceRequest(
+                request.PartyId,
+                request.InvoiceNumber,
+                request.SaleDate,
+                request.SaleDate,
+                request.CurrencyCode,
+                request.ExchangeRate,
+                invoiceLines),
+            cancellationToken);
+        var postedInvoice = await PostInvoiceAsync(
+            companyId,
+            invoice.Id,
+            new PostSalesInvoiceRequest(
+                request.JournalId,
+                request.AccountingPeriodId,
+                request.ReceivableAccountId,
+                request.TaxAccounts),
+            cancellationToken)
+            ?? throw new KeyNotFoundException("The POS invoice could not be found for posting.");
+
+        var payment = await CreatePaymentAsync(
+            companyId,
+            new CreatePaymentRequest(
+                request.PartyId,
+                request.PaymentNumber,
+                "Receive",
+                request.SaleDate,
+                request.CurrencyCode,
+                request.ExchangeRate,
+                postedInvoice.GrandTotal),
+            cancellationToken);
+        var allocatedPayment = await AllocatePaymentAsync(
+            companyId,
+            payment.Id,
+            new AllocatePaymentRequest(postedInvoice.GrandTotal, postedInvoice.Id, null),
+            cancellationToken)
+            ?? throw new KeyNotFoundException("The POS payment could not be found for allocation.");
+        var postedPayment = await PostPaymentAsync(
+            companyId,
+            allocatedPayment.Id,
+            new PostPaymentRequest(
+                request.JournalId,
+                request.AccountingPeriodId,
+                request.SettlementAccountId,
+                request.ReceivableAccountId),
+            cancellationToken)
+            ?? throw new KeyNotFoundException("The POS payment could not be found for posting.");
+
+        var movementNumber = 0;
+        foreach (var lineGroup in request.Lines.GroupBy(line => line.ItemId))
+        {
+            movementNumber++;
+            await inventory.IssueAsync(
+                companyId,
+                new IssueStockRequest(
+                    $"POS-{invoice.Id}-{movementNumber}",
+                    lineGroup.Key,
+                    request.WarehouseId,
+                    null,
+                    request.JournalId,
+                    request.AccountingPeriodId,
+                    request.InventoryAccountId,
+                    request.CostOfGoodsSoldAccountId,
+                    request.SaleDate,
+                    lineGroup.Sum(line => line.Quantity)),
+                cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return new PosSaleDto(postedInvoice, postedPayment);
+    }
+
     public async Task<IReadOnlyList<PaymentDto>> GetPaymentsAsync(
         long companyId,
         CancellationToken cancellationToken)
@@ -928,7 +1026,9 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
             throw Validation("amount", "Allocation amount must be positive and within the supported range.");
         }
 
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
         var payment = await db.Payments.SingleOrDefaultAsync(
             item => item.Id == paymentId && item.CompanyId == companyId,
             cancellationToken);
@@ -1013,7 +1113,7 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
         try
         {
             await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -1031,7 +1131,9 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
     {
         var tenantId = EnsureTenant();
         var company = await EnsureCompanyAsync(companyId, cancellationToken);
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
         var payment = await db.Payments.SingleOrDefaultAsync(
             item => item.Id == paymentId && item.CompanyId == companyId,
             cancellationToken);
@@ -1102,7 +1204,7 @@ public sealed class BillingService(AppDbContext db, ICurrentTenant currentTenant
             payment.Status = "Posted";
             payment.Revision++;
             await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
         {

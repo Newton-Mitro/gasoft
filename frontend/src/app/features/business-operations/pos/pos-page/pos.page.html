@@ -1,0 +1,401 @@
+<div class="pos-page-heading">
+  <div>
+    <p class="eyebrow">SALES & RECEIVABLES</p>
+    <h1>{{ title }}</h1>
+    <p class="page-description">Scan an item, build the cart, and check out.</p>
+  </div>
+  @if (functionalCurrencyCode) {
+    <div class="currency-badge">
+      <i class="fa-solid fa-building" aria-hidden="true"></i>
+      <span>{{ companyName }}</span>
+      <strong>{{ functionalCurrencyCode }}</strong>
+    </div>
+  }
+</div>
+
+@if (error) {
+  <div class="alert error" role="alert">
+    <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+    <span>{{ error }}</span>
+  </div>
+}
+
+@if (loading) {
+  <div class="loading-card"><span class="spinner"></span> Getting your register ready…</div>
+} @else {
+  <div class="pos-layout">
+    <section class="pos-catalog panel" aria-labelledby="catalog-heading">
+      <div class="pos-panel-heading">
+        <div>
+          <p class="eyebrow">PRODUCT CATALOG</p>
+          <h2 id="catalog-heading">Choose an item</h2>
+        </div>
+        <span class="catalog-count">{{ items.length }} items</span>
+      </div>
+
+      <div class="pos-search">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input
+          id="pos-search"
+          type="search"
+          [(ngModel)]="search"
+          (keydown.enter)="addFirstMatch(); $event.preventDefault()"
+          placeholder="Search name or scan barcode"
+          autocomplete="off"
+          aria-label="Search items by name or SKU"
+        />
+        @if (search) {
+          <button type="button" aria-label="Clear search" (click)="search = ''">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        } @else {
+          <kbd>Enter ↵</kbd>
+        }
+      </div>
+      <p class="search-hint">Scan a barcode or type an item name or SKU, then press Enter.</p>
+
+      <div class="pos-item-grid">
+        @for (item of filteredItems; track item.id) {
+          <button
+            type="button"
+            class="pos-item"
+            [disabled]="availableQuantity(item.id) <= 0"
+            (click)="addItem(item)"
+            [attr.aria-label]="'Add ' + item.name + ' to cart'"
+          >
+            <span class="pos-item-icon"><i class="fa-solid fa-box" aria-hidden="true"></i></span>
+            <span class="pos-item-copy">
+              <strong>{{ item.name }}</strong>
+              <small>{{ item.sku }} <span>·</span> {{ item.baseUnitCode }}</small>
+              <span class="stock-pill" [class.stock-empty]="availableQuantity(item.id) <= 0">
+                <i class="fa-solid fa-circle" aria-hidden="true"></i>
+                {{
+                  availableQuantity(item.id) > 0
+                    ? availableQuantity(item.id) + ' available'
+                    : 'Out of stock'
+                }}
+              </span>
+            </span>
+            <span class="add-item-icon"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
+          </button>
+        } @empty {
+          <div class="pos-no-items empty-state">
+            <span class="empty-icon"><i class="fa-solid fa-box-open" aria-hidden="true"></i></span>
+            <h3>{{ search ? 'No matching items' : 'Your catalog is empty' }}</h3>
+            <p>
+              {{ search ? 'Try another name or SKU.' : 'Add inventory items to start selling.' }}
+            </p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <aside class="pos-checkout panel" aria-labelledby="cart-heading">
+      <div class="pos-cart-heading">
+        <div>
+          <p class="eyebrow">CHECKOUT</p>
+          <h2 id="cart-heading">
+            Current sale <span class="cart-count">{{ cart.length }}</span>
+          </h2>
+        </div>
+        <button
+          type="button"
+          class="clear-cart"
+          [disabled]="!cart.length || saving"
+          (click)="cart = []"
+        >
+          <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Clear
+        </button>
+      </div>
+
+      <div class="pos-cart">
+        @for (line of cart; track line.item.id) {
+          <div class="pos-cart-line">
+            <div class="pos-cart-item">
+              <strong>{{ line.item.name }}</strong>
+              <small
+                >{{ line.item.sku }} · {{ formatMoney(line.unitPrice) }} /
+                {{ line.item.baseUnitCode }}</small
+              >
+            </div>
+            <div class="quantity-control" [attr.aria-label]="'Quantity for ' + line.item.name">
+              <button
+                type="button"
+                [disabled]="line.quantity <= 1"
+                (click)="adjustQuantity(line.item.id, -1)"
+                [attr.aria-label]="'Decrease ' + line.item.name + ' quantity'"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                min="0.000001"
+                step="any"
+                [(ngModel)]="line.quantity"
+                [attr.aria-label]="'Quantity for ' + line.item.name"
+              />
+              <button
+                type="button"
+                (click)="adjustQuantity(line.item.id, 1)"
+                [attr.aria-label]="'Increase ' + line.item.name + ' quantity'"
+              >
+                +
+              </button>
+            </div>
+            <label class="price-field">
+              <span>Unit price</span>
+              <span class="price-input">
+                <span>{{ functionalCurrencyCode }}</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  [(ngModel)]="line.unitPrice"
+                  [attr.aria-label]="'Unit price for ' + line.item.name"
+                />
+              </span>
+            </label>
+            <strong class="pos-line-total">{{
+              formatMoney(line.quantity * line.unitPrice)
+            }}</strong>
+            <button
+              type="button"
+              class="remove-item"
+              (click)="removeItem(line.item.id)"
+              [attr.aria-label]="'Remove ' + line.item.name"
+            >
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </div>
+        } @empty {
+          <div class="pos-empty-cart empty-state">
+            <span class="empty-icon"
+              ><i class="fa-solid fa-basket-shopping" aria-hidden="true"></i
+            ></span>
+            <h3>Ready when you are</h3>
+            <p>Scan a barcode or choose an item to add it here.</p>
+          </div>
+        }
+      </div>
+
+      <div class="customer-field">
+        <label for="pos-customer">Customer</label>
+        <select appSearchableSelect id="pos-customer" aria-label="Customer" [(ngModel)]="partyId">
+          <option [ngValue]="null">Choose a customer</option>
+          @for (customer of customers; track customer.id) {
+            <option [ngValue]="customer.id">
+              {{ customer.partyNo }} · {{ customer.displayName }}
+            </option>
+          }
+        </select>
+        @if (!customers.length) {
+          <small>Add a customer record before taking a sale.</small>
+        }
+      </div>
+
+      <details class="pos-settings" [open]="!setupComplete">
+        <summary>
+          <span class="settings-summary-icon"
+            ><i class="fa-solid fa-sliders" aria-hidden="true"></i
+          ></span>
+          <span class="settings-summary-copy">
+            <strong>Store & accounting setup</strong>
+            <small>Warehouse, tax and posting accounts</small>
+          </span>
+          <span class="settings-status" [class.settings-ready]="setupComplete">
+            <i
+              class="fa-solid"
+              [class.fa-circle-check]="setupComplete"
+              [class.fa-circle-exclamation]="!setupComplete"
+              aria-hidden="true"
+            ></i>
+            {{ setupComplete ? 'Ready' : 'Required' }}
+          </span>
+          <i class="fa-solid fa-chevron-down settings-chevron" aria-hidden="true"></i>
+        </summary>
+        <div class="pos-settings-grid">
+          <label
+            >Warehouse
+            <select appSearchableSelect aria-label="Warehouse" [(ngModel)]="warehouseId">
+              <option [ngValue]="null">Select warehouse</option>
+              @for (option of options['warehouses']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label
+            >Journal
+            <select appSearchableSelect aria-label="Journal" [(ngModel)]="journalId">
+              <option [ngValue]="null">Select journal</option>
+              @for (option of options['journals']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label
+            >Open accounting period
+            <select
+              appSearchableSelect
+              aria-label="Open accounting period"
+              [(ngModel)]="accountingPeriodId"
+            >
+              <option [ngValue]="null">Select period</option>
+              @for (option of options['periods']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label
+            >Sales revenue account
+            <select
+              appSearchableSelect
+              aria-label="Sales revenue account"
+              [(ngModel)]="revenueAccountId"
+            >
+              <option [ngValue]="null">Select account</option>
+              @for (option of options['revenueAccounts']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label
+            >Receivable account
+            <select
+              appSearchableSelect
+              aria-label="Receivable account"
+              [(ngModel)]="receivableAccountId"
+            >
+              <option [ngValue]="null">Select account</option>
+              @for (option of options['assetAccounts']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label
+            >Cash / card account
+            <select
+              appSearchableSelect
+              aria-label="Cash or card account"
+              [(ngModel)]="settlementAccountId"
+            >
+              <option [ngValue]="null">Select account</option>
+              @for (option of options['assetAccounts']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label
+            >Tax code <span class="optional">(optional)</span>
+            <select appSearchableSelect aria-label="Tax code" [(ngModel)]="taxCodeId">
+              <option [ngValue]="null">No tax</option>
+              @for (option of options['taxCodes']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          @if (taxCodeId) {
+            <label
+              >Tax liability account
+              <select
+                appSearchableSelect
+                aria-label="Tax liability account"
+                [(ngModel)]="taxAccountId"
+              >
+                <option [ngValue]="null">Select account</option>
+                @for (option of options['taxAccounts']; track option.value) {
+                  <option [ngValue]="option.value">{{ option.label }}</option>
+                }
+              </select>
+            </label>
+          }
+          <label
+            >Inventory asset account
+            <select
+              appSearchableSelect
+              aria-label="Inventory asset account"
+              [(ngModel)]="inventoryAccountId"
+            >
+              <option [ngValue]="null">Select account</option>
+              @for (option of options['assetAccounts']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label
+            >Cost of goods sold account
+            <select
+              appSearchableSelect
+              aria-label="Cost of goods sold account"
+              [(ngModel)]="costOfGoodsSoldAccountId"
+            >
+              <option [ngValue]="null">Select account</option>
+              @for (option of options['expenseAccounts']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
+      </details>
+
+      <div class="pos-total">
+        <div>
+          <span>Subtotal</span>
+          <small>Tax calculated at checkout</small>
+        </div>
+        <strong>{{ formatMoney(subtotal) }}</strong>
+      </div>
+      @if (cart.length && !canCheckout) {
+        <p class="checkout-hint">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          Add items with stock, choose a customer, and complete the required setup to continue.
+        </p>
+      }
+      <button
+        class="button primary pos-submit"
+        type="button"
+        [disabled]="saving || !canCheckout"
+        (click)="checkout()"
+      >
+        @if (saving) {
+          <span class="spinner"></span> Processing sale…
+        } @else {
+          <i class="fa-solid fa-lock" aria-hidden="true"></i> Complete sale
+        }
+      </button>
+      <p class="secure-checkout">
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Stock and accounting update
+        together.
+      </p>
+    </aside>
+  </div>
+}
+
+@if (lastSale; as sale) {
+  <section class="pos-receipt panel" id="pos-receipt">
+    <div class="receipt-heading">
+      <div>
+        <p class="eyebrow">SALE COMPLETED</p>
+        <h2>{{ companyName }}</h2>
+        <p>Invoice {{ sale.invoice.invoiceNumber }} · Payment {{ sale.payment.paymentNumber }}</p>
+      </div>
+      <button class="button secondary print-button" type="button" (click)="printReceipt()">
+        <i class="fa-solid fa-print" aria-hidden="true"></i> Print receipt
+      </button>
+    </div>
+    <div class="receipt-lines">
+      @for (line of sale.invoice.lines; track $index) {
+        <div>
+          <span>{{ line.description }} × {{ line.quantity }}</span>
+          <strong>{{ formatMoney(line.grossAmount) }}</strong>
+        </div>
+      }
+    </div>
+    <div class="receipt-total">
+      <span>Total paid</span>
+      <strong>{{ formatMoney(sale.invoice.grandTotal) }}</strong>
+    </div>
+    <p class="pos-note">
+      Invoice and payment posted; inventory was deducted. The receipt is available to print.
+    </p>
+  </section>
+}

@@ -62,6 +62,10 @@ Use **Customers & suppliers** to add or edit party details, indicate whether a p
 3. Save the draft. Review it and use the available actions to edit, email, cancel, accept, or decline according to its status.
 4. Email requires a valid email address on the customer. An accepted quote can be converted to an invoice; provide the invoice number and dates and review them before creating it.
 
+### Point of sale
+
+Open **Sales & Receivables → Point of sale**. Search by item name or SKU, add items, and enter quantities and unit prices. Select the customer, warehouse, open accounting period, journal, and posting accounts before completing checkout. A tax code is optional; when selected, choose its tax liability account. Checkout posts the sales invoice and payment, allocates the payment to the invoice, and issues the sold quantities from the selected warehouse in one transaction. If validation or stock posting fails, the checkout is rolled back. Use **Print receipt** after a successful sale.
+
 ### Sales invoices
 
 Create a draft invoice by entering the customer and document details, then add revenue lines, quantities, prices, and any tax codes. Review the calculated totals and tax before saving. To post, select the invoice and complete the posting form. Posting creates receivable and revenue journal entries.
