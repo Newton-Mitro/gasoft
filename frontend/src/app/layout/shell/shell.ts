@@ -78,6 +78,10 @@ export class Shell {
       links: [{ label: 'Payments', path: '/payments', icon: 'fa-credit-card' }],
     },
     {
+      label: 'EXPENSES',
+      links: [{ label: 'Expense reports', path: '/expenses', icon: 'fa-file-invoice' }],
+    },
+    {
       label: 'INVENTORY',
       links: [
         { label: 'Item categories', path: '/inventory/categories', icon: 'fa-tags' },

@@ -53,6 +53,8 @@ public sealed class AppDbContext(
     public DbSet<CustomerRefund> CustomerRefunds => Set<CustomerRefund>();
     public DbSet<PurchaseBill> PurchaseBills => Set<PurchaseBill>();
     public DbSet<PurchaseBillLine> PurchaseBillLines => Set<PurchaseBillLine>();
+    public DbSet<ExpenseReport> ExpenseReports => Set<ExpenseReport>();
+    public DbSet<ExpenseReportLine> ExpenseReportLines => Set<ExpenseReportLine>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
     public DbSet<Payment> Payments => Set<Payment>();
@@ -1144,6 +1146,76 @@ public sealed class AppDbContext(
             entity.ToTable(table => table.HasCheckConstraint(
                 "CK_PurchaseBillLines_Amounts",
                 "\"Quantity\" > 0 AND \"UnitPrice\" >= 0 AND \"NetAmount\" >= 0 AND \"TaxAmount\" >= 0 AND \"GrossAmount\" = \"NetAmount\" + \"TaxAmount\""));
+            entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
+        });
+
+        builder.Entity<ExpenseReport>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasAlternateKey(x => new { x.TenantId, x.CompanyId, x.Id });
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.ReportNumber }).IsUnique();
+            entity.Property(x => x.ReportNumber).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsFixedLength().IsRequired();
+            entity.Property(x => x.TotalAmount).HasPrecision(20, 6);
+            entity.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.ReviewNote).HasMaxLength(1000);
+            entity.Property(x => x.Revision).IsConcurrencyToken();
+            entity.HasOne<Company>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId })
+                .HasPrincipalKey(x => new { x.TenantId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<JournalEntry>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.JournalEntryId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<JournalEntry>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.ReimbursementJournalEntryId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ChartOfAccount>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.EmployeePayableAccountId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ChartOfAccount>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.ReimbursementCashAccountId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Currency>()
+                .WithMany()
+                .HasForeignKey(x => x.CurrencyCode)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.ToTable(table => table.HasCheckConstraint(
+                "CK_ExpenseReports_TotalAmount",
+                "\"TotalAmount\" > 0"));
+            entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
+        });
+
+        builder.Entity<ExpenseReportLine>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Merchant).HasMaxLength(160).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.Amount).HasPrecision(20, 6);
+            entity.Property(x => x.ReceiptFileName).HasMaxLength(100);
+            entity.HasOne(x => x.ExpenseReport)
+                .WithMany(x => x.Lines)
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.ExpenseReportId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<ChartOfAccount>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.AccountId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.ToTable(table => table.HasCheckConstraint(
+                "CK_ExpenseReportLines_Amount",
+                "\"Amount\" > 0"));
             entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
         });
 

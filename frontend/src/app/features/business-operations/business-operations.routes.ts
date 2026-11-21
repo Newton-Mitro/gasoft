@@ -10,6 +10,7 @@ import { SALES_INVOICES_ROUTES } from './sales-invoices/sales-invoices.routes';
 import { PURCHASE_BILLS_ROUTES } from './purchase-bills/purchase-bills.routes';
 import { PAYMENTS_ROUTES } from './payments/payments.routes';
 import { POS_ROUTES } from './pos/pos.routes';
+import { EXPENSES_ROUTES } from './expenses/expenses.routes';
 
 export const BUSINESS_OPERATIONS_ROUTES: Routes = [
   ...FIXED_ASSETS_ROUTES,
@@ -23,4 +24,5 @@ export const BUSINESS_OPERATIONS_ROUTES: Routes = [
   ...SALES_INVOICES_ROUTES,
   ...PURCHASE_BILLS_ROUTES,
   ...PAYMENTS_ROUTES,
+  ...EXPENSES_ROUTES,
 ];

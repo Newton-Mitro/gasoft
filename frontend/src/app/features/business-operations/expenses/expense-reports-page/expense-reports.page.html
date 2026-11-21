@@ -1,0 +1,489 @@
+@if (view === 'index') {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">EMPLOYEE EXPENSES</p>
+      <h1>Expense reports</h1>
+      <p class="page-description">
+        Submit receipts, get manager approval, then post and reimburse claims.
+      </p>
+    </div>
+    <a class="button primary" routerLink="/expenses/create">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i> New report
+    </a>
+  </div>
+} @else {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">{{ view === 'create' ? 'NEW SUBMISSION' : 'DRAFT REPORT' }}</p>
+      <h1>{{ view === 'create' ? 'Create expense report' : 'Edit expense report' }}</h1>
+      <p class="page-description">Add expense details and receipts before saving the report.</p>
+    </div>
+  </div>
+}
+
+@if (error) {
+  <div class="alert error" role="alert">{{ error }}</div>
+}
+
+@if (loading) {
+  <div class="loading-card"><span class="spinner"></span> Loading expense reports…</div>
+}
+
+@if (view !== 'index' && !loading && expenseLines.length) {
+  <section class="panel form-panel expense-editor">
+    <div class="field-grid report-title-field">
+      <label>
+        <span>Report title</span>
+        <input
+          name="reportTitle"
+          maxlength="200"
+          required
+          [(ngModel)]="editingTitle"
+          placeholder="e.g. Client visit - May"
+        />
+      </label>
+    </div>
+
+    <div class="expense-lines-heading">
+      <div>
+        <h3>Expenses</h3>
+        <p>Add each expense with its accounting category and receipt.</p>
+      </div>
+      <button class="button secondary table-action" type="button" (click)="addLine()">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i> Add expense
+      </button>
+    </div>
+
+    <div class="expense-line-list">
+      @for (line of expenseLines; track $index; let index = $index) {
+        <article class="expense-line-card">
+          <div class="expense-line-heading">
+            <h4>Expense {{ index + 1 }}</h4>
+            <button
+              class="button secondary table-action remove-line"
+              type="button"
+              [disabled]="expenseLines.length === 1 || saving"
+              (click)="removeLine(index)"
+            >
+              Remove
+            </button>
+          </div>
+          <div class="field-grid">
+            <label>
+              <span>Expense date</span>
+              <input
+                type="date"
+                [name]="'expenseDate-' + index"
+                required
+                [(ngModel)]="line.expenseDate"
+              />
+            </label>
+            <label>
+              <span>Merchant</span>
+              <input
+                [name]="'merchant-' + index"
+                maxlength="160"
+                required
+                [(ngModel)]="line.merchant"
+                placeholder="Merchant or vendor"
+              />
+            </label>
+            <label>
+              <span>Amount</span>
+              <input
+                type="number"
+                step="any"
+                min="0.01"
+                [name]="'amount-' + index"
+                required
+                [(ngModel)]="line.amount"
+              />
+            </label>
+            <label>
+              <span>Expense account</span>
+              <select
+                appSearchableSelect
+                [name]="'account-' + index"
+                [attr.aria-label]="'Expense account for expense ' + (index + 1)"
+                required
+                [(ngModel)]="line.accountId"
+              >
+                <option [ngValue]="null" disabled>Select account</option>
+                @for (account of expenseAccounts; track account.value) {
+                  <option [ngValue]="account.value">{{ account.label }}</option>
+                }
+              </select>
+            </label>
+            <label class="description-field">
+              <span>Description</span>
+              <input
+                [name]="'description-' + index"
+                maxlength="500"
+                required
+                [(ngModel)]="line.description"
+                placeholder="What was this expense for?"
+              />
+            </label>
+          </div>
+          <div class="receipt-row">
+            <label class="receipt-input">
+              <span>Receipt <small>JPG, PNG, WebP or PDF, up to 5 MB</small></span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                [name]="'receipt-' + index"
+                (change)="selectReceipt(index, $event)"
+              />
+            </label>
+            @if (line.receiptUrl) {
+              <button
+                class="button secondary table-action"
+                type="button"
+                (click)="openReceipt(line.receiptUrl)"
+              >
+                <i class="fa-solid fa-paperclip" aria-hidden="true"></i> View saved receipt
+              </button>
+            }
+            @if (line.receiptFile) {
+              <span class="receipt-selected"
+                ><i class="fa-solid fa-check" aria-hidden="true"></i>
+                {{ line.receiptFile.name }}</span
+              >
+            }
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (!expenseAccounts.length) {
+      <p class="form-note">
+        No active expense accounts are available. Add an expense account before creating a report.
+      </p>
+    }
+
+    <div class="form-actions">
+      <button class="button secondary" type="button" (click)="cancelEdit()" [disabled]="saving">
+        Cancel
+      </button>
+      <button
+        class="button primary"
+        type="button"
+        (click)="saveReport()"
+        [disabled]="saving || !expenseAccounts.length"
+      >
+        {{ saving ? 'Saving…' : 'Save draft' }}
+      </button>
+    </div>
+  </section>
+}
+
+@if (view !== 'index' && !loading && !expenseLines.length) {
+  <a class="button secondary" routerLink="/expenses">Back to expense reports</a>
+}
+
+@if (workflowReport; as report) {
+  <section class="panel form-panel workflow-panel">
+    <div class="form-panel-heading">
+      <div>
+        <p class="eyebrow">
+          {{
+            workflowMode === 'reject'
+              ? 'REVIEW'
+              : workflowMode === 'post'
+                ? 'ACCOUNTING'
+                : 'REIMBURSEMENT'
+          }}
+        </p>
+        <h2>
+          @if (workflowMode === 'reject') {
+            Reject {{ report.reportNumber }}
+          } @else if (workflowMode === 'post') {
+            Post {{ report.reportNumber }}
+          } @else {
+            Reimburse {{ report.reportNumber }}
+          }
+        </h2>
+      </div>
+      <button
+        class="icon-button"
+        type="button"
+        aria-label="Close workflow panel"
+        (click)="workflowReportId = null; workflowMode = null"
+      >
+        ×
+      </button>
+    </div>
+
+    @if (workflowMode === 'reject') {
+      <label class="workflow-note">
+        <span>Reason for rejection</span>
+        <textarea
+          rows="3"
+          maxlength="1000"
+          [(ngModel)]="workflowNote"
+          placeholder="Explain what needs to be corrected"
+        ></textarea>
+      </label>
+    } @else {
+      @if (!journals.length) {
+        <p class="form-note">
+          No active journals are available. Activate a journal before posting.
+        </p>
+      }
+      @if (!periods.length) {
+        <p class="form-note">
+          There is no open accounting period covering today. Open the current period before posting.
+        </p>
+      }
+      @if (workflowMode === 'post' && !payableAccounts.length) {
+        <p class="form-note">
+          No active liability accounts are available for the employee payable.
+        </p>
+      }
+      @if (workflowMode === 'reimburse' && !cashAccounts.length) {
+        <p class="form-note">No active asset accounts are available for reimbursement.</p>
+      }
+      <div class="field-grid">
+        <label>
+          <span>Journal</span>
+          <select appSearchableSelect aria-label="Journal" [(ngModel)]="workflowJournalId">
+            <option [ngValue]="null" disabled>Select journal</option>
+            @for (journal of journals; track journal.value) {
+              <option [ngValue]="journal.value">{{ journal.label }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          <span>Open accounting period</span>
+          <select
+            appSearchableSelect
+            aria-label="Open accounting period"
+            [(ngModel)]="workflowPeriodId"
+          >
+            <option [ngValue]="null" disabled>Select period</option>
+            @for (period of periods; track period.id) {
+              <option [ngValue]="period.id">{{ period.startsOn }} – {{ period.endsOn }}</option>
+            }
+          </select>
+        </label>
+        @if (workflowMode === 'post') {
+          <label>
+            <span>Employee payable account</span>
+            <select
+              appSearchableSelect
+              aria-label="Employee payable account"
+              [(ngModel)]="workflowAccountId"
+            >
+              <option [ngValue]="null" disabled>Select liability account</option>
+              @for (account of payableAccounts; track account.value) {
+                <option [ngValue]="account.value">{{ account.label }}</option>
+              }
+            </select>
+          </label>
+        } @else {
+          <label>
+            <span>Cash or bank account</span>
+            <select
+              appSearchableSelect
+              aria-label="Cash or bank account"
+              [(ngModel)]="workflowAccountId"
+            >
+              <option [ngValue]="null" disabled>Select asset account</option>
+              @for (account of cashAccounts; track account.value) {
+                <option [ngValue]="account.value">{{ account.label }}</option>
+              }
+            </select>
+          </label>
+        }
+      </div>
+    }
+
+    <div class="form-actions">
+      <button
+        class="button secondary"
+        type="button"
+        (click)="workflowReportId = null; workflowMode = null"
+      >
+        Cancel
+      </button>
+      <button
+        class="button primary"
+        type="button"
+        (click)="completeWorkflow()"
+        [disabled]="busyReportId === report.id"
+      >
+        {{
+          busyReportId === report.id
+            ? 'Working…'
+            : workflowMode === 'reject'
+              ? 'Reject report'
+              : workflowMode === 'post'
+                ? 'Post journal'
+                : 'Post reimbursement'
+        }}
+      </button>
+    </div>
+  </section>
+}
+
+@if (view === 'index' && !loading) {
+  <section class="table-panel panel">
+    <div class="table-header">
+      <div>
+        <h2>All expense reports</h2>
+        <span>{{ reports.length }} {{ reports.length === 1 ? 'report' : 'reports' }}</span>
+      </div>
+    </div>
+
+    @if (!reports.length) {
+      <div class="empty-state">
+        <span class="empty-icon"><i class="fa-solid fa-receipt" aria-hidden="true"></i></span>
+        <h3>No expense reports yet</h3>
+        <p>Create a report and attach a receipt to start the approval workflow.</p>
+        <a class="button secondary" routerLink="/expenses/create">
+          Create first report
+        </a>
+      </div>
+    } @else {
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Report</th>
+              <th>Employee</th>
+              <th>Expenses</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (report of reports; track report.id) {
+              <tr>
+                <td>
+                  <button
+                    class="report-number"
+                    type="button"
+                    (click)="expandedReportId = expandedReportId === report.id ? null : report.id"
+                  >
+                    {{ report.reportNumber }}
+                  </button>
+                  <small class="report-subtitle">{{ report.title }}</small>
+                </td>
+                <td>{{ report.employeeName }}</td>
+                <td>
+                  {{ report.lines.length }} {{ report.lines.length === 1 ? 'expense' : 'expenses' }}
+                </td>
+                <td class="amount-cell">
+                  {{ report.totalAmount | currency: report.currencyCode : 'code' }}
+                </td>
+                <td>
+                  <span class="status-tag" [class]="report.status.toLowerCase()">{{
+                    report.status
+                  }}</span>
+                </td>
+                <td class="action-cell">
+                  @if (report.canEdit) {
+                    <button
+                      class="button secondary table-action"
+                      type="button"
+                      [disabled]="busyReportId === report.id"
+                      (click)="edit(report)"
+                    >
+                      Edit
+                    </button>
+                  }
+                  @if (report.canSubmit) {
+                    <button
+                      class="button secondary table-action"
+                      type="button"
+                      [disabled]="busyReportId === report.id"
+                      (click)="submitReport(report)"
+                    >
+                      Submit
+                    </button>
+                  }
+                  @if (report.canApprove) {
+                    <button
+                      class="button secondary table-action"
+                      type="button"
+                      [disabled]="busyReportId === report.id"
+                      (click)="approve(report)"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      class="button secondary table-action"
+                      type="button"
+                      [disabled]="busyReportId === report.id"
+                      (click)="beginWorkflow(report, 'reject')"
+                    >
+                      Reject
+                    </button>
+                  }
+                  @if (report.canPost) {
+                    <button
+                      class="button secondary table-action"
+                      type="button"
+                      [disabled]="busyReportId === report.id"
+                      (click)="beginWorkflow(report, 'post')"
+                    >
+                      Post
+                    </button>
+                  }
+                  @if (report.canReimburse) {
+                    <button
+                      class="button secondary table-action"
+                      type="button"
+                      [disabled]="busyReportId === report.id"
+                      (click)="beginWorkflow(report, 'reimburse')"
+                    >
+                      Reimburse
+                    </button>
+                  }
+                </td>
+              </tr>
+              @if (expandedReportId === report.id) {
+                <tr class="details-row">
+                  <td colspan="6">
+                    <div class="line-details">
+                      @for (line of report.lines; track line.id) {
+                        <div class="line-detail">
+                          <div>
+                            <strong>{{ line.merchant }}</strong>
+                            <span>{{ line.expenseDate }} · {{ line.description }}</span>
+                          </div>
+                          <div class="line-detail-end">
+                            <strong>{{
+                              line.amount | currency: report.currencyCode : 'code'
+                            }}</strong>
+                            @if (line.receiptUrl) {
+                              <button
+                                class="text-button"
+                                type="button"
+                                (click)="openReceipt(line.receiptUrl)"
+                              >
+                                View receipt
+                              </button>
+                            } @else {
+                              <span class="no-receipt">No receipt</span>
+                            }
+                          </div>
+                        </div>
+                      }
+                      @if (report.reviewNote) {
+                        <p class="review-note">
+                          <strong>Review note:</strong> {{ report.reviewNote }}
+                        </p>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

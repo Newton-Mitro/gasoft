@@ -78,6 +78,10 @@ Create a draft order by selecting a supplier and warehouse, entering order detai
 
 Create a supplier bill draft, enter the supplier and bill details, and add expense lines and applicable tax codes. Review and save the draft. Use **Post** after review; posting creates payable and expense journal entries.
 
+### Employee expenses
+
+Open **Expenses → Expense reports** to create a draft report. Add each expense with its date, merchant, description, expense account, amount, and optional JPEG, PNG, WebP, or PDF receipt (up to 5 MB). Save the draft, then submit it for review. Owners and admins can approve or reject submitted reports; a rejected report can be corrected and resubmitted. After approval, an owner or admin posts it with an open accounting period, journal, and employee-payable account. Use **Reimburse** after posting to record the payment against a cash or bank account. Posting and reimbursement create balanced ledger entries.
+
 ### Payments and allocations
 
 Create an incoming or outgoing payment with its payment number, date, party, currency, amount, and required account details. Use **Allocate** to apply some or all of an available payment to an invoice or bill. Review the amount and target document before submitting. Use **Post** to record the cash and control-account journal entries. The page shows payment status and allocated amount.

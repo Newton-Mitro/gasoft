@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IReportingService, ReportingService>();
         services.AddScoped<IConsolidationService, ConsolidationService>();
         services.AddScoped<IBankReconciliationService, BankReconciliationService>();
+        services.AddScoped<IExpenseReportService, ExpenseReportService>();
         services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.User.RequireUniqueEmail = true;
