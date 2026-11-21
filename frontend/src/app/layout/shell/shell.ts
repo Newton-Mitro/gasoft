@@ -54,24 +54,46 @@ export class Shell {
       ],
     },
     {
-      label: 'OPERATIONS',
+      label: 'CUSTOMERS & SUPPLIERS',
+      links: [{ label: 'Customers & suppliers', path: '/parties', icon: 'fa-address-book' }],
+    },
+    {
+      label: 'SALES & RECEIVABLES',
       links: [
-        { label: 'Bank reconciliation', path: '/banking/reconciliation', icon: 'fa-building-columns' },
-        { label: 'Customers & suppliers', path: '/parties', icon: 'fa-address-book' },
         { label: 'Sales quotes', path: '/sales-quotes', icon: 'fa-file-signature' },
-        { label: 'Credit notes', path: '/sales-credit-notes', icon: 'fa-file-circle-minus' },
         { label: 'Sales invoices', path: '/sales-invoices', icon: 'fa-file-invoice-dollar' },
-        { label: 'Purchase bills', path: '/purchase-bills', icon: 'fa-receipt' },
+        { label: 'Credit notes', path: '/sales-credit-notes', icon: 'fa-file-circle-minus' },
+      ],
+    },
+    {
+      label: 'PURCHASING & PAYABLES',
+      links: [
         { label: 'Purchase orders', path: '/purchase-orders', icon: 'fa-cart-shopping' },
-        { label: 'Payments', path: '/payments', icon: 'fa-credit-card' },
-        { label: 'Items', path: '/inventory/items', icon: 'fa-box' },
+        { label: 'Purchase bills', path: '/purchase-bills', icon: 'fa-receipt' },
+      ],
+    },
+    {
+      label: 'PAYMENTS',
+      links: [{ label: 'Payments', path: '/payments', icon: 'fa-credit-card' }],
+    },
+    {
+      label: 'INVENTORY',
+      links: [
         { label: 'Item categories', path: '/inventory/categories', icon: 'fa-tags' },
+        { label: 'Items', path: '/inventory/items', icon: 'fa-box' },
         { label: 'Warehouses', path: '/inventory/warehouses', icon: 'fa-warehouse' },
-        { label: 'Stock balances', path: '/inventory/balances', icon: 'fa-scale-balanced' },
         { label: 'Stock movements', path: '/inventory/movements', icon: 'fa-arrow-right-arrow-left' },
         { label: 'Inventory counts', path: '/inventory/counts', icon: 'fa-clipboard-check' },
-        { label: 'Fixed assets', path: '/fixed-assets', icon: 'fa-landmark' },
+        { label: 'Stock balances', path: '/inventory/balances', icon: 'fa-scale-balanced' },
       ],
+    },
+    {
+      label: 'BANKING',
+      links: [{ label: 'Bank reconciliation', path: '/banking/reconciliation', icon: 'fa-building-columns' }],
+    },
+    {
+      label: 'FIXED ASSETS',
+      links: [{ label: 'Fixed assets', path: '/fixed-assets', icon: 'fa-landmark' }],
     },
     {
       label: 'REPORTS',

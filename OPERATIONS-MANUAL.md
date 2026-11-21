@@ -6,7 +6,7 @@ This manual explains the operational workflows available in the Gasoft web appli
 
 1. Sign in with your Gasoft account.
 2. Use **Current organization** in the left navigation to select the organization you are working in. Company-scoped records and reports use this selection; changing it reloads the application.
-3. Use the left navigation to open a module. On a narrow screen, open the navigation menu first.
+3. Use the left navigation to open a module. Related links are grouped by module, with setup and transaction steps ordered in workflow sequence. On a narrow screen, open the navigation menu first.
 4. Use the profile link to manage your personal account. Appearance and theme color can be changed in the sidebar. The notification inbox contains personal notifications; items can be marked read or dismissed.
 
 Access to some functions depends on your workspace role. For example, audit history and accounting-period/year close or reopen controls are restricted to Owners and Admins.
@@ -19,9 +19,9 @@ Complete setup before entering routine transactions:
 2. When an organization is created, starter account groups, accounts, and journals are created automatically. Review **General Ledger → Chart of accounts** and **Journals**; add or edit records to match your approved accounting structure.
 3. Create a fiscal year in **General Ledger → Fiscal years**, then create its accounting periods in **Accounting periods**. Fiscal years and periods are not created automatically.
 4. Configure **Administration → Tax codes & rates** and **Tax registrations** as applicable.
-5. Add customers and suppliers in **Operations → Customers & suppliers**. Add their addresses when needed. For emailed quotes, maintain a valid customer email address.
+5. Add customers and suppliers in **Customers & suppliers**. Add their addresses when needed. For emailed quotes, maintain a valid customer email address.
 6. If tracking stock, create item categories, inventory items, warehouses, and warehouse locations before recording stock activity.
-7. If reconciling bank statements, create an eligible postable asset account in the chart of accounts, then link it to a bank account in **Bank reconciliation**.
+7. If reconciling bank statements, create an eligible postable asset account in the chart of accounts, then link it to a bank account in **Banking → Bank reconciliation**.
 
 ## 3. General ledger
 
@@ -53,7 +53,7 @@ Fiscal-year close requires periods to exist and be closed, and no draft journal 
 
 ### Customers and suppliers
 
-Use **Operations → Customers & suppliers** to add or edit party details, indicate whether a party is a customer, supplier, or both, and maintain contact and currency details. Use **Addresses** to maintain party addresses. Keeping these details current supports document creation and customer quote email.
+Use **Customers & suppliers** to add or edit party details, indicate whether a party is a customer, supplier, or both, and maintain contact and currency details. Use **Addresses** to maintain party addresses. Keeping these details current supports document creation and customer quote email.
 
 ### Sales quotes
 
@@ -100,7 +100,7 @@ For depreciation, select the due open period through which to depreciate and a j
 
 ## 6. Bank reconciliation
 
-1. If no bank account exists, add one and link it to an active, postable asset account. Only the last four account digits are stored.
+1. Open **Banking → Bank reconciliation**. If no bank account exists, add one and link it to an active, postable asset account. Only the last four account digits are stored.
 2. Select the bank account and import a CSV statement. Required headers are `date`, `description`, and `amount`; `reference` is optional. Dates must use ISO `YYYY-MM-DD`. Positive amounts are deposits and negative amounts are withdrawals.
 3. Review imported transactions and their matched, partially matched, or unmatched status.
 4. For an unmatched transaction, use **Find match** and review the posted ledger candidates. Allocate amounts in the same direction as the bank transaction; partial allocations can be completed later.
