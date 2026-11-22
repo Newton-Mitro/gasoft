@@ -4,7 +4,7 @@
       <h3>Entry lines</h3>
       <p>Add each account movement. Every line needs a debit or a credit.</p>
     </div>
-    <button class="button secondary" type="button" [disabled]="lines.length >= 1000" (click)="addLine()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add line</button>
+    <button class="add-line-button" type="button" [disabled]="lines.length >= 1000" (click)="addLine()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add line</button>
   </div>
 
   <div class="journal-line-headings" aria-hidden="true">

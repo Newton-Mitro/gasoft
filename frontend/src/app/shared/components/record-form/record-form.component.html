@@ -1,5 +1,5 @@
 <div class="record-form-layout" [class.has-preview]="showPreview">
-  <section class="form-panel panel" [class.transaction-form]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries'">
+  <section class="form-panel panel" [class.transaction-form]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries'" [class.journal-entry-form]="pageKey === 'journal-entries'">
     <div class="form-panel-heading">
       <div class="form-heading-copy">
         <p class="eyebrow">{{ eyebrow }}</p>
@@ -18,7 +18,7 @@
         </div>
         <small class="required-note"><span aria-hidden="true">*</span> Required</small>
       </div>
-      <div class="field-grid" [class.transaction-fields]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries' || formMode === 'receive' || formMode === 'issue'" [class.payment-fields]="pageKey === 'payments' && (formMode === 'create' || formMode === 'edit')">
+      <div class="field-grid" [class.transaction-fields]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries' || formMode === 'receive' || formMode === 'issue'" [class.journal-entry-fields]="pageKey === 'journal-entries'" [class.payment-fields]="pageKey === 'payments' && (formMode === 'create' || formMode === 'edit')">
         @for (field of fields; track field.key) {
           <label [class.checkbox-label]="field.type === 'checkbox'" [class.invalid-field]="fieldErrors(field.key).length > 0">
             @if (field.type === 'checkbox') {

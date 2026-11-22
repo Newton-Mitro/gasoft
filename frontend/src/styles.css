@@ -3386,6 +3386,20 @@ html[data-theme='dark'] .app-shell .main-content .pos-search kbd {
   gap: 20px 22px;
 }
 
+:root .content-area .form-panel.journal-entry-form .field-grid.journal-entry-fields {
+  gap: 14px 18px;
+}
+
+:root .content-area .form-panel.journal-entry-form .field-grid.journal-entry-fields label {
+  gap: 6px;
+}
+
+:root .content-area .form-panel.journal-entry-form .field-grid.journal-entry-fields :is(input:not([type='checkbox']):not([type='radio']), select) {
+  height: 40px;
+  min-height: 40px;
+  padding: 0 11px;
+}
+
 :root .content-area .form-panel .field-grid label {
   color: var(--text);
   font-weight: 650;

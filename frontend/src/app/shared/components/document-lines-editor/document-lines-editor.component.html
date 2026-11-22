@@ -1,7 +1,7 @@
 <section class="document-lines" aria-label="Document lines">
   <div class="document-lines-heading">
     <div><h3>Document lines</h3><p>Add one or more revenue or expense lines.</p></div>
-    <button class="button secondary table-action" type="button" [disabled]="lines.length >= 1000" (click)="addLine()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add line</button>
+    <button class="add-line-button" type="button" [disabled]="lines.length >= 1000" (click)="addLine()"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add line</button>
   </div>
   @for (line of lines; track $index; let i = $index) {
     <fieldset class="document-line">

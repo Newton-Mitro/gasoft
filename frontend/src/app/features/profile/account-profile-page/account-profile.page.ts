@@ -6,6 +6,7 @@ import { AuthenticatedImageComponent } from '../../../shared/components/authenti
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FieldValidationDirective } from '../../../shared/directives/field-validation.directive';
 import { InputComponent } from '../../../shared/components/input/input.component';
+import { FormValidationService } from '../../../shared/services/form-validation.service';
 
 @Component({
   selector: 'app-account-profile-page',
@@ -15,6 +16,7 @@ import { InputComponent } from '../../../shared/components/input/input.component
 })
 export class AccountProfilePage implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
+  readonly formValidation = inject(FormValidationService);
   readonly profile = signal<AccountProfile | null>(null);
   readonly loading = signal(true);
   readonly profileSaving = signal(false);
@@ -96,10 +98,21 @@ export class AccountProfilePage implements OnInit, OnDestroy {
   }
 
   updateProfile(): void {
+    this.formValidation.clear();
     this.error.set('');
     this.success.set('');
+    const displayName = this.displayName.trim();
+    if (!displayName) {
+      this.formValidation.setErrors({ displayName: ['Enter your display name.'] });
+      return;
+    }
+    if (displayName.length > 200) {
+      this.formValidation.setErrors({ displayName: ['Display name must be 200 characters or fewer.'] });
+      return;
+    }
+
     this.profileSaving.set(true);
-    this.auth.updateProfile(this.displayName.trim()).subscribe({
+    this.auth.updateProfile(displayName).subscribe({
       next: profile => {
         this.profile.set(profile);
         this.displayName = profile.displayName;
@@ -116,10 +129,36 @@ export class AccountProfilePage implements OnInit, OnDestroy {
   }
 
   updatePassword(): void {
+    this.formValidation.clear();
     this.error.set('');
     this.success.set('');
-    if (this.newPassword !== this.confirmPassword) {
-      this.error.set('The new passwords do not match.');
+    const validationErrors: Record<string, string[]> = {};
+    if (!this.currentPassword) {
+      validationErrors['currentPassword'] = ['Enter your current password.'];
+    }
+    const newPasswordErrors: string[] = [];
+    if (!this.newPassword) {
+      newPasswordErrors.push('Enter a new password.');
+    } else {
+      if (this.newPassword.length < 12) {
+        newPasswordErrors.push('Use at least 12 characters.');
+      }
+      if (!/\p{Nd}/u.test(this.newPassword)) {
+        newPasswordErrors.push('Include at least one number.');
+      }
+      if (!/[^\p{L}\p{Nd}]/u.test(this.newPassword)) {
+        newPasswordErrors.push('Include at least one symbol.');
+      }
+    }
+    if (newPasswordErrors.length) validationErrors['newPassword'] = newPasswordErrors;
+    if (!this.confirmPassword) {
+      validationErrors['confirmPassword'] = ['Confirm your new password.'];
+    } else if (this.newPassword !== this.confirmPassword) {
+      validationErrors['confirmPassword'] = ['The new passwords do not match.'];
+    }
+
+    if (Object.keys(validationErrors).length) {
+      this.formValidation.setErrors(validationErrors);
       return;
     }
 

@@ -60,6 +60,17 @@ export class Shell {
       links: [{ label: 'Customers & suppliers', path: '/parties', icon: 'fa-address-book' }],
     },
     {
+      label: 'INVENTORY',
+      links: [
+        { label: 'Item categories', path: '/inventory/categories', icon: 'fa-tags' },
+        { label: 'Items', path: '/inventory/items', icon: 'fa-box' },
+        { label: 'Warehouses', path: '/inventory/warehouses', icon: 'fa-warehouse' },
+        { label: 'Stock movements', path: '/inventory/movements', icon: 'fa-arrow-right-arrow-left' },
+        { label: 'Inventory counts', path: '/inventory/counts', icon: 'fa-clipboard-check' },
+        { label: 'Stock balances', path: '/inventory/balances', icon: 'fa-scale-balanced' },
+      ],
+    },
+    {
       label: 'SALES & RECEIVABLES',
       links: [
         { label: 'Point of sale', path: '/pos', icon: 'fa-cash-register' },
@@ -82,17 +93,6 @@ export class Shell {
     {
       label: 'EXPENSES',
       links: [{ label: 'Expense reports', path: '/expenses', icon: 'fa-file-invoice' }],
-    },
-    {
-      label: 'INVENTORY',
-      links: [
-        { label: 'Item categories', path: '/inventory/categories', icon: 'fa-tags' },
-        { label: 'Items', path: '/inventory/items', icon: 'fa-box' },
-        { label: 'Warehouses', path: '/inventory/warehouses', icon: 'fa-warehouse' },
-        { label: 'Stock movements', path: '/inventory/movements', icon: 'fa-arrow-right-arrow-left' },
-        { label: 'Inventory counts', path: '/inventory/counts', icon: 'fa-clipboard-check' },
-        { label: 'Stock balances', path: '/inventory/balances', icon: 'fa-scale-balanced' },
-      ],
     },
     {
       label: 'BANKING',
