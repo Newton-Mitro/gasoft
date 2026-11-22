@@ -147,6 +147,22 @@ public static class CompanySetupSeeder
             Code = "BANK",
             Name = "Bank journal",
             JournalType = "Bank"
+        },
+        new()
+        {
+            TenantId = tenantId,
+            CompanyId = companyId,
+            Code = "CASHREC",
+            Name = "Cash receipts journal",
+            JournalType = "Cash"
+        },
+        new()
+        {
+            TenantId = tenantId,
+            CompanyId = companyId,
+            Code = "CASHPAY",
+            Name = "Cash payments journal",
+            JournalType = "Cash"
         }
     ];
 }

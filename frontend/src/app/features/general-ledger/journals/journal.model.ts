@@ -1,4 +1,4 @@
-export type JournalType = 'General' | 'Sales' | 'Purchase' | 'Bank';
+export type JournalType = 'General' | 'Sales' | 'Purchase' | 'Bank' | 'Cash';
 
 export interface Journal {
   id: number;

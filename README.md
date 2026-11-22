@@ -56,7 +56,7 @@ The notification inbox stores important workflow events (such as postings and pe
 
 ### Accounting period controls
 
-New organizations are created with starter account groups, accounts, and journals. Fiscal years and accounting periods are not created automatically; add them before entering transactions.
+New organizations are created with starter account groups and accounts, plus General, Sales, Purchase, Bank, Cash receipts, and Cash payments journals. Fiscal years and accounting periods are not created automatically; add them before entering transactions.
 
 Accounting periods can be closed or reopened by workspace Owners and Admins. A reason is required and each change is recorded in the period status history. The close checklist blocks periods with draft journal entries or unreconciled imported bank statement transactions; closed periods reject postings until an authorized user reopens them.
 

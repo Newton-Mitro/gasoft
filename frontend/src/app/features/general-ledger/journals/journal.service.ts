@@ -50,6 +50,6 @@ function isJournal(value: unknown): value is Journal {
   return Number.isSafeInteger(row['id']) &&
     typeof row['code'] === 'string' &&
     typeof row['name'] === 'string' &&
-    ['General', 'Sales', 'Purchase', 'Bank'].includes(String(row['journalType'])) &&
+    ['General', 'Sales', 'Purchase', 'Bank', 'Cash'].includes(String(row['journalType'])) &&
     typeof row['isActive'] === 'boolean';
 }

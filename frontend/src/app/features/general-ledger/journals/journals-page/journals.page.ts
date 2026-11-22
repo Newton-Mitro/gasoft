@@ -9,7 +9,7 @@ import { Journal, JournalPayload, JournalType } from '../journal.model';
 import { JournalService } from '../journal.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
 
-const JOURNAL_TYPES: Choice[] = ['General', 'Sales', 'Purchase', 'Bank']
+const JOURNAL_TYPES: Choice[] = ['General', 'Sales', 'Purchase', 'Bank', 'Cash']
   .map(value => ({ label: value, value }));
 
 @Component({
@@ -183,7 +183,7 @@ export class JournalsPageComponent implements OnInit, OnDestroy {
 }
 
 function isJournalType(value: unknown): value is JournalType {
-  return value === 'General' || value === 'Sales' || value === 'Purchase' || value === 'Bank';
+  return value === 'General' || value === 'Sales' || value === 'Purchase' || value === 'Bank' || value === 'Cash';
 }
 
 function toRecordId(params: ParamMap): number | null {

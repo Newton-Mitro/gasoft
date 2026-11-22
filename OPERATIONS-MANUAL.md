@@ -16,7 +16,7 @@ Access to some functions depends on your workspace role. For example, audit hist
 Complete setup before entering routine transactions:
 
 1. Open **Administration → Company settings**. Add an organization if needed, then review its legal name, code, functional currency, contact details, address, and tax registration number. A company logo can be uploaded as a JPEG, PNG, or WebP image up to 5 MB.
-2. When an organization is created, starter account groups, accounts, and journals are created automatically. Review **General Ledger → Chart of accounts** and **Journals**; add or edit records to match your approved accounting structure.
+2. When an organization is created, starter account groups, accounts, and journals are created automatically. Default journals include General, Sales, Purchase, Bank, Cash receipts, and Cash payments. Review **General Ledger → Chart of accounts** and **Journals**; add or edit records to match your approved accounting structure.
 3. Create a fiscal year in **General Ledger → Fiscal years**, then create its accounting periods in **Accounting periods**. Fiscal years and periods are not created automatically.
 4. Configure **Administration → Tax codes & rates** and **Tax registrations** as applicable.
 5. Add customers and suppliers in **Customers & suppliers**. Add their addresses when needed. For emailed quotes, maintain a valid customer email address.

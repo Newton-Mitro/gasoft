@@ -29,4 +29,20 @@ describe('JournalService', () => {
     expect(receivedError).toBeInstanceOf(Error);
     expect((receivedError as Error).message).toContain('invalid record');
   });
+
+  it('accepts cash journals returned by the API', () => {
+    const journal: Journal = {
+      id: 3,
+      code: 'CASHREC',
+      name: 'Cash receipts journal',
+      journalType: 'Cash',
+      isActive: true,
+    };
+    const api = { get: () => of([journal]) } as unknown as ApiService;
+    let rows: Journal[] = [];
+
+    new JournalService(api).getAll().subscribe(result => rows = result);
+
+    expect(rows).toEqual([journal]);
+  });
 });
