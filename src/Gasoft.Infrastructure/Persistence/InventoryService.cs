@@ -288,6 +288,69 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
         return new WarehouseLocationDto(location.Id, warehouseId, location.Code, location.Name);
     }
 
+    public async Task<WarehouseLocationDto?> GetLocationAsync(
+        long companyId,
+        long warehouseId,
+        long locationId,
+        CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        return await db.WarehouseLocations.AsNoTracking()
+            .Where(location =>
+                location.CompanyId == companyId &&
+                location.WarehouseId == warehouseId &&
+                location.Id == locationId)
+            .Select(location => new WarehouseLocationDto(
+                location.Id, location.WarehouseId, location.Code, location.Name))
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<WarehouseLocationDto?> UpdateLocationAsync(
+        long companyId,
+        long warehouseId,
+        long locationId,
+        UpdateWarehouseLocationRequest request,
+        CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        var location = await db.WarehouseLocations.SingleOrDefaultAsync(
+            item => item.CompanyId == companyId &&
+                item.WarehouseId == warehouseId &&
+                item.Id == locationId,
+            cancellationToken);
+        if (location is null) return null;
+
+        var code = Normalize(request.Code).ToUpperInvariant();
+        var name = Normalize(request.Name);
+        ValidateCodeAndName(code, name, 30, 120);
+        location.Code = code;
+        location.Name = name;
+        await SaveAsync(cancellationToken);
+        return new WarehouseLocationDto(location.Id, warehouseId, location.Code, location.Name);
+    }
+
+    public async Task<IReadOnlyList<WarehouseLocationDto>> GetLocationsAsync(
+        long companyId,
+        long warehouseId,
+        CancellationToken cancellationToken)
+    {
+        await EnsureCompanyAsync(companyId, cancellationToken);
+        if (!await db.Warehouses.AnyAsync(
+                warehouse => warehouse.Id == warehouseId && warehouse.CompanyId == companyId,
+                cancellationToken))
+        {
+            throw new KeyNotFoundException("Warehouse was not found in this company.");
+        }
+
+        return await db.WarehouseLocations.AsNoTracking()
+            .Where(location => location.CompanyId == companyId && location.WarehouseId == warehouseId)
+            .OrderBy(location => location.Code)
+            .ThenBy(location => location.Id)
+            .Select(location => new WarehouseLocationDto(
+                location.Id, location.WarehouseId, location.Code, location.Name))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<StockBalanceDto>> GetStockBalancesAsync(
         long companyId,
         CancellationToken cancellationToken)

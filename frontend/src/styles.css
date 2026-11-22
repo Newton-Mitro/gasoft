@@ -3265,14 +3265,14 @@ html[data-theme='dark'] .app-shell .main-content .pos-search kbd {
 
 :root .content-area :is(.panel:not(.empty-state), .table-panel, .form-panel, .member-form, .order-form, .order-list, .order-detail, .quote-form, .convert-form, .credit-form, .asset-form) {
   border-color: var(--border);
-  border-radius: 16px;
+  border-radius: 0;
   background: var(--surface);
   box-shadow: 0 14px 36px color-mix(in srgb, var(--text-strong) 7%, transparent), 0 2px 6px color-mix(in srgb, var(--text-strong) 4%, transparent);
 }
 
 :root .content-area .empty-state.panel {
   border-color: var(--border);
-  border-radius: 16px;
+  border-radius: 0;
   box-shadow: 0 14px 36px color-mix(in srgb, var(--text-strong) 7%, transparent), 0 2px 6px color-mix(in srgb, var(--text-strong) 4%, transparent);
 }
 

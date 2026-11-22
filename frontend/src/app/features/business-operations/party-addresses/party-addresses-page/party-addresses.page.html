@@ -29,12 +29,18 @@
 } @else {
   <div class="page-heading">
     <div>
-      <a class="back-link" routerLink="/parties"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Customers & suppliers</a>
       <p class="eyebrow">CUSTOMER / SUPPLIER</p>
       <h1><i class="page-heading-icon fa-solid fa-location-dot" aria-hidden="true"></i>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
-    <a class="button primary" [routerLink]="[indexPath, 'create']"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add address</a>
+    <div class="heading-actions">
+      <a class="button secondary" routerLink="/parties"
+        ><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Customers &amp; suppliers</a
+      >
+      <a class="button primary" [routerLink]="[indexPath, 'create']"
+        ><i class="fa-solid fa-plus" aria-hidden="true"></i> Add address</a
+      >
+    </div>
   </div>
   @if (error) {
     <div class="alert error">{{ error }}</div>

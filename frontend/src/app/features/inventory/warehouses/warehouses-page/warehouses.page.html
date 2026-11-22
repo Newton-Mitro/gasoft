@@ -1,8 +1,97 @@
-@if (view !== 'index') {
+@if (view === 'locations') {
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">WAREHOUSE</p>
+      <h1><i class="page-heading-icon fa-solid fa-location-dot" aria-hidden="true"></i>{{ locationsTitle }}</h1>
+      <p class="page-description">{{ locationsDescription }}</p>
+    </div>
+    <div class="heading-actions">
+      <a class="button secondary" [routerLink]="indexPath"
+        ><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Warehouses</a
+      >
+      @if (currentRecordId !== null) {
+        <a
+          class="button primary"
+          [routerLink]="[indexPath, currentRecordId, 'locations', 'create']"
+          ><i class="fa-solid fa-plus" aria-hidden="true"></i> Add location</a
+        >
+      }
+    </div>
+  </div>
+  @if (error && !loading) {
+    <div class="alert error">{{ error }}</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading warehouse locations…</div>
+  }
+  @if (!loading && !error) {
+    <section class="table-panel panel">
+      <div class="table-header">
+        <div>
+          <h2>{{ locationsTitle }}</h2>
+          <span>{{ totalCount }} {{ totalCount === 1 ? 'location' : 'locations' }}</span>
+        </div>
+      </div>
+      @if (!locations.length) {
+        <div class="empty-state">
+          <span class="empty-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
+          <h3>No locations yet</h3>
+          <p>Add a location to organize stock within this warehouse.</p>
+          <a
+            class="button secondary"
+            [routerLink]="[indexPath, currentRecordId, 'locations', 'create']"
+            >Add first location</a
+          >
+        </div>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (location of pagedLocations; track location.id) {
+                <tr>
+                  <td>{{ location.code }}</td>
+                  <td>{{ location.name }}</td>
+                  <td class="action-cell">
+                    <a
+                      class="button secondary table-action"
+                      [routerLink]="[indexPath, currentRecordId, 'locations', location.id, 'edit']"
+                      >Edit</a
+                    >
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <app-pagination
+        [loading]="loading"
+        [page]="page"
+        [pageSize]="pageSize"
+        [totalCount]="totalCount"
+        [totalPages]="totalPages"
+        (pageChange)="onPageChange($event)"
+      />
+    </section>
+  }
+} @else if (view !== 'index') {
   <div class="page-heading">
     <div>
       <p class="eyebrow">
-        {{ view === 'create' ? 'NEW RECORD' : view === 'edit' ? 'EDIT RECORD' : 'NEW LOCATION' }}
+        {{
+          view === 'create'
+            ? 'NEW RECORD'
+            : view === 'edit' || view === 'location-edit'
+              ? 'EDIT RECORD'
+              : 'NEW LOCATION'
+        }}
       </p>
       <h1><i class="page-heading-icon fa-solid fa-warehouse" aria-hidden="true"></i>
         {{
@@ -10,22 +99,26 @@
             ? 'Create warehouse'
             : view === 'edit'
               ? 'Edit warehouse'
-              : 'Add warehouse location'
+              : view === 'location-edit'
+                ? 'Edit warehouse location'
+                : 'Add warehouse location'
         }}
       </h1>
-      <p class="page-description">{{ description }}</p>
+      <p class="page-description">
+        {{ view === 'location' || view === 'location-edit' ? locationsDescription : description }}
+      </p>
     </div>
   </div>
   @if (error && !loading) {
     <div class="alert error">{{ error }}</div>
   }
   @if (loading) {
-    <div class="loading-card"><span class="spinner"></span> Loading warehouse…</div>
+    <div class="loading-card"><span class="spinner"></span> Loading {{ view === 'location-edit' ? 'warehouse location' : 'warehouse' }}…</div>
   }
   @if (!loading) {
     <app-record-form
       [pageKey]="pageKey"
-      [title]="view === 'location' ? 'Warehouse location' : title"
+      [title]="view === 'location' || view === 'location-edit' ? 'Warehouse location' : title"
       [formMode]="formMode"
       [fields]="activeFields"
       [form]="form"
@@ -91,8 +184,8 @@
                     >
                     <a
                       class="button secondary table-action"
-                      [routerLink]="[indexPath, warehouse.id, 'locations', 'create']"
-                      >Add location</a
+                      [routerLink]="[indexPath, warehouse.id, 'locations']"
+                      >Locations</a
                     >
                   </td>
                 </tr>

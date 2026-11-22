@@ -17,6 +17,7 @@ public sealed record UpdateItemRequest(
 public sealed record CreateWarehouseRequest(string Code, string Name);
 public sealed record UpdateWarehouseRequest(string Code, string Name);
 public sealed record CreateWarehouseLocationRequest(string Code, string Name);
+public sealed record UpdateWarehouseLocationRequest(string Code, string Name);
 public sealed record ReceiveStockRequest(
     string MovementNumber,
     long ItemId,

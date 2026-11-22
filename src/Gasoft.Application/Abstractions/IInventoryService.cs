@@ -21,7 +21,17 @@ public interface IInventoryService
     Task<WarehouseDto?> GetWarehouseAsync(long companyId, long warehouseId, CancellationToken cancellationToken);
     Task<WarehouseDto> CreateWarehouseAsync(long companyId, CreateWarehouseRequest request, CancellationToken cancellationToken);
     Task<WarehouseDto?> UpdateWarehouseAsync(long companyId, long warehouseId, UpdateWarehouseRequest request, CancellationToken cancellationToken);
+    Task<IReadOnlyList<WarehouseLocationDto>> GetLocationsAsync(
+        long companyId, long warehouseId, CancellationToken cancellationToken);
+    Task<WarehouseLocationDto?> GetLocationAsync(
+        long companyId, long warehouseId, long locationId, CancellationToken cancellationToken);
     Task<WarehouseLocationDto> CreateLocationAsync(long companyId, long warehouseId, CreateWarehouseLocationRequest request, CancellationToken cancellationToken);
+    Task<WarehouseLocationDto?> UpdateLocationAsync(
+        long companyId,
+        long warehouseId,
+        long locationId,
+        UpdateWarehouseLocationRequest request,
+        CancellationToken cancellationToken);
     Task<IReadOnlyList<StockBalanceDto>> GetStockBalancesAsync(long companyId, CancellationToken cancellationToken);
     Task<PagedResultDto<StockBalanceDto>> GetStockBalancesPageAsync(
         long companyId, int page, int pageSize, CancellationToken cancellationToken);

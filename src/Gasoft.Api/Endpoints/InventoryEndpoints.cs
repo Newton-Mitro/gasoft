@@ -190,6 +190,34 @@ public static class InventoryEndpoints
                 return Results.NotFound(new { error = exception.Message });
             }
         });
+        companies.MapGet("/warehouses/{warehouseId:long}/locations", async (
+            long companyId,
+            long warehouseId,
+            IInventoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                return Results.Ok(await service.GetLocationsAsync(companyId, warehouseId, cancellationToken));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
+        companies.MapGet("/warehouses/{warehouseId:long}/locations/{locationId:long}", async (
+            long companyId,
+            long warehouseId,
+            long locationId,
+            IInventoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            var location = await service.GetLocationAsync(
+                companyId, warehouseId, locationId, cancellationToken);
+            return location is null
+                ? Results.NotFound(new { error = "Warehouse location was not found." })
+                : Results.Ok(location);
+        });
         companies.MapPost("/warehouses", async (
             long companyId,
             CreateWarehouseRequest request,
@@ -265,6 +293,31 @@ public static class InventoryEndpoints
             catch (KeyNotFoundException exception)
             {
                 return Results.NotFound(new { error = exception.Message });
+            }
+        });
+        companies.MapPut("/warehouses/{warehouseId:long}/locations/{locationId:long}", async (
+            long companyId,
+            long warehouseId,
+            long locationId,
+            UpdateWarehouseLocationRequest request,
+            IInventoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var location = await service.UpdateLocationAsync(
+                    companyId, warehouseId, locationId, request, cancellationToken);
+                return location is null
+                    ? Results.NotFound(new { error = "Warehouse location was not found." })
+                    : Results.Ok(location);
+            }
+            catch (InventoryValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (InventoryConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
             }
         });
         companies.MapGet("/inventory/balances", async (
