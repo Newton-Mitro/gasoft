@@ -6,12 +6,28 @@
 .workspace-card {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 16px;
   background: var(--surface);
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--text-strong) 7%, transparent), 0 2px 6px color-mix(in srgb, var(--text-strong) 4%, transparent);
 }
 
 .setup-card {
-  padding: 22px;
+  position: relative;
+  padding: 0;
+}
+
+.setup-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 45%, var(--focus-color)));
+  content: '';
+}
+
+.account-setup-layout {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
 }
 
 .section-heading,
@@ -26,7 +42,10 @@
 
 .section-heading {
   justify-content: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 0;
+  padding: 26px 28px 22px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-muted) 50%, var(--surface));
 }
 
 .section-icon {
@@ -47,49 +66,50 @@
 .candidate-heading h3 {
   margin: 0;
   color: var(--text-strong);
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 700;
+  letter-spacing: -.3px;
 }
 
 .section-heading p,
 .import-panel p,
 .candidate-heading p {
-  margin: 5px 0 0;
+  margin: 6px 0 0;
   color: var(--text-muted);
-  font-size: 11px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .account-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 15px;
+  gap: 18px 22px;
+  padding: 24px 28px 28px;
 }
 
 .account-form-column {
   display: grid;
   align-content: start;
-  gap: 15px;
+  gap: 18px;
   min-width: 0;
 }
 
 .account-form label,
 .account-select {
   display: grid;
-  gap: 7px;
+  gap: 8px;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
-.account-form input,
 .account-form select,
 .account-select select {
   min-width: 0;
-  min-height: 40px;
-  padding: 0 11px;
+  min-height: 44px;
+  padding: 0 13px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 9px;
   background: var(--surface);
   color: var(--text-strong);
   font: inherit;
@@ -101,9 +121,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-top: 4px;
+  padding-top: 6px;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .form-actions {
@@ -120,12 +140,12 @@
   grid-column: 1 / -1;
   margin: 0;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .workspace-header {
   align-items: flex-end;
-  padding: 18px 20px;
+  padding: 22px 24px;
 }
 
 .account-select {
@@ -138,7 +158,7 @@
   justify-content: flex-end;
   gap: 8px;
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .account-meta span:last-child {
@@ -155,7 +175,7 @@
 
 .import-panel {
   align-items: flex-start;
-  padding: 18px 20px;
+  padding: 20px 24px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   background: var(--surface-muted);
@@ -167,7 +187,7 @@
 
 .import-panel code {
   color: var(--text-strong);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .import-controls {
@@ -222,7 +242,7 @@
 .summary-item {
   display: grid;
   gap: 5px;
-  padding: 14px 20px;
+  padding: 18px 24px;
 }
 
 .summary-item + .summary-item {
@@ -231,12 +251,12 @@
 
 .summary-item span {
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .summary-item strong {
   color: var(--text-strong);
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .table-scroll {
@@ -317,9 +337,9 @@ tbody tr:last-child > td {
 }
 
 .table-action {
-  min-height: 30px;
-  padding: 0 9px;
-  font-size: 10px;
+  min-height: 34px;
+  padding: 0 11px;
+  font-size: 11px;
 }
 
 .candidate-row > td {
@@ -423,13 +443,13 @@ tbody tr:last-child > td {
 
 .candidate-item strong {
   color: var(--text-strong);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .candidate-item span,
 .no-candidates {
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .no-candidates {
@@ -453,9 +473,26 @@ tbody tr:last-child > td {
   font-size: 11px;
 }
 
+@media (min-width: 1000px) {
+  .account-setup-layout.has-preview {
+    grid-template-columns: minmax(0, 1.7fr) minmax(270px, .9fr);
+    align-items: start;
+  }
+}
+
 @media (max-width: 760px) {
+  .section-heading {
+    padding: 22px 20px 18px;
+  }
+
   .account-form {
     grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .form-footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .workspace-header,
@@ -480,12 +517,28 @@ tbody tr:last-child > td {
     flex-wrap: wrap;
   }
 
+  .summary-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .summary-item {
-    padding: 12px 10px;
+    padding: 14px 16px;
+  }
+
+  .summary-item + .summary-item {
+    border-left: 0;
+  }
+
+  .summary-item:nth-child(even) {
+    border-left: 1px solid var(--border);
+  }
+
+  .summary-item:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
   }
 
   .summary-item span {
-    min-height: 24px;
+    min-height: 0;
   }
 
   .adjustment-form {

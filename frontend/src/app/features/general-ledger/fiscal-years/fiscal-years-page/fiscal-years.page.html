@@ -2,7 +2,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">{{ view === 'create' ? 'NEW RECORD' : 'EDIT RECORD' }}</p>
-      <h1>{{ view === 'create' ? 'Create fiscal year' : 'Edit fiscal year' }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-calendar-days" aria-hidden="true"></i>{{ view === 'create' ? 'Create fiscal year' : 'Edit fiscal year' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
@@ -30,7 +30,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">COMPANY WORKSPACE</p>
-      <h1>{{ title }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-calendar-days" aria-hidden="true"></i>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"

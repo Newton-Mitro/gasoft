@@ -2,6 +2,16 @@
   display: block;
 }
 
+.record-form-layout {
+  min-width: 0;
+}
+
+.record-form-layout.has-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
 .form-panel {
   position: relative;
   width: 100%;
@@ -127,6 +137,10 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px 22px;
+}
+
+.field-grid.payment-fields {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .field-grid label {
@@ -272,9 +286,15 @@
 }
 
 @media (min-width: 1000px) {
+  .record-form-layout.has-preview {
+    grid-template-columns: minmax(0, 1.7fr) minmax(270px, .9fr);
+    align-items: start;
+  }
+
   .field-grid.transaction-fields {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
 }
 
 @media (max-width: 700px) {

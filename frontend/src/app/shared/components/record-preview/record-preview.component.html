@@ -1,0 +1,28 @@
+<aside class="record-preview panel" [attr.aria-label]="configuration.title">
+  <div class="preview-heading">
+    <span class="preview-icon" aria-hidden="true"><i class="fa-solid" [class]="iconClass"></i></span>
+    <div>
+      <p class="eyebrow">{{ configuration.eyebrow }}</p>
+      <h2>{{ configuration.title }}</h2>
+    </div>
+    <span class="preview-badge">{{ statusLabel }}</span>
+  </div>
+  <div class="preview-primary">
+    <span>{{ primaryLabel }}</span>
+    <strong>{{ primaryValue }}</strong>
+    @if (primarySuffix && primarySuffix !== 'Not set') {
+      <small>{{ primarySuffix }}</small>
+    }
+    @if (configuration.description) {
+      <p>{{ configuration.description }}</p>
+    }
+  </div>
+  <dl class="preview-details">
+    @for (field of detailFields; track field.key) {
+      <div>
+        <dt>{{ field.label }}</dt>
+        <dd>{{ formatFieldValue(field) }}</dd>
+      </div>
+    }
+  </dl>
+</aside>

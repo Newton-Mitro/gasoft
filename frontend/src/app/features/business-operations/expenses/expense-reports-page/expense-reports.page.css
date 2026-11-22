@@ -11,7 +11,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 21px 0 12px;
+  margin: 14px 0 8px;
 }
 .expense-lines-heading h3,
 .expense-line-heading h4 {
@@ -27,19 +27,30 @@
 }
 .expense-line-list {
   display: grid;
-  gap: 11px;
+  gap: 8px;
 }
 .expense-line-card {
-  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(190px, .75fr);
+  gap: 12px 16px;
+  align-items: start;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
 }
 .expense-line-heading {
   display: flex;
+  grid-column: 1 / -1;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+}
+.expense-line-card .field-grid {
+  grid-column: 1;
+  grid-row: 2;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 .remove-line {
   color: var(--error-text) !important;
@@ -49,13 +60,29 @@
 }
 .receipt-row {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 12px;
+  grid-column: 2;
+  grid-row: 2;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin: 0;
+}
+.receipt-row.has-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(100px, 115px);
+  align-items: start;
+}
+.receipt-upload {
+  display: flex;
+  grid-column: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
 }
 .receipt-input {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 6px;
   color: var(--text);
@@ -70,6 +97,7 @@
   font-weight: 400;
 }
 .receipt-input input {
+  width: 100%;
   max-width: 330px;
   color: var(--text);
   font: inherit;
@@ -78,6 +106,55 @@
 .receipt-selected {
   color: var(--success-text);
   font-size: 10px;
+}
+.receipt-preview {
+  grid-column: 2;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-muted);
+}
+.receipt-preview-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+.receipt-preview img {
+  display: block;
+  width: 100%;
+  height: 90px;
+  border-radius: 6px;
+  background: var(--surface);
+  object-fit: contain;
+}
+.receipt-pdf-preview {
+  display: flex;
+  min-height: 90px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+.receipt-pdf-preview > i {
+  color: var(--accent-text);
+  font-size: 25px;
+}
+.receipt-pdf-preview strong {
+  color: var(--text-strong);
+  font-size: 11px;
+}
+.receipt-pdf-preview > span {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .workflow-panel {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
@@ -202,6 +279,32 @@
   color: var(--text-muted);
   font-size: 10px;
 }
+@media (max-width: 1100px) {
+  .expense-line-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .expense-line-card .field-grid {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .receipt-row {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .receipt-row.has-preview {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(160px, 190px);
+    align-items: start;
+  }
+
+  .receipt-preview {
+    max-width: 190px;
+  }
+}
+
 @media (max-width: 700px) {
   .expense-editor,
   .workflow-panel {
@@ -212,17 +315,48 @@
     flex-direction: column;
   }
   .description-field {
-    grid-column: auto;
+    grid-column: span 2;
+  }
+  .expense-line-card .field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .receipt-row,
   .line-detail {
     align-items: flex-start;
     flex-direction: column;
   }
+  .receipt-row.has-preview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .receipt-upload,
+  .receipt-preview {
+    grid-column: 1;
+  }
+  .receipt-upload {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .receipt-input {
+    flex: initial;
+  }
+  .receipt-preview {
+    width: 100%;
+    max-width: 320px;
+  }
   .line-detail-end {
     align-items: flex-start;
   }
   .action-cell {
     min-width: 180px;
+  }
+}
+
+@media (max-width: 520px) {
+  .expense-line-card .field-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .description-field {
+    grid-column: auto;
   }
 }

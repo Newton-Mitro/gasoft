@@ -1,0 +1,137 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.record-preview {
+  margin: 0 0 24px;
+  padding: 22px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+.preview-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.preview-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 17px;
+}
+
+.preview-heading > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.preview-heading .eyebrow {
+  margin: 0 0 4px;
+  font-size: 9px;
+}
+
+.preview-heading h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.preview-badge {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.preview-primary {
+  display: grid;
+  gap: 6px;
+  margin: 21px 0 16px;
+  padding: 17px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface));
+}
+
+.preview-primary > span {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.preview-primary strong {
+  color: var(--text-strong);
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -.4px;
+  overflow-wrap: anywhere;
+}
+
+.preview-primary small {
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.preview-primary p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.preview-details {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.preview-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.preview-details > div:last-child {
+  border-bottom: 0;
+}
+
+.preview-details dt {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.preview-details dd {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 520px) {
+  .record-preview {
+    padding: 18px;
+  }
+}
+
+@media (min-width: 1000px) {
+  :host {
+    position: sticky;
+    top: 24px;
+  }
+}

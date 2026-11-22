@@ -10,37 +10,6 @@
   flex-direction: column;
 }
 
-.audit-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 22px;
-}
-
-.audit-heading .eyebrow {
-  margin: 0 0 7px;
-  color: var(--accent-text);
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: .14em;
-}
-
-.audit-heading h1 {
-  margin: 0;
-  color: var(--text-strong);
-  font-size: clamp(25px, 4vw, 31px);
-  font-weight: 680;
-  letter-spacing: -.8px;
-}
-
-.page-description {
-  margin: 8px 0 0;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
 .audit-total {
   flex: 0 0 auto;
   padding: 7px 10px;
@@ -216,12 +185,6 @@
 }
 
 @media (max-width: 700px) {
-  .audit-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-  }
-
   .audit-filters {
     align-items: stretch;
   }

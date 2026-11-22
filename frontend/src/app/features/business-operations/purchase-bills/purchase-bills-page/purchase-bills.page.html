@@ -2,7 +2,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">{{ view === 'create' ? 'NEW BILL' : 'EDIT BILL' }}</p>
-      <h1>{{ view === 'create' ? 'Create purchase bill' : 'Edit purchase bill' }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>{{ view === 'create' ? 'Create purchase bill' : 'Edit purchase bill' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
@@ -33,7 +33,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">COMPANY WORKSPACE</p>
-      <h1>{{ title }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"><i class="fa-solid fa-plus" aria-hidden="true"></i> New bill</a>

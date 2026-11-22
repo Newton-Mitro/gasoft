@@ -4,7 +4,7 @@
       <p class="eyebrow">
         {{ view === 'create' ? 'NEW RECORD' : view === 'edit' ? 'EDIT RECORD' : 'NEW LOCATION' }}
       </p>
-      <h1>
+      <h1><i class="page-heading-icon fa-solid fa-warehouse" aria-hidden="true"></i>
         {{
           view === 'create'
             ? 'Create warehouse'
@@ -40,7 +40,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">COMPANY WORKSPACE</p>
-      <h1>{{ title }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-warehouse" aria-hidden="true"></i>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"><i class="fa-solid fa-plus" aria-hidden="true"></i> New warehouse</a>

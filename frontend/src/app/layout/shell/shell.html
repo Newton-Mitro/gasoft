@@ -19,8 +19,8 @@
   }
   <aside class="sidebar" [class.mobile-open]="mobileNavOpen">
     <a class="brand sidebar-brand" routerLink="/dashboard" (click)="mobileNavOpen = false"
-      ><img class="brand-logo" src="/logo.png" alt="gasoft logo" /><span class="brand-name"
-        >gasoft</span
+      ><img class="brand-logo" src="/logo.png" [alt]="appName + ' logo'" /><span class="brand-name"
+        >{{ appName }}</span
       ></a
     >
     <div class="company-switcher">

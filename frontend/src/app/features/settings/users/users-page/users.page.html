@@ -1,11 +1,12 @@
 @if (view !== 'index') {
   @if (view === 'create') {
     <section class="member-create">
-      <header class="member-create-heading">
-        <span class="member-create-icon" aria-hidden="true"><i class="fa-solid fa-user-plus"></i></span>
-        <p class="eyebrow">WORKSPACE ACCESS</p>
-        <h1>Add a team member</h1>
-        <p class="page-description">Choose how you want to add someone to your workspace.</p>
+      <header class="page-heading">
+        <div>
+          <p class="eyebrow">WORKSPACE ACCESS</p>
+          <h1><i class="page-heading-icon fa-solid fa-user-plus" aria-hidden="true"></i>Add a team member</h1>
+          <p class="page-description">Choose how you want to add someone to your workspace.</p>
+        </div>
       </header>
       @if (error) {
         <div class="alert error" role="alert">{{ error }}</div>
@@ -41,7 +42,8 @@
         </button>
       </div>
       @if (!saving) {
-        <form class="member-form" novalidate (ngSubmit)="submit()">
+        <div class="member-form-layout" [class.has-preview]="showCreatePreview">
+          <form class="member-form" novalidate (ngSubmit)="submit()">
           <div class="member-form-heading">
             <div>
               <span class="eyebrow">{{
@@ -132,7 +134,17 @@
               {{ accountMode === 'new' ? 'Create account & add' : 'Add to workspace' }}
             </button>
           </footer>
-        </form>
+          </form>
+          @if (showCreatePreview) {
+            <app-record-preview
+              [pageKey]="pageKey"
+              formMode="create"
+              [fields]="createPreviewFields"
+              [form]="form"
+              [options]="{}"
+            />
+          }
+        </div>
       } @else {
         <div class="loading-card"><span class="spinner"></span> Adding team member…</div>
       }
@@ -141,7 +153,7 @@
     <div class="page-heading">
       <div>
         <p class="eyebrow">EDIT ACCESS</p>
-        <h1>Edit team member access</h1>
+        <h1><i class="page-heading-icon fa-solid fa-user-pen" aria-hidden="true"></i>Edit team member access</h1>
         <p class="page-description">{{ description }}</p>
       </div>
     </div>
@@ -171,7 +183,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">TENANT WORKSPACE</p>
-      <h1>{{ title }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-users" aria-hidden="true"></i>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"

@@ -9,10 +9,11 @@ import { FormValidationService } from '../../services/form-validation.service';
 import { FieldValidationDirective } from '../../directives/field-validation.directive';
 import { SearchableSelectDirective } from '../../directives/searchable-select.directive';
 import { InputComponent } from '../input/input.component';
+import { RecordPreviewComponent, shouldShowRecordPreview } from '../record-preview/record-preview.component';
 
 @Component({
   selector: 'app-record-form',
-  imports: [FormsModule, DocumentLinesEditorComponent, JournalEntryLinesEditorComponent, FieldValidationDirective, SearchableSelectDirective, InputComponent],
+  imports: [FormsModule, DocumentLinesEditorComponent, JournalEntryLinesEditorComponent, FieldValidationDirective, SearchableSelectDirective, InputComponent, RecordPreviewComponent],
   styleUrl: './record-form.component.css',
   templateUrl: './record-form.component.html',
 })
@@ -43,6 +44,10 @@ export class RecordFormComponent {
 
   get journalEntryBalanced(): boolean {
     return isBalancedJournalEntry(this.journalEntryLines);
+  }
+
+  get showPreview(): boolean {
+    return shouldShowRecordPreview(this.pageKey, this.formMode, this.fields);
   }
 
   get heading(): string {
@@ -142,6 +147,12 @@ export class RecordFormComponent {
 
   clearFieldError(key: string): void {
     this.formValidation.clearField(key);
+  }
+
+  updateField(key: string, value: unknown): void {
+    this.form = { ...this.form, [key]: value };
+    this.clearFieldError(key);
+    this.valueChange.emit({ key, value });
   }
 
   submit(): void {

@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
 import { PagedResult } from '../../../shared/models/paged-result.model';
 import { parsePagedResult } from '../../../shared/utils/paged-result';
-import { PartyAddress, PartyAddressPayload } from './party-address.model';
+import { PartyAddress, PartyAddressPayload, PartyAddressType } from './party-address.model';
 
 @Injectable({ providedIn: 'root' })
 export class PartyAddressService {
@@ -17,7 +17,10 @@ export class PartyAddressService {
   getPage(partyId: number, page: number, pageSize: number): Observable<PagedResult<PartyAddress>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.api.get<unknown>(`${endpointForParty(partyId)}/page`, false, params)
-      .pipe(map(result => parsePagedResult(result, isPartyAddress, 'party addresses')));
+      .pipe(map(result => {
+        const addresses = parsePagedResult(result, isPartyAddress, 'party addresses');
+        return { ...addresses, items: addresses.items.map(normalizePartyAddress) };
+      }));
   }
 
   getById(partyId: number, addressId: number): Observable<PartyAddress> {
@@ -45,7 +48,7 @@ function endpointForParty(partyId: number): string {
 
 function toAddress(result: unknown): PartyAddress {
   if (!isPartyAddress(result)) throw new Error('The party address response contains an invalid record.');
-  return result;
+  return normalizePartyAddress(result);
 }
 
 function toAddresses(result: unknown): PartyAddress[] {
@@ -56,7 +59,7 @@ function toAddresses(result: unknown): PartyAddress[] {
       : null;
   if (!rows) throw new Error('The party addresses response has an unsupported format.');
   if (!rows.every(isPartyAddress)) throw new Error('The party addresses response contains an invalid record.');
-  return rows;
+  return rows.map(normalizePartyAddress);
 }
 
 function isPartyAddress(value: unknown): value is PartyAddress {
@@ -64,7 +67,7 @@ function isPartyAddress(value: unknown): value is PartyAddress {
   const row = value as Record<string, unknown>;
   const id = row['id'];
   return typeof id === 'number' && Number.isSafeInteger(id) && id > 0 &&
-    (row['addressType'] === 'Billing' || row['addressType'] === 'Shipping' || row['addressType'] === 'Other') &&
+    parsePartyAddressType(row['addressType']) !== null &&
     typeof row['line1'] === 'string' &&
     isOptionalString(row['line2']) &&
     typeof row['city'] === 'string' &&
@@ -72,6 +75,22 @@ function isPartyAddress(value: unknown): value is PartyAddress {
     isOptionalString(row['postalCode']) &&
     typeof row['countryCode'] === 'string' &&
     typeof row['isDefault'] === 'boolean';
+}
+
+function normalizePartyAddress(address: PartyAddress): PartyAddress {
+  const addressType = parsePartyAddressType(address.addressType);
+  if (addressType === null) throw new Error('The party address response contains an invalid record.');
+  return { ...address, addressType };
+}
+
+function parsePartyAddressType(value: unknown): PartyAddressType | null {
+  if (typeof value !== 'string') return null;
+  switch (value.trim().toUpperCase()) {
+    case 'BILLING': return 'Billing';
+    case 'SHIPPING': return 'Shipping';
+    case 'OTHER': return 'Other';
+    default: return null;
+  }
 }
 
 function isOptionalString(value: unknown): value is string | null {

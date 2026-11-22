@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CurrencyPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { combineLatest, firstValueFrom, forkJoin, Observable, of, Subscription } from 'rxjs';
 import { ApiService } from '../../../../core/api.service';
 import { AuthService } from '../../../../core/auth.service';
@@ -32,6 +33,8 @@ interface ExpenseLineDraft {
   amount: number | null;
   receiptFile: File | null;
   receiptUrl: string | null;
+  receiptObjectUrl: string | null;
+  receiptPreviewUrl: SafeUrl | null;
 }
 
 interface JournalOption {
@@ -57,6 +60,7 @@ type WorkflowMode = 'reject' | 'post' | 'reimburse';
 })
 export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly formValidation = inject(FormValidationService);
   reports: ExpenseReport[] = [];
   expenseAccounts: Choice[] = [];
@@ -97,6 +101,7 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.routeSubscription = combineLatest([this.route.data, this.route.paramMap]).subscribe(
       ([data, params]) => {
+        this.clearReceiptPreviews();
         const view = data['view'];
         this.view = view === 'create' || view === 'edit' ? view : 'index';
         this.error = '';
@@ -122,6 +127,7 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routeSubscription?.unsubscribe();
+    this.clearReceiptPreviews();
   }
 
   get workflowReport(): ExpenseReport | undefined {
@@ -141,16 +147,21 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
   removeLine(index: number): void {
     if (this.expenseLines.length <= 1) return;
     this.formValidation.clear();
+    const removedLine = this.expenseLines[index];
+    if (removedLine) this.clearReceiptPreview(removedLine);
     this.expenseLines = this.expenseLines.filter((_, lineIndex) => lineIndex !== index);
   }
 
   selectReceipt(index: number, event: Event): void {
     const input = event.target;
     if (!(input instanceof HTMLInputElement)) return;
+    const line = this.expenseLines[index];
+    if (!line) return;
     const file = input.files?.[0] ?? null;
     const field = `lines[${index}].receipt`;
     if (file && file.size > 5 * 1024 * 1024) {
-      this.expenseLines[index].receiptFile = null;
+      this.clearReceiptPreview(line);
+      line.receiptFile = null;
       input.value = '';
       this.formValidation.setErrors({
         ...this.formValidation.errors(),
@@ -158,8 +169,24 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
       });
       return;
     }
-    this.expenseLines[index].receiptFile = file;
+    this.clearReceiptPreview(line);
+    line.receiptFile = file;
+    if (file && isPreviewableReceipt(file)) {
+      const objectUrl = URL.createObjectURL(file);
+      line.receiptObjectUrl = objectUrl;
+      line.receiptPreviewUrl = this.sanitizer.bypassSecurityTrustUrl(objectUrl);
+    }
     this.formValidation.clearField(field);
+  }
+
+  openReceiptPreview(objectUrl: string | null): void {
+    if (!objectUrl) return;
+    const opened = window.open(objectUrl, '_blank');
+    if (!opened) {
+      this.notifications.error('The PDF preview was blocked. Allow pop-ups to open it.');
+      return;
+    }
+    opened.opener = null;
   }
 
   async saveReport(): Promise<void> {
@@ -201,12 +228,14 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
         );
         savedReport = report;
         const uploadedLine = report.lines.find((line) => line.id === persistedLine.id);
+        this.clearReceiptPreview(draft);
         draft.receiptFile = null;
         draft.receiptUrl = uploadedLine?.receiptUrl ?? null;
       }
 
       this.replaceReport(report);
       this.editingReportId = null;
+      this.clearReceiptPreviews();
       this.expenseLines = [];
       this.formValidation.clear();
       this.notifications.success(
@@ -469,7 +498,19 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
       amount: null,
       receiptFile: null,
       receiptUrl: null,
+      receiptObjectUrl: null,
+      receiptPreviewUrl: null,
     };
+  }
+
+  private clearReceiptPreview(line: ExpenseLineDraft): void {
+    if (line.receiptObjectUrl) URL.revokeObjectURL(line.receiptObjectUrl);
+    line.receiptObjectUrl = null;
+    line.receiptPreviewUrl = null;
+  }
+
+  private clearReceiptPreviews(): void {
+    this.expenseLines.forEach((line) => this.clearReceiptPreview(line));
   }
 
   private loadIndex(): void {
@@ -548,6 +589,8 @@ export class ExpenseReportsPageComponent implements OnInit, OnDestroy {
             amount: line.amount,
             receiptFile: null,
             receiptUrl: line.receiptUrl,
+            receiptObjectUrl: null,
+            receiptPreviewUrl: null,
           }));
         }
         this.loading = false;
@@ -570,6 +613,10 @@ function isDateOnly(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00.000Z`);
   return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value;
+}
+
+function isPreviewableReceipt(file: File): boolean {
+  return ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(file.type);
 }
 
 function serverValidationErrors(error: unknown): FormValidationErrors {

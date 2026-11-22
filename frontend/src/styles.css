@@ -3145,7 +3145,6 @@ html[data-theme='dark']
   .app-shell
   .main-content
   :is(
-    .pos-page-heading h1,
     .pos-panel-heading h2,
     .pos-cart-heading h2,
     .pos-item-copy strong,
@@ -3262,4 +3261,166 @@ html[data-theme='dark'] .app-shell .main-content .pos-search kbd {
   border-color: var(--accent);
   background: var(--accent);
   color: var(--nav-active-text);
+}
+
+:root .content-area :is(.panel:not(.empty-state), .table-panel, .form-panel, .member-form, .order-form, .order-list, .order-detail, .quote-form, .convert-form, .credit-form, .asset-form) {
+  border-color: var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--text-strong) 7%, transparent), 0 2px 6px color-mix(in srgb, var(--text-strong) 4%, transparent);
+}
+
+:root .content-area .empty-state.panel {
+  border-color: var(--border);
+  border-radius: 16px;
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--text-strong) 7%, transparent), 0 2px 6px color-mix(in srgb, var(--text-strong) 4%, transparent);
+}
+
+:root .content-area .page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  margin: 0 0 26px;
+}
+
+:root .content-area .page-heading > :first-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+:root .content-area .page-heading h1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 27px;
+  font-weight: 650;
+  letter-spacing: -.7px;
+}
+
+:root .content-area .page-heading-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 17px;
+}
+
+:root .content-area .page-heading .eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-text);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .13em;
+}
+
+:root .content-area .page-heading .page-description {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+:root .content-area :is(.asset-form, .order-form, .quote-form, .convert-form, .credit-form, .expense-editor, .workflow-panel) {
+  padding: 24px;
+}
+
+:root .content-area :is(.asset-form, .order-form, .quote-form, .convert-form, .credit-form) .section-heading {
+  margin-bottom: 22px;
+}
+
+:root .content-area :is(.asset-form, .order-form, .quote-form, .convert-form, .credit-form) .section-heading h2 {
+  color: var(--text-strong);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -.3px;
+}
+
+:root .content-area :is(.asset-form, .order-form, .quote-form, .convert-form, .credit-form) .section-heading p {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+:root .content-area :is(.table-panel, .panel) > .table-header {
+  min-height: 68px;
+  padding: 16px 24px;
+  border-bottom-color: var(--border);
+  background: color-mix(in srgb, var(--surface-muted) 50%, var(--surface));
+}
+
+:root .content-area :is(.table-panel, .panel) .table-header h2 {
+  color: var(--text-strong);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.25px;
+}
+
+:root .content-area :is(.table-panel, .panel) .table-header > div > span {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+:root .content-area :is(.field-grid, .header-fields, .receive-fields, .member-fields, .asset-fields, .account-form, .rate-form) :is(input:not([type='checkbox']):not([type='radio']), select) {
+  height: 44px;
+  min-height: 44px;
+  padding: 0 13px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+:root .content-area :is(.field-grid, .header-fields, .receive-fields, .member-fields, .asset-fields, .account-form, .rate-form) label {
+  gap: 8px;
+  font-size: 11px;
+}
+
+:root .content-area .form-panel .field-grid {
+  gap: 20px 22px;
+}
+
+:root .content-area .form-panel .field-grid label {
+  color: var(--text);
+  font-weight: 650;
+}
+
+:root .content-area :is(.asset-form, .order-form, .quote-form, .convert-form, .credit-form) .form-actions > .button,
+:root .content-area .member-form-actions .button {
+  min-height: 41px;
+  padding: 0 18px;
+  border-radius: 9px;
+  font-size: 11px;
+}
+
+@media (max-width: 700px) {
+  :root .content-area .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  :root .content-area .page-heading h1 {
+    font-size: clamp(20px, 6vw, 23px);
+  }
+
+  :root .content-area :is(.table-panel, .panel) > .table-header {
+    padding: 15px 20px;
+  }
+
+  :root .content-area :is(.asset-form, .order-form, .quote-form, .convert-form, .credit-form, .expense-editor, .workflow-panel) {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 420px) {
+  :root .content-area :is(.asset-form, .order-form, .quote-form, .convert-form, .credit-form, .expense-editor, .workflow-panel) {
+    padding: 16px;
+  }
 }

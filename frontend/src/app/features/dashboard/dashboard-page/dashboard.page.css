@@ -2,20 +2,6 @@
   display: block;
 }
 
-.dashboard-heading {
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.dashboard-heading .eyebrow i {
-  margin-right: 5px;
-}
-
-.dashboard-heading h1 {
-  font-size: clamp(26px, 3vw, 34px);
-  letter-spacing: -1.1px;
-}
-
 .dashboard-heading .date-chip {
   display: inline-flex;
   align-items: center;

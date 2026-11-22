@@ -81,8 +81,15 @@ type InputType =
     }
 
     :host-context(.header-fields) .app-input-control:not([type='checkbox']):not([type='radio']),
-    :host-context(.editable-line) .app-input-control:not([type='checkbox']):not([type='radio']),
     :host-context(.receive-fields) .app-input-control:not([type='checkbox']):not([type='radio']) {
+      width: 100%;
+      min-width: 0;
+      height: 44px;
+      padding: 0 13px;
+      border-radius: 9px;
+    }
+
+    :host-context(.editable-line) .app-input-control:not([type='checkbox']):not([type='radio']) {
       width: 100%;
       min-width: 0;
       height: 38px;
@@ -91,7 +98,9 @@ type InputType =
     :host-context(.member-fields) .app-input-control:not([type='checkbox']):not([type='radio']) {
       width: 100%;
       min-width: 0;
-      height: 42px;
+      height: 44px;
+      padding: 0 13px;
+      border-radius: 9px;
     }
 
     :host-context(.audit-filters) .app-input-control:not([type='checkbox']):not([type='radio']) {
@@ -121,8 +130,9 @@ type InputType =
 
     :host-context(.rate-form) .app-input-control:not([type='checkbox']):not([type='radio']) {
       width: 100%;
-      height: 40px;
-      padding: 0 11px;
+      height: 44px;
+      padding: 0 13px;
+      border-radius: 9px;
     }
 
     :host-context(.aging-filter) .app-input-control:not([type='checkbox']):not([type='radio']),
@@ -135,16 +145,17 @@ type InputType =
     :host-context(.account-form) .app-input-control:not([type='checkbox']):not([type='radio']) {
       width: 100%;
       min-width: 0;
-      min-height: 40px;
-      padding: 0 11px;
+      height: 44px;
+      padding: 0 13px;
+      border-radius: 9px;
     }
 
     :host-context(.asset-fields) .app-input-control:not([type='checkbox']):not([type='radio']) {
       width: 100%;
       min-width: 0;
-      min-height: 36px;
-      padding: 0 9px;
-      border-radius: 7px;
+      height: 44px;
+      padding: 0 13px;
+      border-radius: 9px;
     }
 
     :host-context(.budget-toolbar) .app-input-control:not([type='checkbox']):not([type='radio']),

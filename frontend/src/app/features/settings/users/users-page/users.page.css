@@ -5,64 +5,15 @@
 .member-create {
   width: 100%;
   margin: 0;
-  padding: clamp(8px, 2vw, 22px) 0 36px;
+  padding: 0 0 36px;
 }
 
-.member-create-heading {
-  position: relative;
-  padding: 0 0 22px 62px;
-}
-
-.member-create-heading .back-link {
-  display: inline-block;
-  margin: 0 0 24px -62px;
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 600;
-  transition: color .15s ease;
-}
-
-.member-create-heading .back-link:hover {
-  color: var(--accent-text);
-}
-
-.member-create-icon {
-  position: absolute;
-  top: 46px;
-  left: 0;
-  display: grid;
-  width: 46px;
-  height: 46px;
-  place-items: center;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--accent-soft);
-  color: var(--accent-text);
-  font-size: 23px;
-}
-
-.member-create-heading .eyebrow,
 .member-form-heading .eyebrow {
   margin: 0 0 7px;
   color: var(--accent-text);
   font-size: 9px;
   font-weight: 750;
   letter-spacing: .14em;
-}
-
-.member-create-heading h1 {
-  margin: 0;
-  color: var(--text-strong);
-  font-size: clamp(25px, 4vw, 31px);
-  font-weight: 680;
-  letter-spacing: -.8px;
-}
-
-.member-create-heading .page-description {
-  margin: 8px 0 0;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.6;
 }
 
 .account-mode {
@@ -159,9 +110,18 @@
 .member-form {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--surface);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-strong) 6%, transparent);
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--text-strong) 7%, transparent), 0 2px 6px color-mix(in srgb, var(--text-strong) 4%, transparent);
+}
+
+.member-form-layout {
+  min-width: 0;
+}
+
+.member-form-layout.has-preview {
+  display: grid;
+  gap: 18px;
 }
 
 .member-form-heading {
@@ -169,14 +129,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 22px 24px 18px;
+  padding: 27px 30px 24px;
   border-bottom: 1px solid var(--border);
 }
 
 .member-form-heading h2 {
   margin: 0;
   color: var(--text-strong);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 680;
   letter-spacing: -.25px;
 }
@@ -195,8 +155,8 @@
 .member-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 20px;
-  padding: 23px 24px;
+  gap: 20px 22px;
+  padding: 24px 30px;
 }
 
 .member-fields-column {
@@ -210,7 +170,7 @@
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
   color: var(--text);
   font-size: 11px;
   font-weight: 650;
@@ -219,10 +179,10 @@
 .member-fields input,
 .member-fields select {
   width: 100%;
-  height: 42px;
-  padding: 0 12px;
+  height: 44px;
+  padding: 0 13px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 9px;
   outline: 0;
   background: var(--surface);
   color: var(--text-strong);
@@ -272,14 +232,14 @@
   display: flex;
   justify-content: flex-end;
   gap: 9px;
-  padding: 15px 24px;
+  padding: 16px 30px;
   border-top: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface-muted) 65%, var(--surface));
 }
 
 .member-form-actions .button {
-  min-height: 39px;
-  padding: 0 16px;
+  min-height: 41px;
+  padding: 0 18px;
 }
 
 .alert.error {
@@ -289,20 +249,6 @@
 @media (max-width: 600px) {
   .member-create {
     padding-top: 0;
-  }
-
-  .member-create-heading {
-    padding-left: 52px;
-  }
-
-  .member-create-heading .back-link {
-    margin-left: -52px;
-  }
-
-  .member-create-icon {
-    top: 46px;
-    width: 40px;
-    height: 40px;
   }
 
   .account-mode {
@@ -338,6 +284,14 @@
     padding-right: 17px;
     padding-left: 17px;
   }
+}
+
+@media (min-width: 1000px) {
+  .member-form-layout.has-preview {
+    grid-template-columns: minmax(0, 1.7fr) minmax(270px, .9fr);
+    align-items: start;
+  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {

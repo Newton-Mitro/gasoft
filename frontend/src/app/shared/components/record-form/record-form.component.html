@@ -1,84 +1,89 @@
-<section class="form-panel panel" [class.transaction-form]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries'">
-  <div class="form-panel-heading">
-    <div class="form-heading-copy">
-      <p class="eyebrow">{{ eyebrow }}</p>
-      <h2>{{ heading }}</h2>
-    </div>
-    <div class="form-heading-side">
-      <span class="form-mode-tag">{{ modeLabel }}</span>
-      <span class="form-mark" aria-hidden="true"><i class="fa-solid" [class.fa-pen-to-square]="formMode === 'edit'" [class.fa-plus]="formMode !== 'edit'"></i></span>
-    </div>
-  </div>
-  <form (ngSubmit)="submit()">
-    <div class="section-caption">
-      <div>
-        <strong>Details</strong>
-        <small>Enter the information below. Required fields are marked with an asterisk.</small>
+<div class="record-form-layout" [class.has-preview]="showPreview">
+  <section class="form-panel panel" [class.transaction-form]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries'">
+    <div class="form-panel-heading">
+      <div class="form-heading-copy">
+        <p class="eyebrow">{{ eyebrow }}</p>
+        <h2>{{ heading }}</h2>
       </div>
-      <small class="required-note"><span aria-hidden="true">*</span> Required</small>
+      <div class="form-heading-side">
+        <span class="form-mode-tag">{{ modeLabel }}</span>
+        <span class="form-mark" aria-hidden="true"><i class="fa-solid" [class.fa-pen-to-square]="formMode === 'edit'" [class.fa-plus]="formMode !== 'edit'"></i></span>
+      </div>
     </div>
-    <div class="field-grid" [class.transaction-fields]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries' || formMode === 'receive' || formMode === 'issue'">
-      @for (field of fields; track field.key) {
-        <label [class.checkbox-label]="field.type === 'checkbox'" [class.invalid-field]="fieldErrors(field.key).length > 0">
-          @if (field.type === 'checkbox') {
-            <app-input type="checkbox" [name]="field.key" [ngModel]="$any(form)[field.key]" (ngModelChange)="valueChange.emit({ key: field.key, value: $event })" />
-            <span>{{ field.label }}</span>
-          } @else {
-            <span class="field-label">{{ field.label }} @if (field.required) { <span class="required-marker" aria-label="required">*</span> }</span>
-            @if (field.type === 'select') {
-              <select appSearchableSelect [name]="field.key" [required]="!!field.required" [disabled]="isOptionLoading(field.optionSource) || hasOptionFailed(field.optionSource)" [ngModel]="$any(form)[field.key]" (ngModelChange)="clearFieldError(field.key); valueChange.emit({ key: field.key, value: $event })">
-                <option [ngValue]="null" disabled>
-                  @if (isOptionLoading(field.optionSource)) { Loading {{ field.label.toLowerCase() }}… }
-                  @else if (hasOptionFailed(field.optionSource)) { Could not load {{ field.label.toLowerCase() }} }
-                  @else { Select {{ field.label.toLowerCase() }} }
-                </option>
-                @for (choice of field.options ?? options[field.optionSource ?? '']; track choice.value) {
-                  <option [ngValue]="choice.value">{{ choice.label }}</option>
-                }
-              </select>
+    <form (ngSubmit)="submit()">
+      <div class="section-caption">
+        <div>
+          <strong>Details</strong>
+          <small>Enter the information below. Required fields are marked with an asterisk.</small>
+        </div>
+        <small class="required-note"><span aria-hidden="true">*</span> Required</small>
+      </div>
+      <div class="field-grid" [class.transaction-fields]="pageKey === 'sales-invoices' || pageKey === 'purchase-bills' || pageKey === 'journal-entries' || formMode === 'receive' || formMode === 'issue'" [class.payment-fields]="pageKey === 'payments' && (formMode === 'create' || formMode === 'edit')">
+        @for (field of fields; track field.key) {
+          <label [class.checkbox-label]="field.type === 'checkbox'" [class.invalid-field]="fieldErrors(field.key).length > 0">
+            @if (field.type === 'checkbox') {
+              <app-input type="checkbox" [name]="field.key" [ngModel]="$any(form)[field.key]" (ngModelChange)="updateField(field.key, $event)" />
+              <span>{{ field.label }}</span>
             } @else {
-              <app-input [type]="field.type ?? 'text'" [name]="field.key" [required]="!!field.required" [min]="field.min ?? (field.key === 'exchangeRate' ? 0.0000000001 : field.type === 'number' ? 0 : null)" [max]="field.max ?? null" [minlength]="field.minLength ?? null" [maxlength]="field.maxLength ?? null" [pattern]="field.pattern ?? ''" [step]="field.step ?? (field.key === 'exchangeRate' ? '0.0000000001' : field.type === 'number' ? 'any' : null)" [ngModel]="$any(form)[field.key]" (ngModelChange)="clearFieldError(field.key); valueChange.emit({ key: field.key, value: $event })" />
+              <span class="field-label">{{ field.label }} @if (field.required) { <span class="required-marker" aria-label="required">*</span> }</span>
+              @if (field.type === 'select') {
+                <select appSearchableSelect [name]="field.key" [required]="!!field.required" [disabled]="isOptionLoading(field.optionSource) || hasOptionFailed(field.optionSource)" [ngModel]="$any(form)[field.key]" (ngModelChange)="updateField(field.key, $event)">
+                  <option [ngValue]="null" disabled>
+                    @if (isOptionLoading(field.optionSource)) { Loading {{ field.label.toLowerCase() }}… }
+                    @else if (hasOptionFailed(field.optionSource)) { Could not load {{ field.label.toLowerCase() }} }
+                    @else { Select {{ field.label.toLowerCase() }} }
+                  </option>
+                  @for (choice of field.options ?? options[field.optionSource ?? '']; track choice.value) {
+                    <option [ngValue]="choice.value">{{ choice.label }}</option>
+                  }
+                </select>
+              } @else {
+                <app-input [type]="field.type ?? 'text'" [name]="field.key" [required]="!!field.required" [min]="field.min ?? (field.key === 'exchangeRate' ? 0.0000000001 : field.type === 'number' ? 0 : null)" [max]="field.max ?? null" [minlength]="field.minLength ?? null" [maxlength]="field.maxLength ?? null" [pattern]="field.pattern ?? ''" [step]="field.step ?? (field.key === 'exchangeRate' ? '0.0000000001' : field.type === 'number' ? 'any' : null)" [ngModel]="$any(form)[field.key]" (ngModelChange)="updateField(field.key, $event)" />
+              }
             }
-          }
-        </label>
-      }
-    </div>
-    @if (pageKey === 'sales-invoices' || pageKey === 'purchase-bills') {
-      <app-document-lines-editor
-        [lines]="documentLines"
-        [accounts]="options['accounts'] ?? []"
-        [taxCodes]="options['taxCodes'] ?? []"
-        [accountsLoading]="isOptionLoading('accounts')"
-        [accountsFailed]="hasOptionFailed('accounts')"
-        [taxCodesLoading]="isOptionLoading('taxCodes')"
-        [taxCodesFailed]="hasOptionFailed('taxCodes')"
-        [accountLabel]="pageKey === 'sales-invoices' ? 'Revenue account' : 'Expense account'"
-        [currencyCode]="$any(form)['currencyCode'] ?? ''"
-        (linesChange)="documentLinesChange.emit($event)"
-      />
-      <p class="form-note">Tax is calculated for each line using the selected tax code and document date. Posting configuration is selected when you post the draft.</p>
-    }
-    @if (pageKey === 'journal-entries') {
-      <app-journal-entry-lines-editor
-        [lines]="journalEntryLines"
-        [accounts]="options['accounts'] ?? []"
-        [accountsLoading]="isOptionLoading('accounts')"
-        [accountsFailed]="hasOptionFailed('accounts')"
-        [currencyCode]="$any(form)['transactionCurrencyCode'] ?? ''"
-        (linesChange)="journalEntryLinesChange.emit($event)"
-      />
-      <p class="form-note">The entry can be saved as a draft once total debits equal total credits.</p>
-    }
-    @if (error) { <div class="alert error">{{ error }}</div> }
-    <div class="form-actions">
-      <p class="action-hint">{{ actionHint }}</p>
-      <div class="action-buttons">
-        <button class="button secondary" type="button" [disabled]="saving" (click)="cancel.emit()">Cancel</button>
-        <button class="button primary" [disabled]="saving || hasPendingOptions() || hasFailedOptions() || (pageKey === 'journal-entries' && !journalEntryBalanced)">
-          @if (saving) { <span class="button-spinner" aria-hidden="true"></span> Saving… }
-          @else { {{ submitLabel }} }
-        </button>
+          </label>
+        }
       </div>
-    </div>
-  </form>
-</section>
+      @if (pageKey === 'sales-invoices' || pageKey === 'purchase-bills') {
+        <app-document-lines-editor
+          [lines]="documentLines"
+          [accounts]="options['accounts'] ?? []"
+          [taxCodes]="options['taxCodes'] ?? []"
+          [accountsLoading]="isOptionLoading('accounts')"
+          [accountsFailed]="hasOptionFailed('accounts')"
+          [taxCodesLoading]="isOptionLoading('taxCodes')"
+          [taxCodesFailed]="hasOptionFailed('taxCodes')"
+          [accountLabel]="pageKey === 'sales-invoices' ? 'Revenue account' : 'Expense account'"
+          [currencyCode]="$any(form)['currencyCode'] ?? ''"
+          (linesChange)="documentLinesChange.emit($event)"
+        />
+        <p class="form-note">Tax is calculated for each line using the selected tax code and document date. Posting configuration is selected when you post the draft.</p>
+      }
+      @if (pageKey === 'journal-entries') {
+        <app-journal-entry-lines-editor
+          [lines]="journalEntryLines"
+          [accounts]="options['accounts'] ?? []"
+          [accountsLoading]="isOptionLoading('accounts')"
+          [accountsFailed]="hasOptionFailed('accounts')"
+          [currencyCode]="$any(form)['transactionCurrencyCode'] ?? ''"
+          (linesChange)="journalEntryLinesChange.emit($event)"
+        />
+        <p class="form-note">The entry can be saved as a draft once total debits equal total credits.</p>
+      }
+      @if (error) { <div class="alert error">{{ error }}</div> }
+      <div class="form-actions">
+        <p class="action-hint">{{ actionHint }}</p>
+        <div class="action-buttons">
+          <button class="button secondary" type="button" [disabled]="saving" (click)="cancel.emit()">Cancel</button>
+          <button class="button primary" [disabled]="saving || hasPendingOptions() || hasFailedOptions() || (pageKey === 'journal-entries' && !journalEntryBalanced)">
+            @if (saving) { <span class="button-spinner" aria-hidden="true"></span> Saving… }
+            @else { {{ submitLabel }} }
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
+  @if (showPreview) {
+    <app-record-preview [pageKey]="pageKey" [formMode]="formMode" [fields]="fields" [form]="form" [options]="options" />
+  }
+</div>

@@ -2,7 +2,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">EMPLOYEE EXPENSES</p>
-      <h1>Expense reports</h1>
+      <h1><i class="page-heading-icon fa-solid fa-receipt" aria-hidden="true"></i>Expense reports</h1>
       <p class="page-description">
         Submit receipts, get manager approval, then post and reimburse claims.
       </p>
@@ -15,7 +15,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">{{ view === 'create' ? 'NEW SUBMISSION' : 'DRAFT REPORT' }}</p>
-      <h1>{{ view === 'create' ? 'Create expense report' : 'Edit expense report' }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-receipt" aria-hidden="true"></i>{{ view === 'create' ? 'Create expense report' : 'Edit expense report' }}</h1>
       <p class="page-description">Add expense details and receipts before saving the report.</p>
     </div>
   </div>
@@ -125,30 +125,56 @@
               />
             </label>
           </div>
-          <div class="receipt-row">
-            <label class="receipt-input">
-              <span>Receipt <small>JPG, PNG, WebP or PDF, up to 5 MB</small></span>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
-                [name]="'lines[' + index + '].receipt'"
-                (change)="selectReceipt(index, $event)"
-              />
-            </label>
-            @if (line.receiptUrl) {
-              <button
-                class="button secondary table-action"
-                type="button"
-                (click)="openReceipt(line.receiptUrl)"
-              >
-                <i class="fa-solid fa-paperclip" aria-hidden="true"></i> View saved receipt
-              </button>
-            }
-            @if (line.receiptFile) {
-              <span class="receipt-selected"
-                ><i class="fa-solid fa-check" aria-hidden="true"></i>
-                {{ line.receiptFile.name }}</span
-              >
+          <div class="receipt-row" [class.has-preview]="line.receiptFile && line.receiptPreviewUrl">
+            <div class="receipt-upload">
+              <label class="receipt-input">
+                <span>Receipt <small>JPG, PNG, WebP or PDF, up to 5 MB</small></span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  [name]="'lines[' + index + '].receipt'"
+                  (change)="selectReceipt(index, $event)"
+                />
+              </label>
+              @if (line.receiptUrl) {
+                <button
+                  class="button secondary table-action"
+                  type="button"
+                  (click)="openReceipt(line.receiptUrl)"
+                >
+                  <i class="fa-solid fa-paperclip" aria-hidden="true"></i> View saved receipt
+                </button>
+              }
+              @if (line.receiptFile) {
+                <span class="receipt-selected">
+                  <i class="fa-solid fa-check" aria-hidden="true"></i>
+                  {{ line.receiptFile.name }}
+                </span>
+              }
+            </div>
+            @if (line.receiptFile && line.receiptPreviewUrl) {
+              <aside class="receipt-preview" [attr.aria-label]="'Receipt preview for expense ' + (index + 1)">
+                <span class="receipt-preview-label">RECEIPT PREVIEW</span>
+                @if (line.receiptFile.type.startsWith('image/')) {
+                  <img
+                    [src]="line.receiptPreviewUrl"
+                    [alt]="'Receipt for ' + (line.merchant || 'expense ' + (index + 1))"
+                  />
+                } @else {
+                  <div class="receipt-pdf-preview">
+                    <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
+                    <strong>PDF receipt</strong>
+                    <span>{{ line.receiptFile.name }}</span>
+                    <button
+                      class="button secondary table-action"
+                      type="button"
+                      (click)="openReceiptPreview(line.receiptObjectUrl)"
+                    >
+                      Open PDF preview
+                    </button>
+                  </div>
+                }
+              </aside>
             }
           </div>
         </article>

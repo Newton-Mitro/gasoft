@@ -3,7 +3,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { PaginationComponent, PageChange } from '../../../../shared/components/pagination/pagination.component';
 import { errorMessage } from '../../../../shared/utils/page-utils';
-import { Choice } from '../../../../shared/models/shared.models';
+import { Choice, Field } from '../../../../shared/models/shared.models';
+import { RecordPreviewComponent, shouldShowRecordPreview } from '../../../../shared/components/record-preview/record-preview.component';
 import { OptionDataCacheService } from '../../../../shared/data/option-data-cache.service';
 import { OptionDataService } from '../../../../shared/data/option-data.service';
 import { AuthService } from '../../../../core/auth.service';
@@ -26,7 +27,7 @@ import {
 
 @Component({
   selector: 'app-bank-reconciliation-page',
-  imports: [FormsModule, PaginationComponent, FieldValidationDirective, SearchableSelectDirective, InputComponent],
+  imports: [FormsModule, PaginationComponent, RecordPreviewComponent, FieldValidationDirective, SearchableSelectDirective, InputComponent],
   templateUrl: './bank-reconciliation.page.html',
   styleUrls: ['../../../../shared/styles/feature-page.css', './bank-reconciliation.page.css'],
 })
@@ -57,6 +58,13 @@ export class BankReconciliationPageComponent implements OnInit {
   adjustmentDescription = '';
   allocationAmounts: Record<number, number> = {};
   candidates: BankMatchCandidate[] = [];
+  readonly bankAccountPreviewFields: Field[] = [
+    { key: 'name', label: 'Account name' },
+    { key: 'bankName', label: 'Bank name' },
+    { key: 'lastFour', label: 'Last four digits' },
+    { key: 'chartOfAccountId', label: 'Ledger asset account', type: 'select', optionSource: 'accounts' },
+    { key: 'currencyCode', label: 'Functional currency' },
+  ];
   loading = false;
   saving = false;
   importing = false;
@@ -97,6 +105,20 @@ export class BankReconciliationPageComponent implements OnInit {
 
   get selectedAccount(): BankAccount | undefined {
     return this.accounts.find(account => account.id === this.selectedAccountId);
+  }
+
+  get showBankAccountPreview(): boolean {
+    return shouldShowRecordPreview('bank-accounts', 'create', this.bankAccountPreviewFields);
+  }
+
+  get bankAccountPreviewForm(): Record<string, unknown> {
+    return {
+      name: this.name,
+      bankName: this.bankName,
+      lastFour: this.accountNumberLastFour,
+      chartAccountId: this.chartOfAccountId,
+      currencyCode: this.company?.functionalCurrencyCode ?? '',
+    };
   }
 
   get matchedCount(): number {

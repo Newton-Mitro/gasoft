@@ -3,6 +3,22 @@ import { RecordFormComponent } from './record-form.component';
 import { FormValidationService } from '../../services/form-validation.service';
 
 describe('RecordFormComponent option loading', () => {
+  it('updates the form reference and emits changed values for the live preview', () => {
+    const component = new RecordFormComponent(
+      { status: () => signal<'idle' | 'loading' | 'loaded' | 'failed'>('idle') } as never,
+      new FormValidationService(),
+    );
+    component.form = { paymentNumber: '' };
+    const originalForm = component.form;
+    const valueChange = vi.spyOn(component.valueChange, 'emit');
+
+    component.updateField('paymentNumber', 'PAY-001');
+
+    expect(component.form).not.toBe(originalForm);
+    expect(component.form).toEqual({ paymentNumber: 'PAY-001' });
+    expect(valueChange).toHaveBeenCalledWith({ key: 'paymentNumber', value: 'PAY-001' });
+  });
+
   it('identifies option sources that are loading or failed', () => {
     const formValidation = new FormValidationService();
     const optionData = { status: () => signal<'idle' | 'loading' | 'loaded' | 'failed'>('idle') };

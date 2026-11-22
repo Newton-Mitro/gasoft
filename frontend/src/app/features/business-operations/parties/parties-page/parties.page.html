@@ -2,7 +2,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">{{ view === 'create' ? 'NEW RECORD' : 'EDIT RECORD' }}</p>
-      <h1>{{ view === 'create' ? 'Add customer or supplier' : 'Edit customer or supplier' }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-address-book" aria-hidden="true"></i>{{ view === 'create' ? 'Add customer or supplier' : 'Edit customer or supplier' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
@@ -31,7 +31,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">CUSTOMER / SUPPLIER DIRECTORY</p>
-      <h1>{{ title }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-address-book" aria-hidden="true"></i>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add party</a>

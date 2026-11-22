@@ -6,6 +6,7 @@ import { combineLatest, Subscription } from 'rxjs';
 import { errorMessage } from '../../../../shared/utils/page-utils';
 import { Choice, Field } from '../../../../shared/models/shared.models';
 import { RecordFormComponent } from '../../../../shared/components/record-form/record-form.component';
+import { RecordPreviewComponent, shouldShowRecordPreview } from '../../../../shared/components/record-preview/record-preview.component';
 import { PageChange, PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 import {
   AddExistingTenantUserPayload,
@@ -31,7 +32,7 @@ const ROLE_OPTIONS: Choice[] = [
 
 @Component({
   selector: 'app-users-page',
-  imports: [FormsModule, RouterLink, RecordFormComponent, PaginationComponent, FieldValidationDirective, SearchableSelectDirective, InputComponent],
+  imports: [FormsModule, RouterLink, RecordFormComponent, RecordPreviewComponent, PaginationComponent, FieldValidationDirective, SearchableSelectDirective, InputComponent],
   templateUrl: './users.page.html',
   styleUrls: ['../../../../shared/styles/feature-page.css', './users.page.css'],
 })
@@ -62,6 +63,23 @@ export class UsersPageComponent implements OnInit, OnDestroy {
   accountMode: 'new' | 'existing' = 'new';
   private currentRecordId: number | null = null;
   private routeSubscription?: Subscription;
+
+  get createPreviewFields(): Field[] {
+    const fields: Field[] = [
+      { key: 'email', label: 'Email address', type: 'email', required: true },
+      { key: 'role', label: 'Workspace role', type: 'select', required: true, options: ROLE_OPTIONS },
+    ];
+    if (this.accountMode === 'new') {
+      fields.unshift({ key: 'displayName', label: 'Full name', required: true });
+      fields.push({ key: 'temporaryPassword', label: 'Temporary password', type: 'password', required: true });
+    }
+    return fields;
+  }
+
+  get showCreatePreview(): boolean {
+    return this.view === 'create' && !this.saving &&
+      shouldShowRecordPreview(this.pageKey, 'create', this.createPreviewFields);
+  }
 
   constructor(
     private readonly route: ActivatedRoute,

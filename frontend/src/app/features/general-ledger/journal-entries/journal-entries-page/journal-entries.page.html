@@ -2,7 +2,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">{{ view === 'create' ? 'NEW JOURNAL ENTRY' : 'EDIT JOURNAL ENTRY' }}</p>
-      <h1>{{ view === 'create' ? 'Create journal entry' : 'Edit journal entry' }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-scale-balanced" aria-hidden="true"></i>{{ view === 'create' ? 'Create journal entry' : 'Edit journal entry' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
@@ -40,7 +40,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">GENERAL LEDGER</p>
-      <h1>{{ title }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-scale-balanced" aria-hidden="true"></i>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"

@@ -85,6 +85,56 @@ describe('PartyAddressService', () => {
     expect(receivedAddresses).toEqual([address]);
   });
 
+  it('normalizes uppercase address types returned by the API', () => {
+    const address = {
+      id: 2,
+      addressType: 'BILLING',
+      line1: '10 Main Street',
+      line2: null,
+      city: 'Springfield',
+      region: null,
+      postalCode: null,
+      countryCode: 'US',
+      isDefault: true,
+    };
+    const page = { items: [address], page: 1, pageSize: 10, totalCount: 1, totalPages: 1 };
+    const api = {
+      get: (endpoint: string) => of(
+        endpoint.endsWith('/page') ? page : endpoint.endsWith('/2') ? address : [address],
+      ),
+      post: () => of(address),
+      put: () => of(address),
+    } as unknown as ApiService;
+    const service = new PartyAddressService(api);
+    const results: string[] = [];
+
+    service.getAll(5).subscribe(rows => results.push(rows[0].addressType));
+    service.getPage(5, 1, 10).subscribe(result => results.push(result.items[0].addressType));
+    service.getById(5, 2).subscribe(result => results.push(result.addressType));
+    service.create(5, {
+      addressType: 'Billing',
+      line1: '10 Main Street',
+      line2: null,
+      city: 'Springfield',
+      region: null,
+      postalCode: null,
+      countryCode: 'US',
+      isDefault: true,
+    }).subscribe(result => results.push(result.addressType));
+    service.update(5, 2, {
+      addressType: 'Billing',
+      line1: '10 Main Street',
+      line2: null,
+      city: 'Springfield',
+      region: null,
+      postalCode: null,
+      countryCode: 'US',
+      isDefault: true,
+    }).subscribe(result => results.push(result.addressType));
+
+    expect(results).toEqual(['Billing', 'Billing', 'Billing', 'Billing', 'Billing']);
+  });
+
   it('rejects malformed address detail responses', () => {
     const api = ({ get: () => of({ id: 2, addressType: 'Billing' }) }) as unknown as ApiService;
     let receivedError: unknown;

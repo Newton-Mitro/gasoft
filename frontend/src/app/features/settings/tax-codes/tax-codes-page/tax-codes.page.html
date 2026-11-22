@@ -2,7 +2,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">{{ view === 'create' ? 'NEW TAX CODE' : 'EDIT TAX CODE' }}</p>
-      <h1>{{ view === 'create' ? 'Add tax code' : 'Edit tax code' }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-percent" aria-hidden="true"></i>{{ view === 'create' ? 'Add tax code' : 'Edit tax code' }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
   </div>
@@ -33,7 +33,7 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">TAX CONFIGURATION</p>
-      <h1>{{ title }}</h1>
+      <h1><i class="page-heading-icon fa-solid fa-calculator" aria-hidden="true"></i>{{ title }}</h1>
       <p class="page-description">{{ description }}</p>
     </div>
     <a class="button primary" [routerLink]="[indexPath, 'create']"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add tax code</a>

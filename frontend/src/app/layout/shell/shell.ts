@@ -9,6 +9,7 @@ import { AuthenticatedImageComponent } from '../../shared/components/authenticat
 import { NotificationService } from '../../shared/services/notification.service';
 import { SearchableSelectDirective } from '../../shared/directives/searchable-select.directive';
 import { NotificationInboxComponent } from './notification-inbox.component';
+import { appBrandingConfig } from '../../app-branding.config';
 
 interface CompanyOption {
   id: number;
@@ -37,6 +38,7 @@ interface NavSection {
 })
 export class Shell {
   readonly notifications = inject(NotificationService);
+  readonly appName = appBrandingConfig.appName;
 
   mobileNavOpen = false;
   readonly companies = signal<CompanyOption[]>([]);

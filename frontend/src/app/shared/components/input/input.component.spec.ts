@@ -65,6 +65,9 @@ class FieldGridInputHostComponent {}
     <div class="header-fields">
       <label><app-input type="date" /></label>
     </div>
+    <div class="receive-fields">
+      <label><app-input type="date" /></label>
+    </div>
     <div class="editable-line">
       <label><app-input type="number" /></label>
     </div>
@@ -122,18 +125,18 @@ describe('InputComponent', () => {
     expect(styles.borderRadius).toBe('8px');
   });
 
-  it('matches searchable-select dimensions in compact order forms', () => {
+  it('uses consistent full-height header controls and compact line-item controls', () => {
     TestBed.configureTestingModule({ imports: [CompactFormInputHostComponent] });
     const fixture = TestBed.createComponent(CompactFormInputHostComponent);
     fixture.detectChanges();
 
     const inputs = fixture.nativeElement.querySelectorAll('input') as NodeListOf<HTMLInputElement>;
-    for (const input of inputs) {
-      const styles = getComputedStyle(input);
-      expect(styles.height).toBe('38px');
-      expect(styles.padding).toBe('0px 12px');
-      expect(styles.borderRadius).toBe('8px');
-    }
+    expect(getComputedStyle(inputs[0]).height).toBe('44px');
+    expect(getComputedStyle(inputs[0]).borderRadius).toBe('9px');
+    expect(getComputedStyle(inputs[1]).height).toBe('44px');
+    expect(getComputedStyle(inputs[2]).height).toBe('38px');
+    expect(getComputedStyle(inputs[2]).padding).toBe('0px 12px');
+    expect(getComputedStyle(inputs[2]).borderRadius).toBe('8px');
   });
 
   it('matches searchable-select height in the team-member form', () => {
@@ -142,7 +145,8 @@ describe('InputComponent', () => {
     fixture.detectChanges();
 
     const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
-    expect(getComputedStyle(input).height).toBe('42px');
+    expect(getComputedStyle(input).height).toBe('44px');
+    expect(getComputedStyle(input).borderRadius).toBe('9px');
   });
 
   it('keeps additional page-specific inputs at their intended dimensions', () => {
@@ -156,10 +160,11 @@ describe('InputComponent', () => {
     expect(getComputedStyle(inputs[0]).height).toBe('34px');
     expect(getComputedStyle(inputs[1]).height).toBe('36px');
     expect(getComputedStyle(inputs[2]).height).toBe('39px');
-    expect(getComputedStyle(inputs[3]).height).toBe('40px');
+    expect(getComputedStyle(inputs[3]).height).toBe('44px');
     expect(getComputedStyle(inputs[4]).height).toBe('37px');
-    expect(getComputedStyle(inputs[5]).minHeight).toBe('36px');
-    expect(getComputedStyle(inputs[6]).minHeight).toBe('40px');
+    expect(getComputedStyle(inputs[5]).height).toBe('44px');
+    expect(getComputedStyle(inputs[6]).height).toBe('44px');
+    expect(getComputedStyle(inputs[6]).borderRadius).toBe('9px');
     expect(getComputedStyle(inputs[7]).minHeight).toBe('32px');
     expect(getComputedStyle(inputs[8]).minHeight).toBe('36px');
     expect(getComputedStyle(inputs[9]).minHeight).toBe('38px');

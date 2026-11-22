@@ -1,7 +1,7 @@
 <div class="page-heading">
   <div>
     <p class="eyebrow">CASH MANAGEMENT</p>
-    <h1>Bank reconciliation</h1>
+    <h1><i class="page-heading-icon fa-solid fa-building-columns" aria-hidden="true"></i>Bank reconciliation</h1>
     <p class="page-description">Import a statement, allocate ledger entries across transactions, and post adjustments for bank fees or other differences.</p>
   </div>
 </div>
@@ -14,58 +14,69 @@
 }
 
 @if (!loading && (!accounts.length || showAccountForm)) {
-  <section class="setup-card panel">
-    <div class="section-heading">
-      <span class="section-icon" aria-hidden="true"><i class="fa-solid fa-building-columns"></i></span>
-      <div>
-        <h2>{{ accounts.length ? 'Add a bank account' : 'Connect a bank account' }}</h2>
-        <p>Link a postable asset account from your chart of accounts. Only the last four account digits are stored.</p>
+  <div class="account-setup-layout" [class.has-preview]="showBankAccountPreview">
+    <section class="setup-card panel">
+      <div class="section-heading">
+        <span class="section-icon" aria-hidden="true"><i class="fa-solid fa-building-columns"></i></span>
+        <div>
+          <h2>{{ accounts.length ? 'Add a bank account' : 'Connect a bank account' }}</h2>
+          <p>Link a postable asset account from your chart of accounts. Only the last four account digits are stored.</p>
+        </div>
       </div>
-    </div>
-    @if (company) {
-      <form class="account-form" novalidate (ngSubmit)="createAccount()">
-        <div class="account-form-column">
-          <label>
-            <span>Account name</span>
-            <app-input name="name" type="text" maxlength="120" required [(ngModel)]="name" placeholder="Operating account" />
-          </label>
-          <label>
-            <span>Bank name</span>
-            <app-input name="bankName" type="text" maxlength="120" required [(ngModel)]="bankName" placeholder="Example Bank" />
-          </label>
-        </div>
-        <div class="account-form-column">
-          <label>
-            <span>Last four digits</span>
-            <app-input name="lastFour" type="text" minlength="4" maxlength="4" required [(ngModel)]="accountNumberLastFour" placeholder="1234" />
-          </label>
-          <label>
-            <span>Ledger asset account</span>
-            <select appSearchableSelect name="chartAccount" required [(ngModel)]="chartOfAccountId">
-              <option [ngValue]="null" disabled>Select asset account</option>
-              @for (account of chartAccounts; track account.value) {
-                <option [ngValue]="account.value">{{ account.label }}</option>
-              }
-            </select>
-          </label>
-        </div>
-        <div class="form-footer">
-          <span>Functional currency: <strong>{{ company.functionalCurrencyCode }}</strong></span>
-          <div class="form-actions">
-            @if (accounts.length) {
-              <button class="button secondary" type="button" (click)="closeAccountForm()">Cancel</button>
-            }
-            <button class="button primary" type="submit" [disabled]="saving || !chartAccounts.length">
-              {{ saving ? 'Saving…' : 'Add bank account' }}
-            </button>
+      @if (company) {
+        <form class="account-form" novalidate (ngSubmit)="createAccount()">
+          <div class="account-form-column">
+            <label>
+              <span>Account name</span>
+              <app-input name="name" type="text" maxlength="120" required [(ngModel)]="name" placeholder="Operating account" />
+            </label>
+            <label>
+              <span>Bank name</span>
+              <app-input name="bankName" type="text" maxlength="120" required [(ngModel)]="bankName" placeholder="Example Bank" />
+            </label>
           </div>
-        </div>
-        @if (!chartAccounts.length) {
-          <p class="form-hint">No eligible asset accounts found. Create an active, postable asset account in your chart of accounts first.</p>
-        }
-      </form>
+          <div class="account-form-column">
+            <label>
+              <span>Last four digits</span>
+              <app-input name="lastFour" type="text" minlength="4" maxlength="4" required [(ngModel)]="accountNumberLastFour" placeholder="1234" />
+            </label>
+            <label>
+              <span>Ledger asset account</span>
+              <select appSearchableSelect name="chartAccount" required [(ngModel)]="chartOfAccountId">
+                <option [ngValue]="null" disabled>Select asset account</option>
+                @for (account of chartAccounts; track account.value) {
+                  <option [ngValue]="account.value">{{ account.label }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <div class="form-footer">
+            <span>Functional currency: <strong>{{ company.functionalCurrencyCode }}</strong></span>
+            <div class="form-actions">
+              @if (accounts.length) {
+                <button class="button secondary" type="button" (click)="closeAccountForm()">Cancel</button>
+              }
+              <button class="button primary" type="submit" [disabled]="saving || !chartAccounts.length">
+                {{ saving ? 'Saving…' : 'Add bank account' }}
+              </button>
+            </div>
+          </div>
+          @if (!chartAccounts.length) {
+            <p class="form-hint">No eligible asset accounts found. Create an active, postable asset account in your chart of accounts first.</p>
+          }
+        </form>
+      }
+    </section>
+    @if (company && showBankAccountPreview) {
+      <app-record-preview
+        pageKey="bank-accounts"
+        formMode="create"
+        [fields]="bankAccountPreviewFields"
+        [form]="bankAccountPreviewForm"
+        [options]="{ accounts: chartAccounts }"
+      />
     }
-  </section>
+  </div>
 }
 
 @if (accounts.length) {
