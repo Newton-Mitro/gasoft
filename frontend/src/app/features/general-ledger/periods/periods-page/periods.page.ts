@@ -143,6 +143,7 @@ export class PeriodsPageComponent implements OnInit, OnDestroy {
       title: 'Reopen this accounting period?',
       text: 'Posting will be allowed again.',
       confirmButtonText: 'Reopen period',
+      confirmButtonVariant: 'warning',
     });
     if (!confirmed) return;
     const reason = await this.notifications.prompt({
@@ -172,6 +173,7 @@ export class PeriodsPageComponent implements OnInit, OnDestroy {
           title: 'Close this accounting period?',
           text: 'The period close checklist is clear.',
           confirmButtonText: 'Close period',
+          confirmButtonVariant: 'warning',
         });
         if (!confirmed) {
           this.changeDetector.markForCheck();

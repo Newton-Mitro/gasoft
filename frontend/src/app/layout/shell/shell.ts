@@ -32,7 +32,15 @@ interface NavSection {
 
 @Component({
   selector: 'app-shell',
-  imports: [FormsModule, RouterLink, RouterLinkActive, RouterOutlet, AuthenticatedImageComponent, SearchableSelectDirective, NotificationInboxComponent],
+  imports: [
+    FormsModule,
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    AuthenticatedImageComponent,
+    SearchableSelectDirective,
+    NotificationInboxComponent,
+  ],
   styleUrl: './shell.css',
   templateUrl: './shell.html',
 })
@@ -52,7 +60,11 @@ export class Shell {
         { label: 'Fiscal years', path: '/general-ledger/fiscal-years', icon: 'fa-calendar-days' },
         { label: 'Accounting periods', path: '/general-ledger/periods', icon: 'fa-calendar' },
         { label: 'Journals', path: '/general-ledger/journals', icon: 'fa-book' },
-        { label: 'Journal entries', path: '/general-ledger/journal-entries', icon: 'fa-right-left' },
+        {
+          label: 'Journal entries',
+          path: '/general-ledger/journal-entries',
+          icon: 'fa-right-left',
+        },
       ],
     },
     {
@@ -65,7 +77,11 @@ export class Shell {
         { label: 'Item categories', path: '/inventory/categories', icon: 'fa-tags' },
         { label: 'Items', path: '/inventory/items', icon: 'fa-box' },
         { label: 'Warehouses', path: '/inventory/warehouses', icon: 'fa-warehouse' },
-        { label: 'Stock movements', path: '/inventory/movements', icon: 'fa-arrow-right-arrow-left' },
+        {
+          label: 'Stock movements',
+          path: '/inventory/movements',
+          icon: 'fa-arrow-right-arrow-left',
+        },
         { label: 'Inventory counts', path: '/inventory/counts', icon: 'fa-clipboard-check' },
         { label: 'Stock balances', path: '/inventory/balances', icon: 'fa-scale-balanced' },
       ],
@@ -96,7 +112,13 @@ export class Shell {
     },
     {
       label: 'BANKING',
-      links: [{ label: 'Bank reconciliation', path: '/banking/reconciliation', icon: 'fa-building-columns' }],
+      links: [
+        {
+          label: 'Bank reconciliation',
+          path: '/banking/reconciliation',
+          icon: 'fa-building-columns',
+        },
+      ],
     },
     {
       label: 'FIXED ASSETS',
@@ -110,17 +132,30 @@ export class Shell {
         { label: 'Balance sheet', path: '/reports/balance-sheet', icon: 'fa-table-cells-large' },
         { label: 'Budgets', path: '/reports/budget-vs-actual', icon: 'fa-coins' },
         { label: 'Cash flow', path: '/reports/cash-flow', icon: 'fa-money-bill-transfer' },
-        { label: 'Receivables aging', path: '/reports/receivables-aging', icon: 'fa-hourglass-half' },
+        {
+          label: 'Receivables aging',
+          path: '/reports/receivables-aging',
+          icon: 'fa-hourglass-half',
+        },
         { label: 'Payables aging', path: '/reports/payables-aging', icon: 'fa-hourglass-half' },
-        { label: 'Consolidated trial balance', path: '/reports/consolidation', icon: 'fa-chart-pie' },
+        {
+          label: 'Consolidated trial balance',
+          path: '/reports/consolidation',
+          icon: 'fa-chart-pie',
+        },
       ],
     },
     {
       label: 'ADMINISTRATION',
       links: [
+        { label: 'POS settings', path: '/settings/pos', icon: 'fa-cash-register' },
         { label: 'Company settings', path: '/settings/company', icon: 'fa-gears' },
         { label: 'Tax codes & rates', path: '/settings/tax-codes', icon: 'fa-percent' },
-        { label: 'Tax registrations', path: '/settings/tax-registrations', icon: 'fa-file-circle-check' },
+        {
+          label: 'Tax registrations',
+          path: '/settings/tax-registrations',
+          icon: 'fa-file-circle-check',
+        },
         { label: 'Team members', path: '/users', icon: 'fa-users' },
         { label: 'Audit history', path: '/settings/audit-history', icon: 'fa-clock-rotate-left' },
       ],
@@ -134,8 +169,8 @@ export class Shell {
     private readonly changeDetector: ChangeDetectorRef,
   ) {
     this.api.get<CompanyOption[]>('/api/v1/tenant/companies', false).subscribe({
-      next: companies => this.companies.set(companies),
-      error: error => {
+      next: (companies) => this.companies.set(companies),
+      error: (error) => {
         this.companyLoadError.set('');
         this.notifications.error(errorMessage(error, 'Could not load your companies.'));
         this.changeDetector.markForCheck();
@@ -147,7 +182,7 @@ export class Shell {
   }
 
   get currentCompany(): CompanyOption | undefined {
-    return this.companies().find(company => company.id === this.auth.companyId());
+    return this.companies().find((company) => company.id === this.auth.companyId());
   }
 
   get profileInitial(): string {
@@ -166,13 +201,13 @@ export class Shell {
   }
 
   setThemeColor(value: string): void {
-    const color = this.theme.colors.find(option => option.id === value);
+    const color = this.theme.colors.find((option) => option.id === value);
     if (color) this.theme.setColor(color.id);
   }
 
   selectCompany(value: string | number): void {
     const companyId = Number(value);
-    if (!this.companies().some(company => company.id === companyId)) return;
+    if (!this.companies().some((company) => company.id === companyId)) return;
     this.auth.updateCompanyId(companyId);
     window.location.reload();
   }
@@ -181,5 +216,4 @@ export class Shell {
     this.auth.logout();
     void this.router.navigate(['/login']);
   }
-
 }

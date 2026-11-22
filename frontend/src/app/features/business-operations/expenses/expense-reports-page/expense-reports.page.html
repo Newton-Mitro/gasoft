@@ -192,7 +192,9 @@
         Cancel
       </button>
       <button
-        class="button primary"
+        class="button"
+        [class.primary]="workflowMode !== 'reject'"
+        [class.danger]="workflowMode === 'reject'"
         type="button"
         (click)="saveReport()"
         [disabled]="saving || !expenseAccounts.length"
@@ -445,7 +447,7 @@
                   }
                   @if (report.canApprove) {
                     <button
-                      class="button secondary table-action"
+                      class="button secondary table-action success-action"
                       type="button"
                       [disabled]="busyReportId === report.id"
                       (click)="approve(report)"
@@ -453,7 +455,7 @@
                       Approve
                     </button>
                     <button
-                      class="button secondary table-action"
+                      class="button secondary table-action danger-action"
                       type="button"
                       [disabled]="busyReportId === report.id"
                       (click)="beginWorkflow(report, 'reject')"

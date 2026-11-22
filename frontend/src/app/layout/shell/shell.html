@@ -19,7 +19,8 @@
   }
   <aside class="sidebar" [class.mobile-open]="mobileNavOpen">
     <a class="brand sidebar-brand" routerLink="/dashboard" (click)="mobileNavOpen = false"
-      ><img class="brand-logo" src="/logo.png" [alt]="appName + ' logo'" /><span class="brand-name"
+      ><img class="brand-logo" src="/logo.png" [alt]="appName + ' logo'" /><span
+        class="brand-name"
         >{{ appName }}</span
       ></a
     >
@@ -46,7 +47,8 @@
             >
           </span>
           @if (companies().length > 1) {
-            <select appSearchableSelect
+            <select
+              appSearchableSelect
               aria-label="Switch current company"
               title="Switch current company"
               [ngModel]="company.id"
@@ -72,7 +74,10 @@
         <div class="nav-section">
           <span class="nav-heading">{{ section.label }}</span>
           @for (link of section.links; track link.path) {
-            @if (link.path !== '/settings/audit-history' || auth.isAdministrator()) {
+            @if (
+              (link.path !== '/settings/audit-history' && link.path !== '/settings/pos') ||
+              auth.isAdministrator()
+            ) {
               <a
                 class="nav-link"
                 [routerLink]="link.path"
@@ -92,7 +97,8 @@
       <div class="theme-controls">
         <label>
           <span>Appearance</span>
-          <select appSearchableSelect
+          <select
+            appSearchableSelect
             [ngModel]="theme.mode()"
             aria-label="Color mode"
             (ngModelChange)="setThemeMode($event)"
@@ -104,7 +110,8 @@
         </label>
         <label>
           <span>Theme color</span>
-          <select appSearchableSelect
+          <select
+            appSearchableSelect
             [ngModel]="theme.color()"
             aria-label="Theme color"
             (ngModelChange)="setThemeColor($event)"

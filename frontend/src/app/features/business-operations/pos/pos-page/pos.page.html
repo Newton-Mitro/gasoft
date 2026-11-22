@@ -1,7 +1,9 @@
 <div class="page-heading">
   <div>
     <p class="eyebrow">SALES & RECEIVABLES</p>
-    <h1><i class="page-heading-icon fa-solid fa-cash-register" aria-hidden="true"></i>{{ title }}</h1>
+    <h1>
+      <i class="page-heading-icon fa-solid fa-cash-register" aria-hidden="true"></i>{{ title }}
+    </h1>
     <p class="page-description">Scan an item, build the cart, and check out.</p>
   </div>
   @if (functionalCurrencyCode) {
@@ -242,180 +244,33 @@
         }
       </div>
 
-      <details class="pos-settings" [open]="!setupComplete">
-        <summary>
-          <span class="settings-summary-icon"
-            ><i class="fa-solid fa-sliders" aria-hidden="true"></i
-          ></span>
+      <div class="pos-settings-summary">
+        <span class="settings-summary-icon"
+          ><i class="fa-solid fa-sliders" aria-hidden="true"></i
+        ></span>
+        <span class="settings-summary-copy">
+          <strong>POS settings</strong>
+          <small>
+            {{ setupReady ? 'Saved for this company' : 'Defaults are required before checkout' }}
+          </small>
+        </span>
+        @if (setupReady) {
+          <span class="settings-status settings-ready">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Ready
+          </span>
+        } @else {
+          <span class="settings-status">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Required
+          </span>
+        }
+        @if (auth.isAdministrator()) {
+          <a class="settings-edit-button" routerLink="/settings/pos">Manage</a>
+        } @else if (!setupReady) {
           <span class="settings-summary-copy">
-            <strong>Store & accounting setup</strong>
-            <small>Warehouse, tax and posting accounts</small>
+            <small>Ask a company administrator to configure defaults.</small>
           </span>
-          <span class="settings-status" [class.settings-ready]="setupComplete">
-            <i
-              class="fa-solid"
-              [class.fa-circle-check]="setupComplete"
-              [class.fa-circle-exclamation]="!setupComplete"
-              aria-hidden="true"
-            ></i>
-            {{ setupComplete ? 'Ready' : 'Required' }}
-          </span>
-          <i class="fa-solid fa-chevron-down settings-chevron" aria-hidden="true"></i>
-        </summary>
-        <div class="pos-settings-grid">
-          <label
-            >Warehouse
-            <select
-              appSearchableSelect
-              name="warehouseId"
-              required
-              aria-label="Warehouse"
-              [(ngModel)]="warehouseId"
-            >
-              <option [ngValue]="null">Select warehouse</option>
-              @for (option of options['warehouses']; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-          <label
-            >Journal
-            <select
-              appSearchableSelect
-              name="journalId"
-              required
-              aria-label="Journal"
-              [(ngModel)]="journalId"
-            >
-              <option [ngValue]="null">Select journal</option>
-              @for (option of options['journals']; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-          <label
-            >Open accounting period
-            <select
-              appSearchableSelect
-              name="accountingPeriodId"
-              required
-              aria-label="Open accounting period"
-              [(ngModel)]="accountingPeriodId"
-            >
-              <option [ngValue]="null">Select period</option>
-              @for (option of options['periods']; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-          <label
-            >Sales revenue account
-            <select
-              appSearchableSelect
-              name="revenueAccountId"
-              required
-              aria-label="Sales revenue account"
-              [(ngModel)]="revenueAccountId"
-            >
-              <option [ngValue]="null">Select account</option>
-              @for (option of options['revenueAccounts']; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-          <label
-            >Receivable account
-            <select
-              appSearchableSelect
-              name="receivableAccountId"
-              required
-              aria-label="Receivable account"
-              [(ngModel)]="receivableAccountId"
-            >
-              <option [ngValue]="null">Select account</option>
-              @for (option of options['assetAccounts']; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-          <label
-            >Cash / card account
-            <select
-              appSearchableSelect
-              name="settlementAccountId"
-              required
-              aria-label="Cash or card account"
-              [(ngModel)]="settlementAccountId"
-            >
-              <option [ngValue]="null">Select account</option>
-              @for (option of options['assetAccounts']; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-          <label>
-            <span>Tax code <span class="optional">(optional)</span></span>
-            <select
-              appSearchableSelect
-              name="taxCodeId"
-              aria-label="Tax code"
-              [(ngModel)]="taxCodeId"
-            >
-              <option [ngValue]="null">No tax</option>
-              @for (option of options['taxCodes']; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-          @if (taxCodeId) {
-            <label
-              >Tax liability account
-              <select
-                appSearchableSelect
-                name="taxAccountId"
-                required
-                aria-label="Tax liability account"
-                [(ngModel)]="taxAccountId"
-              >
-                <option [ngValue]="null">Select account</option>
-                @for (option of options['taxAccounts']; track option.value) {
-                  <option [ngValue]="option.value">{{ option.label }}</option>
-                }
-              </select>
-            </label>
-          }
-          <label
-            >Inventory asset account
-            <select
-              appSearchableSelect
-              name="inventoryAccountId"
-              required
-              aria-label="Inventory asset account"
-              [(ngModel)]="inventoryAccountId"
-            >
-              <option [ngValue]="null">Select account</option>
-              @for (option of options['assetAccounts']; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-          <label
-            >Cost of goods sold account
-            <select
-              appSearchableSelect
-              name="costOfGoodsSoldAccountId"
-              required
-              aria-label="Cost of goods sold account"
-              [(ngModel)]="costOfGoodsSoldAccountId"
-            >
-              <option [ngValue]="null">Select account</option>
-              @for (option of options['expenseAccounts']; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-        </div>
-      </details>
+        }
+      </div>
 
       <div class="pos-total">
         <div>

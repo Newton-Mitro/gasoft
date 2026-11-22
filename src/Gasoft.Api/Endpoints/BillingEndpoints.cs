@@ -1,6 +1,7 @@
 using Gasoft.Application.Abstractions;
 using Gasoft.Application.Billing;
 using Gasoft.Application.Inventory;
+using Gasoft.Application.Pos;
 
 namespace Gasoft.Api.Endpoints;
 
@@ -11,6 +12,37 @@ public static class BillingEndpoints
         var companies = app.MapGroup("/api/v1/companies/{companyId:long}")
             .RequireAuthorization()
             .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
+
+        companies.MapGet("/pos/settings", async (
+            long companyId,
+            IPosSettingsService service,
+            CancellationToken cancellationToken) =>
+        {
+            var settings = await service.GetAsync(companyId, cancellationToken);
+            return settings is null
+                ? Results.NotFound(new { error = "Company was not found in this tenant." })
+                : Results.Ok(settings);
+        });
+
+        companies.MapPut("/pos/settings", async (
+            long companyId,
+            SavePosSettingsRequest request,
+            IPosSettingsService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var settings = await service.SaveAsync(companyId, request, cancellationToken);
+                return settings is null
+                    ? Results.NotFound(new { error = "Company was not found in this tenant." })
+                    : Results.Ok(settings);
+            }
+            catch (PosSettingsValidationException exception)
+            {
+                return Results.ValidationProblem(exception.Errors);
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"));
 
         companies.MapPost("/pos/checkout", async (
             long companyId,

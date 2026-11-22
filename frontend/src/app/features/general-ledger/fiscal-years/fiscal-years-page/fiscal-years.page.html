@@ -86,13 +86,13 @@
                         [disabled]="busyYearId === year.id" (click)="prepareOpeningBalances(year)">
                         {{ busyYearId === year.id ? 'Preparing…' : 'Opening balances' }}
                       </button>
-                      <button class="button secondary table-action" type="button"
+                      <button class="button secondary table-action warning-action" type="button"
                         [disabled]="busyYearId === year.id" (click)="changeStatus(year, 'close')">
                         {{ busyYearId === year.id ? 'Checking…' : 'Close' }}
                       </button>
                       <a class="button secondary table-action" [routerLink]="[indexPath, year.id, 'edit']">Edit</a>
                     } @else {
-                      <button class="button secondary table-action" type="button"
+                      <button class="button secondary table-action warning-action" type="button"
                         [disabled]="busyYearId === year.id" (click)="changeStatus(year, 'reopen')">
                         {{ busyYearId === year.id ? 'Reopening…' : 'Reopen' }}
                       </button>

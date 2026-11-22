@@ -8,6 +8,7 @@ interface ConfirmationOptions {
   confirmButtonText?: string;
   cancelButtonText?: string;
   icon?: SweetAlertIcon;
+  confirmButtonVariant?: 'primary' | 'danger' | 'warning';
 }
 
 interface PromptOptions {
@@ -55,6 +56,7 @@ export class NotificationService {
   }
 
   confirm(options: ConfirmationOptions): Promise<boolean> {
+    const confirmButtonVariant = options.confirmButtonVariant ?? 'primary';
     return import('sweetalert2').then(({ default: Swal }) => Swal.fire({
       title: options.title,
       text: options.text,
@@ -68,7 +70,7 @@ export class NotificationService {
       customClass: {
         popup: 'app-swal-popup',
         title: 'app-swal-title',
-        confirmButton: 'app-swal-confirm',
+        confirmButton: `app-swal-confirm app-swal-confirm-${confirmButtonVariant}`,
         cancelButton: 'app-swal-cancel',
       },
     }).then(result => result.isConfirmed));

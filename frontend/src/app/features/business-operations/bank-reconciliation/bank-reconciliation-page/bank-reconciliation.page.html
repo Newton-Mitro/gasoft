@@ -197,7 +197,7 @@
                             <div class="candidate-item">
                               <div><strong>{{ match.entryDate }} · {{ formatAmount(match.amount) }}</strong><span>{{ match.description }}</span></div>
                               <span>Ledger line {{ match.journalLineId }}</span>
-                              <button class="button secondary table-action" type="button" [disabled]="saving" (click)="unmatchTransaction(transaction, match.id)">Remove allocation</button>
+                              <button class="button secondary table-action danger-action" type="button" [disabled]="saving" (click)="unmatchTransaction(transaction, match.id)">Remove allocation</button>
                             </div>
                           }
                         </div>

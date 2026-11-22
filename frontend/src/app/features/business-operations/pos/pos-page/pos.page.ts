@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../../core/api.service';
 import { AuthService } from '../../../../core/auth.service';
@@ -20,7 +21,7 @@ import { NotificationService } from '../../../../shared/services/notification.se
 import { errorMessage } from '../../../../shared/utils/page-utils';
 import { Party } from '../../parties/party.model';
 import { PartyService } from '../../parties/party.service';
-import { PosSalePayload, PosSaleResult } from '../pos.model';
+import { PosSalePayload, PosSaleResult, PosSettings } from '../pos.model';
 import { PosService } from '../pos.service';
 
 interface CompanyOption {
@@ -37,7 +38,7 @@ interface CartLine {
 
 @Component({
   selector: 'app-pos-page',
-  imports: [FormsModule, FieldValidationDirective, SearchableSelectDirective],
+  imports: [FormsModule, FieldValidationDirective, SearchableSelectDirective, RouterLink],
   templateUrl: './pos.page.html',
   styleUrl: './pos.page.css',
 })
@@ -53,6 +54,7 @@ export class PosPageComponent implements OnInit {
   search = '';
   loading = true;
   saving = false;
+  setupReady = false;
   error = '';
   functionalCurrencyCode = '';
   companyName = '';
@@ -71,7 +73,7 @@ export class PosPageComponent implements OnInit {
 
   constructor(
     private readonly api: ApiService,
-    private readonly auth: AuthService,
+    readonly auth: AuthService,
     private readonly itemsApi: ItemService,
     private readonly balancesApi: InventoryBalanceService,
     private readonly partiesApi: PartyService,
@@ -101,6 +103,7 @@ export class PosPageComponent implements OnInit {
       taxAccounts: this.optionData.getAccountOptionsByType('Liability'),
       expenseAccounts: this.optionData.getAccountOptionsByType('Expense'),
       taxCodes: this.optionData.getOptions('taxCodes'),
+      posSettings: this.pos.getSettings(),
     }).subscribe({
       next: (result) => {
         this.items = result.items;
@@ -125,6 +128,8 @@ export class PosPageComponent implements OnInit {
           expenseAccounts: result.expenseAccounts,
           taxCodes: result.taxCodes,
         };
+        this.setSetupValues(result.posSettings);
+        this.setupReady = this.setupComplete;
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -153,24 +158,26 @@ export class PosPageComponent implements OnInit {
   }
 
   get setupComplete(): boolean {
-    const ids = [
-      this.warehouseId,
-      this.journalId,
-      this.accountingPeriodId,
-      this.revenueAccountId,
-      this.receivableAccountId,
-      this.settlementAccountId,
-      this.inventoryAccountId,
-      this.costOfGoodsSoldAccountId,
-      ...(this.taxCodeId ? [this.taxAccountId] : []),
-    ];
-    return ids.every(isPositiveId);
+    return (
+      this.hasOption('warehouses', this.warehouseId) &&
+      this.hasOption('journals', this.journalId) &&
+      this.hasOption('periods', this.accountingPeriodId) &&
+      this.hasOption('revenueAccounts', this.revenueAccountId) &&
+      this.hasOption('assetAccounts', this.receivableAccountId) &&
+      this.hasOption('assetAccounts', this.settlementAccountId) &&
+      this.hasOption('assetAccounts', this.inventoryAccountId) &&
+      this.hasOption('expenseAccounts', this.costOfGoodsSoldAccountId) &&
+      (this.taxCodeId === null ||
+        (this.hasOption('taxCodes', this.taxCodeId) &&
+          this.hasOption('taxAccounts', this.taxAccountId)))
+    );
   }
 
   get canCheckout(): boolean {
     return (
       this.cart.length > 0 &&
       this.setupComplete &&
+      this.setupReady &&
       isPositiveId(this.partyId) &&
       this.cart.every(
         (line) =>
@@ -433,6 +440,26 @@ export class PosPageComponent implements OnInit {
     });
 
     return errors;
+  }
+
+  private hasOption(source: string, value: number | null): boolean {
+    return (
+      isPositiveId(value) &&
+      (this.options[source] ?? []).some((option) => Number(option.value) === value)
+    );
+  }
+
+  private setSetupValues(settings: PosSettings): void {
+    this.warehouseId = settings.warehouseId;
+    this.journalId = settings.journalId;
+    this.accountingPeriodId = settings.accountingPeriodId;
+    this.revenueAccountId = settings.revenueAccountId;
+    this.receivableAccountId = settings.receivableAccountId;
+    this.settlementAccountId = settings.settlementAccountId;
+    this.taxCodeId = settings.taxCodeId;
+    this.taxAccountId = settings.taxAccountId;
+    this.inventoryAccountId = settings.inventoryAccountId;
+    this.costOfGoodsSoldAccountId = settings.costOfGoodsSoldAccountId;
   }
 }
 

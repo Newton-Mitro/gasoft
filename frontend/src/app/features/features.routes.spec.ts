@@ -8,14 +8,14 @@ import { SETTINGS_ROUTES } from './settings/settings.routes';
 
 describe('feature routes', () => {
   it('keeps auth, dashboard, and profile routes in their feature definitions', () => {
-    expect(AUTH_ROUTES.map(route => route.path)).toEqual([
+    expect(AUTH_ROUTES.map((route) => route.path)).toEqual([
       'login',
       'register',
       'forgot-password',
       'reset-password',
     ]);
-    expect(DASHBOARD_ROUTES.map(route => route.path)).toEqual(['dashboard']);
-    expect(PROFILE_ROUTES.map(route => route.path)).toEqual(['account/profile']);
+    expect(DASHBOARD_ROUTES.map((route) => route.path)).toEqual(['dashboard']);
+    expect(PROFILE_ROUTES.map((route) => route.path)).toEqual(['account/profile']);
   });
 
   it('keeps the existing report and resource routes reachable', () => {
@@ -27,7 +27,7 @@ describe('feature routes', () => {
     ];
     const routedPages = new Set(
       routes
-        .map(route => route.data?.['page'])
+        .map((route) => route.data?.['page'])
         .filter((page): page is string => typeof page === 'string'),
     );
 
@@ -39,6 +39,7 @@ describe('feature routes', () => {
     expect(routedPages.has('budget-vs-actual')).toBe(true);
     expect(routedPages.has('fixed-assets')).toBe(true);
     expect(routedPages.has('pos')).toBe(true);
+    expect(routedPages.has('pos-settings')).toBe(true);
   });
 
   it('routes resource pages through distinct feature components', () => {
@@ -64,8 +65,12 @@ describe('feature routes', () => {
     expect(componentByPage.get('item-categories')).not.toBe(componentByPage.get('items'));
     expect(componentByPage.get('warehouses')).not.toBe(componentByPage.get('items'));
     expect(componentByPage.get('inventory-balances')).not.toBe(componentByPage.get('warehouses'));
-    expect(componentByPage.get('inventory-counts')).not.toBe(componentByPage.get('inventory-balances'));
-    expect(componentByPage.get('inventory-movements')).not.toBe(componentByPage.get('inventory-counts'));
+    expect(componentByPage.get('inventory-counts')).not.toBe(
+      componentByPage.get('inventory-balances'),
+    );
+    expect(componentByPage.get('inventory-movements')).not.toBe(
+      componentByPage.get('inventory-counts'),
+    );
     expect(componentByPage.get('accounts')).toBeDefined();
     expect(componentByPage.get('parties')).toBeDefined();
     expect(componentByPage.get('sales-invoices')).not.toBe(componentByPage.get('parties'));
@@ -94,5 +99,7 @@ describe('feature routes', () => {
     expect(componentByPage.get('income-statement')).not.toBe(componentByPage.get('balance-sheet'));
     expect(componentByPage.get('budget-vs-actual')).toBeDefined();
     expect(componentByPage.get('fixed-assets')).toBeDefined();
+    expect(componentByPage.get('pos-settings')).toBeDefined();
+    expect(componentByPage.get('pos-settings')).not.toBe(componentByPage.get('pos'));
   });
 });

@@ -80,13 +80,13 @@
                   <td>{{ period.status }}</td>
                   <td>
                     @if (period.status === 'Open') {
-                      <button class="button secondary table-action" type="button"
+                      <button class="button secondary table-action warning-action" type="button"
                         [disabled]="busyPeriodId === period.id" (click)="changeStatus(period, 'close')">
                         {{ busyPeriodId === period.id ? 'Checking…' : 'Close' }}
                       </button>
                       <a class="button secondary table-action" [routerLink]="[indexPath, period.id, 'edit']">Edit</a>
                     } @else {
-                      <button class="button secondary table-action" type="button"
+                      <button class="button secondary table-action warning-action" type="button"
                         [disabled]="busyPeriodId === period.id" (click)="changeStatus(period, 'reopen')">
                         {{ busyPeriodId === period.id ? 'Reopening…' : 'Reopen' }}
                       </button>

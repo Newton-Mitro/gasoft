@@ -160,6 +160,7 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
       title: 'Reopen this fiscal year?',
       text: 'Its accounting periods will remain closed.',
       confirmButtonText: 'Reopen fiscal year',
+      confirmButtonVariant: 'warning',
     });
     if (!confirmed) return;
     const reason = await this.notifications.prompt({
@@ -218,6 +219,7 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
           title: 'Close this fiscal year?',
           text: 'All accounting periods are closed and there are no draft journals.',
           confirmButtonText: 'Close fiscal year',
+          confirmButtonVariant: 'warning',
         });
         if (!confirmed) {
           this.changeDetector.markForCheck();
@@ -307,6 +309,7 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
       title: 'Post the year-end closing journal?',
       text: 'This will zero the income and expense accounts for the fiscal year and transfer net income or loss to retained earnings.',
       confirmButtonText: 'Post closing journal',
+      confirmButtonVariant: 'warning',
     });
     if (!confirmed) return;
     this.error = '';

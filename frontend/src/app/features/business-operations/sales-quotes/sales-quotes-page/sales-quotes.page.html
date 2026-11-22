@@ -109,13 +109,13 @@
                 <button class="button secondary table-action" type="button" [title]="getCustomerEmail(quote.customerId) ? '' : 'Add a valid email address to the customer first.'" [disabled]="supportDataLoading || !!supportDataError || saving || sendingQuoteId === quote.id || !getCustomerEmail(quote.customerId)" (click)="sendQuote(quote)">
                   {{ sendingQuoteId === quote.id ? 'Sending…' : 'Email quote' }}
                 </button>
-                <button class="button secondary table-action" type="button" (click)="act(quote, 'cancel')">Cancel</button>
+                <button class="button secondary table-action danger-action" type="button" (click)="act(quote, 'cancel')">Cancel</button>
               } @else if (quote.status === 'Sent') {
-                <button class="button secondary table-action" type="button" (click)="act(quote, 'accept')">Accept</button>
-                <button class="button secondary table-action" type="button" (click)="act(quote, 'decline')">Decline</button>
+                <button class="button secondary table-action success-action" type="button" (click)="act(quote, 'accept')">Accept</button>
+                <button class="button secondary table-action danger-action" type="button" (click)="act(quote, 'decline')">Decline</button>
               } @else if (quote.status === 'Accepted') {
                 <button class="button secondary table-action" type="button" (click)="beginConvert(quote)">Convert</button>
-                <button class="button secondary table-action" type="button" (click)="act(quote, 'cancel')">Cancel</button>
+                <button class="button secondary table-action danger-action" type="button" (click)="act(quote, 'cancel')">Cancel</button>
               }
             </td>
           </tr>

@@ -19,6 +19,7 @@ public sealed class AppDbContext(
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<TenantUser> TenantUsers => Set<TenantUser>();
     public DbSet<Company> Companies => Set<Company>();
+    public DbSet<PosSettings> PosSettings => Set<PosSettings>();
     public DbSet<CompanyUser> CompanyUsers => Set<CompanyUser>();
     public DbSet<Party> Parties => Set<Party>();
     public DbSet<PartyAddress> PartyAddresses => Set<PartyAddress>();
@@ -239,6 +240,18 @@ public sealed class AppDbContext(
             entity.HasOne<TenantUser>()
                 .WithMany()
                 .HasForeignKey(x => new { x.TenantId, x.UserId })
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
+        });
+
+        builder.Entity<PosSettings>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId }).IsUnique();
+            entity.HasOne<Company>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId })
+                .HasPrincipalKey(x => new { x.TenantId, x.Id })
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
         });

@@ -7,6 +7,14 @@ import { AUDIT_HISTORY_ROUTES } from './audit-history/audit-history.routes';
 import { USERS_ROUTES } from './users/users.routes';
 
 export const SETTINGS_ROUTES: Routes = [
+  {
+    path: 'settings/pos',
+    loadComponent: () =>
+      import('../business-operations/pos/pos-settings-page/pos-settings.page').then(
+        (module) => module.PosSettingsPageComponent,
+      ),
+    data: { page: 'pos-settings' },
+  },
   ...TAX_JURISDICTIONS_ROUTES,
   ...TAX_CODES_ROUTES,
   ...TAX_REGISTRATIONS_ROUTES,

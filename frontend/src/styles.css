@@ -18,6 +18,9 @@
   --nav-active-text: #fff;
   --nav-hover-bg: color-mix(in srgb, var(--accent) 18%, transparent);
   --error-text: #b42318;
+  --warning-text: #805014;
+  --warning-fill: #9a641e;
+  --warning-hover: #7d5016;
   --success-text: #246644;
   --sidebar-text: color-mix(in srgb, #bfd0c9 76%, var(--accent) 24%);
   --sidebar-muted: color-mix(in srgb, #9eb3ac 72%, var(--accent) 28%);
@@ -30,6 +33,9 @@
   --text: color-mix(in srgb, #233d31 68%, var(--accent) 32%);
   --text-strong: color-mix(in srgb, #173b30 58%, var(--accent) 42%);
   --text-muted: color-mix(in srgb, #718078 62%, var(--accent) 38%);
+  --surface-shadow:
+    0 6px 16px color-mix(in srgb, var(--text-strong) 5%, transparent),
+    0 1px 3px color-mix(in srgb, var(--text-strong) 3%, transparent);
   --scrollbar-thumb: color-mix(in srgb, var(--accent) 25%, #d7e1d9);
   --scrollbar-thumb-hover: color-mix(in srgb, var(--accent) 42%, #aebfb2);
   --scrollbar-track: transparent;
@@ -100,6 +106,7 @@
   --text: color-mix(in srgb, #d9e3dc 78%, var(--accent) 22%);
   --text-strong: color-mix(in srgb, #edf4ef 78%, var(--accent) 22%);
   --text-muted: color-mix(in srgb, #a4b2a9 72%, var(--accent) 28%);
+  --surface-shadow: 0 6px 16px #00000024, 0 1px 3px #0000001a;
   --accent-soft: color-mix(in srgb, var(--accent) 23%, #1b2420);
   --accent-text: color-mix(in srgb, var(--accent) 58%, #e8f2eb);
   --accent-contrast: #102119;
@@ -107,6 +114,9 @@
   --nav-active-text: #fff;
   --nav-hover-bg: color-mix(in srgb, var(--accent) 16%, transparent);
   --error-text: #ff6b61;
+  --warning-text: #f2c56b;
+  --warning-fill: #aa741e;
+  --warning-hover: #c18c2d;
   --success-text: #a7e0b7;
   --sidebar-text: color-mix(in srgb, #bfd0c9 76%, var(--accent) 24%);
   --sidebar-muted: color-mix(in srgb, #9eb3ac 72%, var(--accent) 28%);
@@ -429,12 +439,13 @@ html[data-theme='dark'] .form-panel::before {
 .app-swal-cancel {
   min-height: 38px;
   padding: 0 16px;
-  border: 0;
-  border-radius: 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   font: inherit;
   font-size: 13px;
   font-weight: 650;
   cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.12s ease;
 }
 .app-swal-confirm {
   color: #fff;
@@ -445,11 +456,35 @@ html[data-theme='dark'] .form-panel::before {
 }
 .app-swal-cancel {
   margin-right: 8px;
+  border-color: var(--border);
   color: var(--text);
   background: var(--surface-muted);
 }
 .app-swal-cancel:hover {
   background: var(--surface-raised);
+}
+.app-swal-confirm-danger {
+  color: var(--surface);
+  background: var(--error-text);
+}
+.app-swal-confirm-danger:hover {
+  background: color-mix(in srgb, var(--error-text) 78%, #000);
+}
+.app-swal-confirm-warning {
+  color: #fff;
+  background: var(--warning-fill);
+}
+.app-swal-confirm-warning:hover {
+  background: var(--warning-hover);
+}
+.app-swal-confirm:active,
+.app-swal-cancel:active {
+  transform: translateY(1px);
+}
+.app-swal-confirm:focus-visible,
+.app-swal-cancel:focus-visible {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 2px;
 }
 
 .app-toast {
@@ -2473,6 +2508,7 @@ html[data-accent] :is(.content-area, .auth-page) :is(.alert.error, .alert.succes
   border: 1px dotted var(--border);
   border-radius: 12px;
   background: linear-gradient(120deg, var(--surface), var(--surface-muted));
+  box-shadow: var(--surface-shadow);
   text-align: center;
 }
 
@@ -3267,13 +3303,26 @@ html[data-theme='dark'] .app-shell .main-content .pos-search kbd {
   border-color: var(--border);
   border-radius: 0;
   background: var(--surface);
-  box-shadow: 0 14px 36px color-mix(in srgb, var(--text-strong) 7%, transparent), 0 2px 6px color-mix(in srgb, var(--text-strong) 4%, transparent);
+  box-shadow: var(--surface-shadow);
 }
 
 :root .content-area .empty-state.panel {
   border-color: var(--border);
   border-radius: 0;
-  box-shadow: 0 14px 36px color-mix(in srgb, var(--text-strong) 7%, transparent), 0 2px 6px color-mix(in srgb, var(--text-strong) 4%, transparent);
+  box-shadow: var(--surface-shadow);
+}
+
+:root .content-area
+  :is(
+    .audit-filters,
+    .dashboard-action-card,
+    .dashboard-metric,
+    .loading-card,
+    .metric-card,
+    .mode-card,
+    .report-total
+  ) {
+  box-shadow: var(--surface-shadow);
 }
 
 :root .content-area .page-heading {
@@ -3437,4 +3486,219 @@ html[data-theme='dark'] .app-shell .main-content .pos-search kbd {
   :root .content-area :is(.asset-form, .order-form, .quote-form, .convert-form, .credit-form, .expense-editor, .workflow-panel) {
     padding: 16px;
   }
+}
+
+:root .app-shell .content-area :is(
+  .button,
+  .primary-button,
+  .danger-button,
+  .danger-action,
+  .warning-action,
+  .success-action,
+  .add-line-button,
+  .add-account-button,
+  .icon-button,
+  .remove-line,
+  .settings-edit-button
+) {
+  font-weight: 650;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    color 0.16s ease,
+    transform 0.12s ease;
+}
+
+:root .app-shell .content-area .button {
+    min-height: 39px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 15px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+:root .app-shell .content-area :is(.button.primary, .primary-button) {
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+:root .app-shell .content-area :is(.button.primary, .primary-button):hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+:root .app-shell .content-area :is(.button.secondary, .button.ghost) {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-strong);
+}
+
+:root .app-shell .content-area :is(.button.secondary, .button.ghost):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+:root .app-shell .content-area :is(.danger-button, .danger-action, .remove-line, .button.danger) {
+  border: 1px solid color-mix(in srgb, var(--error-text) 28%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--error-text) 7%, var(--surface));
+  color: var(--error-text);
+}
+
+:root .app-shell .content-area :is(.danger-button, .danger-action, .remove-line, .button.danger):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--error-text) 48%, var(--border));
+  background: color-mix(in srgb, var(--error-text) 13%, var(--surface));
+}
+
+:root .app-shell .content-area .remove-line.icon-button {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+:root .app-shell .content-area .remove-line.icon-button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+:root .app-shell .content-area :is(.warning-action, .button.warning) {
+  border: 1px solid color-mix(in srgb, var(--warning-text) 30%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--warning-text) 8%, var(--surface));
+  color: var(--warning-text);
+}
+
+:root .app-shell .content-area :is(.warning-action, .button.warning):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--warning-text) 48%, var(--border));
+  background: color-mix(in srgb, var(--warning-text) 13%, var(--surface));
+}
+
+:root .app-shell .content-area :is(.success-action, .button.success) {
+  border: 1px solid color-mix(in srgb, var(--success-text) 28%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--success-text) 7%, var(--surface));
+  color: var(--success-text);
+}
+
+:root .app-shell .content-area :is(.success-action, .button.success):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--success-text) 45%, var(--border));
+  background: color-mix(in srgb, var(--success-text) 12%, var(--surface));
+}
+
+:root .app-shell .content-area :is(.add-line-button, .add-account-button) {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--accent-text);
+}
+
+:root .app-shell .content-area :is(.add-line-button, .add-account-button):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: var(--accent-soft);
+}
+
+:root .app-shell .content-area :is(.icon-button, .settings-edit-button) {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+:root .app-shell .content-area :is(.icon-button, .settings-edit-button):hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+:root .app-shell .content-area :is(
+  .button,
+  .primary-button,
+  .danger-button,
+  .danger-action,
+  .warning-action,
+  .success-action,
+  .add-line-button,
+  .add-account-button,
+  .icon-button,
+  .remove-line
+):active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+:root .app-shell .content-area :is(
+  .button,
+  .primary-button,
+  .danger-button,
+  .danger-action,
+  .warning-action,
+  .success-action,
+  .add-line-button,
+  .add-account-button,
+  .icon-button,
+  .remove-line
+):disabled {
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+:root .app-shell .content-area :is(.table-action, .document-line .button, .action-cell .button) {
+  min-height: 31px;
+  padding: 0 10px;
+  font-size: 10px;
+}
+
+:root .app-shell .content-area :is(.view-switch, .method-switch) button {
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+:root .app-shell .content-area :is(.view-switch, .method-switch) button.active {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+:root .auth-card .button {
+  border-radius: 8px;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    color 0.16s ease,
+    transform 0.12s ease;
+}
+
+:root .auth-card .button.primary {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+:root .auth-card .button.primary:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+:root .auth-card .button.secondary {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-strong);
 }

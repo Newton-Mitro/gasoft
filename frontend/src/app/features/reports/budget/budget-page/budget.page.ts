@@ -137,6 +137,7 @@ export class BudgetPageComponent implements OnInit {
       title: `Delete “${selected.name}”?`,
       text: 'This will also delete all of its budget amounts.',
       confirmButtonText: 'Delete budget',
+      confirmButtonVariant: 'danger',
     });
     if (!confirmed) return;
     this.saving = true;

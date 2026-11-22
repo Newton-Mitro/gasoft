@@ -135,6 +135,7 @@ export class TaxCodesPageComponent implements OnInit, OnDestroy {
       title: `Delete tax code ${code.code}?`,
       text: 'Its rate history will also be deleted.',
       confirmButtonText: 'Delete tax code',
+      confirmButtonVariant: 'danger',
     });
     if (!confirmed) return;
     this.saving = true;
@@ -220,6 +221,7 @@ export class TaxCodesPageComponent implements OnInit, OnDestroy {
       title: 'Delete this tax rate?',
       text: `This removes the ${rate.ratePercent}% rate effective ${rate.validFrom}.`,
       confirmButtonText: 'Delete rate',
+      confirmButtonVariant: 'danger',
     });
     if (!confirmed) return;
     this.saving = true;

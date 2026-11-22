@@ -194,7 +194,7 @@
                 <td><app-input [name]="'elim-description-' + $index" [(ngModel)]="line.description" [readonly]="run.status !== 'Draft'" /></td>
                 <td><app-input type="number" min="0" step="0.01" [name]="'elim-debit-' + $index" [(ngModel)]="line.debit" [readonly]="run.status !== 'Draft'" /></td>
                 <td><app-input type="number" min="0" step="0.01" [name]="'elim-credit-' + $index" [(ngModel)]="line.credit" [readonly]="run.status !== 'Draft'" /></td>
-                <td>@if (run.status === 'Draft') { <button class="button secondary table-action" type="button" (click)="removeEliminationLine($index)">Remove</button> }</td>
+                <td>@if (run.status === 'Draft') { <button class="button secondary table-action danger-action" type="button" (click)="removeEliminationLine($index)">Remove</button> }</td>
               </tr>
             }</tbody>
           </table></div>

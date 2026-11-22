@@ -69,6 +69,7 @@
   min-height: 0;
   flex: 1 1 0;
   overflow: hidden;
+  border: 1px solid var(--border);
 }
 
 .audit-table-wrap {

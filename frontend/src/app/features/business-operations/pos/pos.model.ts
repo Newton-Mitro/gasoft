@@ -25,6 +25,19 @@ export interface PosSalePayload {
   costOfGoodsSoldAccountId: number;
 }
 
+export interface PosSettings {
+  warehouseId: number | null;
+  journalId: number | null;
+  accountingPeriodId: number | null;
+  revenueAccountId: number | null;
+  receivableAccountId: number | null;
+  settlementAccountId: number | null;
+  taxCodeId: number | null;
+  taxAccountId: number | null;
+  inventoryAccountId: number | null;
+  costOfGoodsSoldAccountId: number | null;
+}
+
 export interface PosSaleResult {
   invoice: {
     id: number;

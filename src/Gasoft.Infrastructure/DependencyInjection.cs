@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<ITenantRegistrationService, TenantRegistrationService>();
         services.AddScoped<IAccountingService, AccountingService>();
         services.AddScoped<IBillingService, BillingService>();
+        services.AddScoped<IPosSettingsService, PosSettingsService>();
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<ICompanyReadService, CompanyReadService>();
         services.AddScoped<ISalesQuoteService, SalesQuoteService>();

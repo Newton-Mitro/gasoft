@@ -49,7 +49,9 @@
 .mode-card.selected {
   border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
   background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 9%, transparent);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 9%, transparent),
+    var(--surface-shadow);
 }
 
 .mode-card:focus-visible {

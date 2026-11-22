@@ -2068,6 +2068,58 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.PosSettings", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AccountingPeriodId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CostOfGoodsSoldAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("InventoryAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("JournalId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ReceivableAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RevenueAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SettlementAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("TaxAccountId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("TaxCodeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("WarehouseId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CompanyId")
+                        .IsUnique();
+
+                    b.ToTable("PosSettings");
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.PurchaseBill", b =>
                 {
                     b.Property<long>("Id")
@@ -5611,6 +5663,16 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TenantId", "CompanyId", "SalesInvoiceId")
                         .HasPrincipalKey("TenantId", "CompanyId", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.PosSettings", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.Company", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.PurchaseBill", b =>
