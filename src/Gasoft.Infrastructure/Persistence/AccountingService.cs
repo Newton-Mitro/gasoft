@@ -514,6 +514,8 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
         var tenantId = EnsureTenant();
         await EnsureCompanyAsync(tenantId, companyId, cancellationToken);
 
+        await using var transaction = await db.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, cancellationToken);
         var year = await db.FiscalYears.SingleOrDefaultAsync(
             item => item.CompanyId == companyId && item.Id == fiscalYearId,
             cancellationToken);
@@ -521,12 +523,15 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
         if (year.Status != "Open")
             throw new AccountingConflictException("Opening balances can only be prepared for an open fiscal year.");
 
-        var openPeriod = await db.AccountingPeriods
-            .Where(period => period.CompanyId == companyId && period.FiscalYearId == fiscalYearId && period.Status == "Open")
+        var firstPeriod = await db.AccountingPeriods
+            .Where(period => period.CompanyId == companyId && period.FiscalYearId == fiscalYearId)
             .OrderBy(period => period.StartsOn)
             .FirstOrDefaultAsync(cancellationToken);
-        if (openPeriod is null)
-            throw new AccountingConflictException("Open an accounting period before preparing opening balances.");
+        if (firstPeriod is null ||
+            firstPeriod.StartsOn > year.StartsOn ||
+            firstPeriod.EndsOn < year.StartsOn)
+            throw new AccountingConflictException(
+                "Create an accounting period that includes the fiscal year start before preparing opening balances.");
 
         var previousYear = await db.FiscalYears
             .Where(item => item.CompanyId == companyId && item.EndsOn < year.StartsOn)
@@ -534,30 +539,64 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             .FirstOrDefaultAsync(cancellationToken);
         if (previousYear is null)
             throw new AccountingConflictException("Create and close a prior fiscal year before preparing opening balances.");
+        if (previousYear.Status != "Closed")
+            throw new AccountingConflictException("Close the prior fiscal year before preparing opening balances.");
 
-        var existingOpeningEntry = await db.JournalEntries.AsNoTracking()
+        var previousYearChecklist = await BuildFiscalYearCloseChecklistAsync(previousYear, cancellationToken);
+        if (!previousYearChecklist.CanClose)
+            throw new AccountingConflictException(
+                "Complete the prior fiscal-year close checklist, including posting any required closing journal, before preparing opening balances.");
+
+        var closing = await db.FiscalYearClosings.AsNoTracking()
+            .SingleOrDefaultAsync(
+                item => item.CompanyId == companyId && item.FiscalYearId == previousYear.Id,
+                cancellationToken);
+        if (closing is not null && previousYearChecklist.ClosingJournalStatus != "Posted")
+            throw new AccountingConflictException(
+                "Post the prior fiscal year closing journal before preparing opening balances.");
+
+        var periodIds = await db.AccountingPeriods.AsNoTracking()
+            .Where(period => period.CompanyId == companyId && period.FiscalYearId == fiscalYearId)
+            .Select(period => period.Id)
+            .ToArrayAsync(cancellationToken);
+        var openingDescription =
+            $"Opening balances for {year.StartsOn:yyyy-MM-dd} to {year.EndsOn:yyyy-MM-dd}";
+        var existingOpeningEntries = await db.JournalEntries.AsNoTracking()
             .Include(entry => entry.Lines)
             .Where(entry => entry.CompanyId == companyId &&
-                           entry.AccountingPeriodId == openPeriod.Id &&
-                           entry.Status == "Draft" &&
-                           entry.Description.StartsWith("Opening balances for "))
-            .OrderByDescending(entry => entry.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (existingOpeningEntry is not null)
+                           periodIds.Contains(entry.AccountingPeriodId) &&
+                           entry.Description == openingDescription)
+            .OrderBy(entry => entry.Id)
+            .ToListAsync(cancellationToken);
+        if (existingOpeningEntries.Count > 1)
+            throw new AccountingConflictException(
+                "More than one opening-balance journal exists for this fiscal year. Resolve the duplicates before continuing.");
+        if (existingOpeningEntries.Count == 1)
+        {
+            var existingOpeningEntry = existingOpeningEntries[0];
+            if (existingOpeningEntry.AccountingPeriodId != firstPeriod.Id)
+                throw new AccountingConflictException(
+                    "The existing opening-balance journal is not in the first accounting period. Resolve it before preparing another.");
+            if (existingOpeningEntry.Status == "Draft" && firstPeriod.Status != "Open")
+                throw new AccountingConflictException(
+                    "Reopen the first accounting period before reviewing and posting the opening-balance journal.");
+            if (existingOpeningEntry.Status is not ("Draft" or "Posted"))
+                throw new AccountingConflictException(
+                    "The existing opening-balance journal is not available for posting.");
+
+            await transaction.CommitAsync(cancellationToken);
             return ToDto(existingOpeningEntry);
+        }
+
+        if (firstPeriod.Status != "Open")
+            throw new AccountingConflictException(
+                "Open the first accounting period before preparing opening balances.");
 
         var generalJournal = await db.Journals.SingleOrDefaultAsync(
             journal => journal.CompanyId == companyId && journal.Code == "GEN" && journal.IsActive,
             cancellationToken);
         if (generalJournal is null)
             throw new AccountingConflictException("An active General journal (GEN) is required for opening balances.");
-
-        var closing = await db.FiscalYearClosings.AsNoTracking()
-            .SingleOrDefaultAsync(
-                item => item.CompanyId == companyId && item.FiscalYearId == previousYear.Id,
-                cancellationToken);
-        if (closing is null)
-            throw new AccountingConflictException("Post the prior fiscal year closing journal before preparing opening balances.");
 
         var company = await db.Companies.SingleAsync(item => item.Id == companyId, cancellationToken);
         var functionalCurrency = await db.Currencies.SingleAsync(
@@ -591,8 +630,12 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
         var totalDebit = openingLines.Sum(line => line.FunctionalDebit);
         var totalCredit = openingLines.Sum(line => line.FunctionalCredit);
         var roundingDifference = totalDebit - totalCredit;
-        if (Math.Abs(roundingDifference) > 0.01m)
+        if (roundingDifference != 0)
         {
+            if (closing is null)
+                throw new AccountingConflictException(
+                    "The prior-year balance-sheet balances do not balance. Review the prior-year ledger before carrying them forward.");
+
             var retainedEarningsAccount = await db.ChartOfAccounts.SingleOrDefaultAsync(
                 account => account.CompanyId == companyId && account.Id == closing.RetainedEarningsAccountId,
                 cancellationToken);
@@ -612,13 +655,14 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             TenantId = tenantId,
             CompanyId = companyId,
             JournalId = generalJournal.Id,
-            AccountingPeriodId = openPeriod.Id,
+            AccountingPeriodId = firstPeriod.Id,
             EntryDate = year.StartsOn,
-            Description = $"Opening balances for {year.StartsOn:yyyy-MM-dd} to {year.EndsOn:yyyy-MM-dd}",
+            Description = openingDescription,
             Lines = openingLines
         };
         db.JournalEntries.Add(entry);
         await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return ToDto(entry);
     }
 

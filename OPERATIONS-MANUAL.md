@@ -47,7 +47,9 @@ The current journal-entry form has an entry description, but no dedicated party-
 
 Use the **History** action to review status changes. Before closing a period, review its close checklist. Draft journal entries and unreconciled imported bank statement transactions are blockers. Resolve blockers, then close the period with a reason. Reopening also requires a reason and is audited. Only authorized Owners and Admins can close or reopen periods.
 
-Fiscal-year close requires periods to exist and be closed, and no draft journal entries to remain. If posted revenue or expense balances remain, use the close checklist to prepare the closing journal, select a retained-earnings account, review the generated draft, and post it through the closing workflow. Lock the year only after the checklist allows it. Reopening a fiscal year does not reopen its accounting periods. For a new year, use **Opening balances** to prepare and review an opening journal from prior-year balance-sheet balances.
+Fiscal-year close requires periods to exist and be closed, and no draft journal entries to remain. If posted revenue or expense balances remain, use the close checklist to prepare the closing journal, select a retained-earnings account, review the generated draft, and post it through the closing workflow. If no income or expense balances remain, no closing journal is needed. Lock the year only after the checklist allows it. Reopening a fiscal year does not reopen its accounting periods.
+
+For a new year, first close the prior year and post any required closing journal. Then use **Opening balances** to prepare the opening journal in the new year’s first, open accounting period. It carries forward the prior year’s posted asset, liability, and equity balances; revenue and expense accounts are closed to retained earnings and do not carry forward. Review and post the opening journal before entering normal activity. Repeating the preparation returns the existing journal rather than creating a duplicate.
 
 ## 4. Sales, purchasing, and payments
 

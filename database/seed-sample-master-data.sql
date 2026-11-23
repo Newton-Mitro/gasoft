@@ -1,9 +1,12 @@
 -- Sample master data for Gasoft's PostgreSQL database.
 -- Apply the EF Core migrations first, then replace these IDs with an existing
 -- tenant/company pair. Existing records are preserved except NULL company
--- prices, which are filled with the illustrative amounts below.
+-- prices, which are filled, and a prior stock-only draft journal, which is
+-- upgraded to the full sample opening journal.
 -- Selling prices are illustrative demo values in the company's functional
 -- currency; review them before using the items for live sales.
+-- Illustrative opening account balances are also added as a draft General
+-- journal for review; replace them with actual balances before live use.
 --
 -- To find IDs:
 -- SELECT "Id", "Name" FROM "Tenants" ORDER BY "Id";
@@ -13,6 +16,19 @@ DO $seed$
 DECLARE
     target_tenant_id bigint := 1; -- Set this to the target tenant ID.
     target_company_id bigint := 1; -- Set this to a company in that tenant.
+    opening_movement_count integer;
+    opening_stock_value numeric(20, 6);
+    opening_equity_value numeric(20, 6);
+    opening_total_debit numeric(20, 6);
+    current_period_id bigint;
+    general_journal_id bigint;
+    functional_currency_code character(3);
+    opening_journal_id bigint;
+    existing_opening_journal_count integer;
+    existing_opening_journal_description text;
+    existing_opening_journal_status text;
+    opening_account_count integer;
+    legacy_journal_matches boolean;
 BEGIN
     IF target_tenant_id <= 0 OR target_company_id <= 0 THEN
         RAISE EXCEPTION 'Set target_tenant_id and target_company_id before running this script.';
@@ -112,8 +128,7 @@ BEGIN
     VALUES (target_tenant_id, target_company_id, 'MAIN', 'Main Warehouse')
     ON CONFLICT ("TenantId", "CompanyId", "Code") DO NOTHING;
 
-    -- Opening stock is seeded into inventory valuation only; this does not
-    -- create a general-ledger journal entry. Unit costs use the company's
+    -- Seed the opening stock valuation. Unit costs use the company's
     -- functional currency.
     WITH stock_seed("Sku", "Quantity", "UnitCost") AS (
         VALUES
@@ -161,5 +176,210 @@ BEGIN
         "TenantId", "CompanyId", "Id", "ItemId", "WarehouseId",
         "QuantityIn", "UnitCost", 0
     FROM inserted_movements;
+
+    -- Add an illustrative opening trial balance as a draft. Opening balance
+    -- equity is calculated as the offset; replace the demo amounts before live use.
+    SELECT COUNT(*)::integer
+    INTO existing_opening_journal_count
+    FROM "JournalEntries"
+    WHERE "TenantId" = target_tenant_id
+      AND "CompanyId" = target_company_id
+      AND "Description" IN (
+          'Opening balances for sample master data',
+          'Opening stock balance for sample master data'
+      );
+
+    IF existing_opening_journal_count > 1 THEN
+        RAISE EXCEPTION 'Multiple sample opening-balance journals already exist; resolve them before reseeding.';
+    END IF;
+
+    IF existing_opening_journal_count = 1 THEN
+        SELECT "Id", "Description", "Status"
+        INTO opening_journal_id, existing_opening_journal_description, existing_opening_journal_status
+        FROM "JournalEntries"
+        WHERE "TenantId" = target_tenant_id
+          AND "CompanyId" = target_company_id
+          AND "Description" IN (
+              'Opening balances for sample master data',
+              'Opening stock balance for sample master data'
+          );
+    END IF;
+
+    IF existing_opening_journal_description = 'Opening stock balance for sample master data'
+       AND existing_opening_journal_status <> 'Draft' THEN
+        RAISE EXCEPTION 'The earlier stock-only opening journal is already posted; reverse it before applying full sample opening balances.';
+    END IF;
+
+    IF existing_opening_journal_description IS DISTINCT FROM 'Opening balances for sample master data' THEN
+        SELECT COUNT(*)::integer, COALESCE(SUM("TotalCost"), 0)
+        INTO opening_movement_count, opening_stock_value
+        FROM "StockMovements"
+        WHERE "TenantId" = target_tenant_id
+          AND "CompanyId" = target_company_id
+          AND "MovementType" = 'OpeningBalance'
+          AND "MovementNumber" IN (
+              'OPENING-SEED-PAPER-A4',
+              'OPENING-SEED-PEN-BLUE',
+              'OPENING-SEED-MOUSE-USB',
+              'OPENING-SEED-WATER-BOX'
+          );
+
+        IF opening_movement_count <> 4 OR opening_stock_value <= 0 THEN
+            RAISE EXCEPTION 'Expected four positive opening stock movements; found % movements worth %.',
+                opening_movement_count, opening_stock_value;
+        END IF;
+
+        SELECT company."FunctionalCurrencyCode"
+        INTO functional_currency_code
+        FROM "Companies" AS company
+        WHERE company."TenantId" = target_tenant_id
+          AND company."Id" = target_company_id;
+
+        SELECT period."Id"
+        INTO current_period_id
+        FROM "AccountingPeriods" AS period
+        WHERE period."TenantId" = target_tenant_id
+          AND period."CompanyId" = target_company_id
+          AND period."Status" = 'Open'
+          AND period."StartsOn" <= CURRENT_DATE
+          AND period."EndsOn" >= CURRENT_DATE
+          AND EXISTS (
+              SELECT 1
+              FROM "FiscalYears" AS fiscal_year
+              WHERE fiscal_year."TenantId" = target_tenant_id
+                AND fiscal_year."CompanyId" = target_company_id
+                AND fiscal_year."Id" = period."FiscalYearId"
+                AND fiscal_year."Status" = 'Open'
+          )
+        ORDER BY period."StartsOn"
+        LIMIT 1;
+
+        IF current_period_id IS NULL THEN
+            RAISE EXCEPTION 'Create an open accounting period containing today before seeding opening balances.';
+        END IF;
+
+        SELECT journal."Id"
+        INTO general_journal_id
+        FROM "Journals" AS journal
+        WHERE journal."TenantId" = target_tenant_id
+          AND journal."CompanyId" = target_company_id
+          AND journal."Code" = 'GEN'
+          AND journal."IsActive";
+
+        IF general_journal_id IS NULL THEN
+            RAISE EXCEPTION 'An active General journal (GEN) is required to seed opening balances.';
+        END IF;
+
+        SELECT COUNT(*)::integer
+        INTO opening_account_count
+        FROM (VALUES
+            ('1000'), ('1100'), ('1200'), ('1400'),
+            ('1490'), ('2000'), ('2200'), ('3000')
+        ) AS required("Code")
+        JOIN "ChartOfAccounts" AS account
+          ON account."TenantId" = target_tenant_id
+         AND account."CompanyId" = target_company_id
+         AND account."Code" = required."Code"
+         AND account."IsActive"
+         AND account."AllowPosting";
+
+        IF opening_account_count <> 8 THEN
+            RAISE EXCEPTION 'Active, postable accounts 1000, 1100, 1200, 1400, 1490, 2000, 2200, and 3000 are required.';
+        END IF;
+
+        opening_total_debit := 100000 + 25000 + opening_stock_value + 50000;
+        opening_equity_value := opening_total_debit - 5000 - 20000 - 30000;
+
+        IF existing_opening_journal_count = 1 THEN
+            SELECT
+                COUNT(*) = 2
+                AND COUNT(*) FILTER (
+                    WHERE account."Code" = '1200'
+                      AND line."Debit" = opening_stock_value
+                      AND line."Credit" = 0
+                      AND line."FunctionalDebit" = opening_stock_value
+                      AND line."FunctionalCredit" = 0
+                ) = 1
+                AND COUNT(*) FILTER (
+                    WHERE account."Code" = '3000'
+                      AND line."Debit" = 0
+                      AND line."Credit" = opening_stock_value
+                      AND line."FunctionalDebit" = 0
+                      AND line."FunctionalCredit" = opening_stock_value
+                ) = 1
+            INTO legacy_journal_matches
+            FROM "JournalLines" AS line
+            JOIN "ChartOfAccounts" AS account
+              ON account."TenantId" = line."TenantId"
+             AND account."CompanyId" = line."CompanyId"
+             AND account."Id" = line."AccountId"
+            WHERE line."TenantId" = target_tenant_id
+              AND line."CompanyId" = target_company_id
+              AND line."JournalEntryId" = opening_journal_id;
+
+            IF NOT legacy_journal_matches THEN
+                RAISE EXCEPTION 'The earlier draft opening journal was changed; review it manually before reseeding.';
+            END IF;
+
+            UPDATE "JournalEntries"
+            SET "AccountingPeriodId" = current_period_id,
+                "EntryDate" = CURRENT_DATE,
+                "Description" = 'Opening balances for sample master data',
+                "TotalDebit" = opening_total_debit,
+                "TotalCredit" = opening_total_debit,
+                "Revision" = "Revision" + 1
+            WHERE "Id" = opening_journal_id
+              AND "TenantId" = target_tenant_id
+              AND "CompanyId" = target_company_id;
+
+            DELETE FROM "JournalLines"
+            WHERE "TenantId" = target_tenant_id
+              AND "CompanyId" = target_company_id
+              AND "JournalEntryId" = opening_journal_id;
+        ELSE
+            INSERT INTO "JournalEntries"
+                ("TenantId", "CompanyId", "JournalId", "AccountingPeriodId",
+                 "EntryDate", "Description", "Status", "TotalDebit", "TotalCredit", "Revision")
+            VALUES
+                (target_tenant_id, target_company_id, general_journal_id, current_period_id,
+                 CURRENT_DATE, 'Opening balances for sample master data', 'Draft',
+                 opening_total_debit, opening_total_debit, 0)
+            RETURNING "Id" INTO opening_journal_id;
+        END IF;
+
+        INSERT INTO "JournalLines"
+            ("TenantId", "CompanyId", "JournalEntryId", "AccountId", "CostCenterId",
+             "TransactionCurrencyCode", "Debit", "Credit", "FunctionalDebit",
+             "FunctionalCredit", "ExchangeRate", "Description")
+        SELECT
+            target_tenant_id,
+            target_company_id,
+            opening_journal_id,
+            account."Id",
+            NULL::bigint,
+            functional_currency_code,
+            sample."Debit",
+            sample."Credit",
+            sample."Debit",
+            sample."Credit",
+            1,
+            sample."Description"
+        FROM (VALUES
+            ('1000', 100000.00::numeric, 0::numeric, 'Opening cash'),
+            ('1100', 25000.00::numeric, 0::numeric, 'Opening receivables'),
+            ('1200', opening_stock_value, 0::numeric, 'Opening inventory'),
+            ('1400', 50000.00::numeric, 0::numeric, 'Opening property and equipment'),
+            ('1490', 0::numeric, 5000.00::numeric, 'Opening accumulated depreciation'),
+            ('2000', 0::numeric, 20000.00::numeric, 'Opening payables'),
+            ('2200', 0::numeric, 30000.00::numeric, 'Opening loans'),
+            ('3000', 0::numeric, opening_equity_value, 'Opening balance equity')
+        ) AS sample("AccountCode", "Debit", "Credit", "Description")
+        JOIN "ChartOfAccounts" AS account
+          ON account."TenantId" = target_tenant_id
+         AND account."CompanyId" = target_company_id
+         AND account."Code" = sample."AccountCode"
+         AND account."IsActive"
+         AND account."AllowPosting";
+    END IF;
 END;
 $seed$;

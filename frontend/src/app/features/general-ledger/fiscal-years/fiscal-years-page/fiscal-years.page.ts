@@ -281,7 +281,7 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
   async prepareOpeningBalances(year: FiscalYear): Promise<void> {
     const confirmed = await this.notifications.confirm({
       title: 'Prepare opening balances?',
-      text: 'This creates a draft journal using the prior year’s posted balance-sheet balances. Review and post the draft before use.',
+      text: 'The prior fiscal year must be closed and any required closing journal posted. This creates or returns the opening journal in the first accounting period; review and post it before use.',
       confirmButtonText: 'Prepare opening balances',
       icon: 'question',
     });
@@ -291,7 +291,9 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
     this.fiscalYears.prepareOpeningBalances(year.id).subscribe({
       next: entry => {
         this.busyYearId = null;
-        this.notifications.success(`Draft opening-balance journal ${entry.id} created for ${year.startsOn}. Review and post it before using the new year.`);
+        this.notifications.success(entry.status === 'Posted'
+          ? `Opening-balance journal ${entry.id} is already posted; no duplicate was created.`
+          : `Draft opening-balance journal ${entry.id} is ready for review and posting for ${year.startsOn}.`);
         this.success = '';
         this.changeDetector.markForCheck();
       },
