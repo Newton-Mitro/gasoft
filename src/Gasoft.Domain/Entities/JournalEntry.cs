@@ -12,5 +12,6 @@ public sealed class JournalEntry : TenantOwnedEntity
     public decimal TotalDebit { get; set; }
     public decimal TotalCredit { get; set; }
     public int Revision { get; set; }
+    public long? ReversalOfEntryId { get; set; }
     public ICollection<JournalLine> Lines { get; set; } = new List<JournalLine>();
 }

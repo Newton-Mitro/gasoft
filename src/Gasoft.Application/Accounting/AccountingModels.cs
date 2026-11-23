@@ -35,6 +35,7 @@ public sealed record CreateJournalEntryRequest(
     DateOnly EntryDate,
     string Description,
     IReadOnlyList<CreateJournalLineRequest> Lines);
+public sealed record ReverseJournalEntryRequest(DateOnly ReversalDate);
 public sealed record CreateJournalLineRequest(
     long AccountId,
     string TransactionCurrencyCode,
@@ -135,7 +136,9 @@ public sealed record JournalEntryDto(
     string Status,
     decimal TotalDebit,
     decimal TotalCredit,
-    IReadOnlyList<JournalLineDto> Lines);
+    IReadOnlyList<JournalLineDto> Lines,
+    long? ReversalOfEntryId = null,
+    long? ReversedByEntryId = null);
 public sealed record JournalLineDto(
     long Id,
     long AccountId,

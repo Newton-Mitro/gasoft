@@ -524,9 +524,17 @@ public sealed class AppDbContext(
             entity.Property(x => x.TotalDebit).HasPrecision(20, 6);
             entity.Property(x => x.TotalCredit).HasPrecision(20, 6);
             entity.Property(x => x.Revision).IsConcurrencyToken();
+            entity.HasIndex(x => new { x.TenantId, x.CompanyId, x.ReversalOfEntryId })
+                .IsUnique()
+                .HasDatabaseName("UX_JournalEntries_TenantId_CompanyId_ReversalOfEntryId");
             entity.HasOne<Journal>()
                 .WithMany()
                 .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.JournalId })
+                .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<JournalEntry>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId, x.ReversalOfEntryId })
                 .HasPrincipalKey(x => new { x.TenantId, x.CompanyId, x.Id })
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<AccountingPeriod>()
@@ -1627,6 +1635,21 @@ public sealed class AppDbContext(
                 var statusValue = statusChange.HasValue
                     ? entry.Property("ToStatus").CurrentValue?.ToString()
                     : null;
+                var journalEntry = entry.Entity as JournalEntry;
+                var notificationTitle = postsRecord
+                    ? journalEntry?.ReversalOfEntryId is not null
+                        ? "Journal reversal posted"
+                        : $"{entityName} posted"
+                    : statusChange.HasValue ? $"{entityName} status changed" : null;
+                var notificationMessage = postsRecord
+                    ? journalEntry is null
+                        ? $"A {entityName} record was posted."
+                        : journalEntry.ReversalOfEntryId is long originalEntryId
+                            ? $"Journal entry #{originalEntryId} was reversed on {journalEntry.EntryDate:yyyy-MM-dd} with debit and credit amounts swapped."
+                            : $"Journal entry #{journalEntry.Id} \"{journalEntry.Description}\" was posted on {journalEntry.EntryDate:yyyy-MM-dd}."
+                    : statusChange.HasValue && !string.IsNullOrWhiteSpace(statusValue)
+                        ? $"A {entityName} was {statusValue}."
+                        : null;
                 return new PendingAuditEntry(
                     entry.Entity,
                     entry.State,
@@ -1642,12 +1665,8 @@ public sealed class AppDbContext(
                     entityName,
                     entityId,
                     JsonSerializer.Serialize(changes),
-                    postsRecord ? $"{entityName} posted" : statusChange.HasValue ? $"{entityName} status changed" : null,
-                    postsRecord
-                        ? $"A {entityName} record was posted."
-                        : statusChange.HasValue && !string.IsNullOrWhiteSpace(statusValue)
-                            ? $"A {entityName} was {statusValue}."
-                            : null);
+                    notificationTitle,
+                    notificationMessage);
             })
             .Where(entry => entry is not null)
             .Select(entry => entry!)

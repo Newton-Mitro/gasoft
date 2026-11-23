@@ -1774,6 +1774,9 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.Property<long>("JournalId")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("ReversalOfEntryId")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("Revision")
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
@@ -1799,6 +1802,10 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "CompanyId", "AccountingPeriodId");
 
                     b.HasIndex("TenantId", "CompanyId", "JournalId");
+
+                    b.HasIndex("TenantId", "CompanyId", "ReversalOfEntryId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_JournalEntries_TenantId_CompanyId_ReversalOfEntryId");
 
                     b.ToTable("JournalEntries");
                 });
@@ -5617,6 +5624,12 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .HasPrincipalKey("TenantId", "CompanyId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.JournalEntry", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "ReversalOfEntryId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.JournalLine", b =>

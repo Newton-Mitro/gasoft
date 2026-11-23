@@ -40,6 +40,7 @@ Open **General Ledger → Journals** to create and maintain journals. Journal ty
 3. Add at least two lines. Select an account and enter debit or credit amounts as appropriate.
 4. Confirm total debits equal total credits, then save the draft.
 5. Review the draft before posting it from the journal-entry list. Posting writes the entry to the ledger; posted entries are not available for draft editing.
+6. To correct a standalone posted entry, choose **Reverse** and confirm. The system posts a new entry dated today in an open accounting period and fiscal year, swapping each original debit and credit while preserving its account, currency, and exchange rate. The original remains unchanged and is linked to the reversal. Each entry can be reversed only once. Entries generated from sales, purchasing, payment, inventory, expense, fixed-asset, or fiscal-year workflows must be corrected through their source workflow instead. If today has no open accounting period and fiscal year, open them before retrying.
 
 The current journal-entry form has an entry description, but no dedicated party-reference field. If a source identifier is needed, follow your organization's policy for including it in the description or use the relevant sales, purchasing, or payment workflow that records the party.
 

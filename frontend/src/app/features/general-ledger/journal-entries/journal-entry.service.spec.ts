@@ -13,6 +13,8 @@ describe('JournalEntryService', () => {
     status: 'Draft',
     totalDebit: '25.00',
     totalCredit: '25.00',
+    reversalOfEntryId: null,
+    reversedByEntryId: null,
     lines: [{
       id: 1,
       accountId: 10,
@@ -69,12 +71,14 @@ describe('JournalEntryService', () => {
     service.getById(21).subscribe();
     service.create(payload).subscribe();
     service.update(21, payload).subscribe();
+    service.reverse(21, '2026-11-23').subscribe();
 
     expect(calls).toEqual([
       ['GET', 'journal-entries', true],
       ['GET', 'journal-entries/21', true],
       ['POST', 'journal-entries', payload, true],
       ['PUT', 'journal-entries/21', payload, true],
+      ['POST', 'journal-entries/21/reverse', { reversalDate: '2026-11-23' }, true],
     ]);
   });
 
@@ -85,6 +89,18 @@ describe('JournalEntryService', () => {
     let receivedError: unknown;
 
     new JournalEntryService(api).getAll().subscribe({ error: error => receivedError = error });
+
+    expect(receivedError).toBeInstanceOf(Error);
+    expect((receivedError as Error).message).toContain('invalid record');
+  });
+
+  it('rejects malformed reversal references', () => {
+    const api = ({
+      get: () => of({ ...entry, reversedByEntryId: 'not-an-id' }),
+    }) as unknown as ApiService;
+    let receivedError: unknown;
+
+    new JournalEntryService(api).getById(21).subscribe({ error: error => receivedError = error });
 
     expect(receivedError).toBeInstanceOf(Error);
     expect((receivedError as Error).message).toContain('invalid record');

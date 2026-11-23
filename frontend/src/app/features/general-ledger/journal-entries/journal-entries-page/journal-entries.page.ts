@@ -19,6 +19,7 @@ import {
 } from '../journal-entry.model';
 import { JournalEntryService } from '../journal-entry.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
+import { NotificationInboxService } from '../../../../layout/shell/notification-inbox.service';
 
 const JOURNAL_ENTRY_OPTIONS = ['journals', 'periods', 'currencies', 'accounts'];
 
@@ -30,6 +31,7 @@ const JOURNAL_ENTRY_OPTIONS = ['journals', 'periods', 'currencies', 'accounts'];
 })
 export class JournalEntriesPageComponent implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
+  readonly notificationInbox = inject(NotificationInboxService);
   readonly pageKey = 'journal-entries';
   readonly title = 'Journal entries';
   readonly description = 'Create a balanced journal draft and post it to the general ledger.';
@@ -199,6 +201,37 @@ export class JournalEntriesPageComponent implements OnInit, OnDestroy {
     });
   }
 
+  async reverseEntry(entry: JournalEntry): Promise<void> {
+    if (entry.status !== 'Posted' || entry.reversedByEntryId || this.saving) return;
+    const confirmed = await this.notifications.confirm({
+      title: 'Reverse this posted journal entry?',
+      text: 'A new journal entry will be posted today with the debit and credit sides swapped. The original entry will remain unchanged.',
+      confirmButtonText: 'Reverse and post',
+      confirmButtonVariant: 'danger',
+    });
+    if (!confirmed) return;
+
+    this.saving = true;
+    this.error = '';
+    this.entries.reverse(entry.id, localDateOnly()).subscribe({
+      next: reversal => {
+        this.rows = this.rows.map(row => row.id === entry.id
+          ? { ...row, reversedByEntryId: reversal.id }
+          : row);
+        this.saving = false;
+        this.notifications.success(`Journal entry ${entry.id} was reversed by entry ${reversal.id}.`);
+        this.notificationInbox.load(1);
+        this.loadRows();
+      },
+      error: error => {
+        this.error = '';
+        this.notifications.error(errorMessage(error, 'Could not reverse this journal entry.'));
+        this.saving = false;
+        this.changeDetector.markForCheck();
+      },
+    });
+  }
+
   formatAmount(value: number | string): string {
     const amount = Number(value);
     if (!Number.isFinite(amount)) return '—';
@@ -323,4 +356,11 @@ function toRecordId(params: ParamMap): number | null {
 
 function isPositiveId(value: number): boolean {
   return Number.isSafeInteger(value) && value > 0;
+}
+
+function localDateOnly(): string {
+  const date = new Date();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
 }

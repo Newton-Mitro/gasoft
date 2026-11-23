@@ -69,8 +69,8 @@
           <a class="button secondary" [routerLink]="[indexPath, 'create']">Create first entry</a>
         </div>
       } @else {
-        <div class="table-scroll">
-          <table>
+        <div class="table-scroll journal-entry-table-scroll">
+          <table class="journal-entry-table">
             <thead>
               <tr>
                 <th>Entry date</th>
@@ -84,30 +84,46 @@
             <tbody>
               @for (entry of rows; track entry.id) {
                 <tr>
-                  <td>{{ entry.entryDate }}</td>
-                  <td>{{ entry.description }}</td>
-                  <td>
+                  <td class="journal-entry-date" data-label="Entry date">{{ entry.entryDate }}</td>
+                  <td class="journal-entry-description" data-label="Description">{{ entry.description }}</td>
+                  <td class="journal-entry-status" data-label="Status">
                     <span class="status-tag" [class.posted]="entry.status === 'Posted'">{{
                       entry.status
                     }}</span>
                   </td>
-                  <td>{{ formatAmount(entry.totalDebit) }}</td>
-                  <td>{{ formatAmount(entry.totalCredit) }}</td>
-                  <td class="action-cell">
-                    @if (entry.status === 'Draft') {
-                      <a
-                        class="button secondary table-action"
-                        [routerLink]="[indexPath, entry.id, 'edit']"
-                        >Edit</a
-                      >
-                    }
-                    <button
-                      class="button secondary table-action"
-                      [disabled]="entry.status !== 'Draft' || saving"
-                      (click)="postEntry(entry)"
-                    >
-                      {{ entry.status === 'Posted' ? 'Posted' : 'Post entry' }}
-                    </button>
+                  <td class="journal-entry-debit" data-label="Total debit">{{ formatAmount(entry.totalDebit) }}</td>
+                  <td class="journal-entry-credit" data-label="Total credit">{{ formatAmount(entry.totalCredit) }}</td>
+                  <td class="action-cell" data-label="Actions">
+                    <div class="journal-entry-actions">
+                      @if (entry.status === 'Draft' && !entry.reversalOfEntryId) {
+                        <a
+                          class="button secondary table-action"
+                          [routerLink]="[indexPath, entry.id, 'edit']"
+                          >Edit</a
+                        >
+                      }
+                      @if (entry.status === 'Draft') {
+                        <button
+                          class="button secondary table-action"
+                          [disabled]="saving"
+                          (click)="postEntry(entry)"
+                        >
+                          Post entry
+                        </button>
+                      }
+                      @if (entry.status === 'Posted' && !entry.reversedByEntryId) {
+                        <button
+                          class="button secondary table-action"
+                          [disabled]="saving"
+                          (click)="reverseEntry(entry)"
+                        >
+                          Reverse
+                        </button>
+                      }
+                      @if (entry.reversedByEntryId) {
+                        <span class="status-tag">Reversed by #{{ entry.reversedByEntryId }}</span>
+                      }
+                    </div>
                   </td>
                 </tr>
               }

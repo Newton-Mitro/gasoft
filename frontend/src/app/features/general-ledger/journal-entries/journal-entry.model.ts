@@ -20,6 +20,8 @@ export interface JournalEntry {
   status: string;
   totalDebit: number | string;
   totalCredit: number | string;
+  reversalOfEntryId?: number | null;
+  reversedByEntryId?: number | null;
   lines: JournalEntryLine[];
 }
 

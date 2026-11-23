@@ -33,6 +33,11 @@ export class JournalEntryService {
   update(id: number, payload: JournalEntryPayload): Observable<JournalEntry> {
     return this.api.put<unknown>(`${ENDPOINT}/${id}`, payload, true).pipe(map(toJournalEntry));
   }
+
+  reverse(id: number, reversalDate: string): Observable<JournalEntry> {
+    return this.api.post<unknown>(`${ENDPOINT}/${id}/reverse`, { reversalDate }, true)
+      .pipe(map(toJournalEntry));
+  }
 }
 
 function toJournalEntries(result: unknown): JournalEntry[] {
@@ -63,6 +68,8 @@ function isJournalEntry(value: unknown): value is JournalEntry {
     typeof row['status'] === 'string' &&
     isNumericValue(row['totalDebit']) &&
     isNumericValue(row['totalCredit']) &&
+    isOptionalId(row['reversalOfEntryId']) &&
+    isOptionalId(row['reversedByEntryId']) &&
     Array.isArray(row['lines']) &&
     row['lines'].every(isJournalEntryLine);
 }
@@ -83,6 +90,10 @@ function isJournalEntryLine(value: unknown): value is JournalEntry['lines'][numb
 
 function isId(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
+}
+
+function isOptionalId(value: unknown): boolean {
+  return value === undefined || value === null || isId(value);
 }
 
 function isNumericValue(value: unknown): value is number | string {

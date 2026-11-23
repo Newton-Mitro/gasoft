@@ -3034,6 +3034,144 @@ html[data-accent] :is(.content-area, .auth-page) :is(.alert.error, .alert.succes
   }
 }
 
+:root .content-area .journal-entry-table-scroll {
+  overflow-x: auto;
+}
+
+:root .content-area .journal-entry-table {
+  min-width: 920px;
+  table-layout: fixed;
+  white-space: normal;
+}
+
+:root .content-area .journal-entry-table :is(th, td):nth-child(1) {
+  width: 110px;
+  white-space: nowrap;
+}
+
+:root .content-area .journal-entry-table :is(th, td):nth-child(2) {
+  width: 250px;
+  white-space: normal;
+}
+
+:root .content-area .journal-entry-table :is(th, td):nth-child(3) {
+  width: 85px;
+  white-space: nowrap;
+}
+
+:root .content-area .journal-entry-table :is(th, td):nth-child(4),
+:root .content-area .journal-entry-table :is(th, td):nth-child(5) {
+  width: 145px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+:root .content-area .journal-entry-table :is(th, td):nth-child(6) {
+  width: 185px;
+  white-space: normal;
+}
+
+:root .content-area .journal-entry-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 700px) {
+  :root .content-area:has(.journal-entry-table) {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  :root .content-area:has(.journal-entry-table) > router-outlet + * {
+    min-height: auto;
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  :root .content-area:has(.journal-entry-table) .table-panel {
+    height: auto;
+    min-height: 0;
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  :root .content-area:has(.journal-entry-table) .table-panel > .journal-entry-table-scroll {
+    min-height: 0;
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  :root .content-area .journal-entry-table {
+    min-width: 0;
+    table-layout: auto;
+  }
+
+  :root .content-area .journal-entry-table :is(th, td):nth-child(n) {
+    width: auto;
+    white-space: normal;
+    text-align: left;
+  }
+
+  :root .content-area .journal-entry-table tbody td {
+    height: auto;
+    min-height: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 9px;
+  }
+
+  :root .content-area .journal-entry-table tbody tr {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "date status"
+      "description description"
+      "debit credit"
+      "actions actions";
+    gap: 0 6px;
+    padding: 5px;
+  }
+
+  :root .content-area .journal-entry-table .journal-entry-date {
+    grid-area: date;
+  }
+
+  :root .content-area .journal-entry-table .journal-entry-status {
+    grid-area: status;
+  }
+
+  :root .content-area .journal-entry-table .journal-entry-description {
+    grid-area: description;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--surface-muted) 50%, transparent);
+    color: var(--text-strong);
+    font-weight: 600;
+  }
+
+  :root .content-area .journal-entry-table .journal-entry-debit {
+    grid-area: debit;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root .content-area .journal-entry-table .journal-entry-credit {
+    grid-area: credit;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :root .content-area .journal-entry-table .action-cell {
+    grid-area: actions;
+  }
+
+  :root .content-area .journal-entry-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root .content-area :is(.table-scroll, .detail-table, .table-panel) tbody tr {
     transition: none;

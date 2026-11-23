@@ -1697,7 +1697,12 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
         var entry = await db.JournalEntries.AsNoTracking()
             .Include(item => item.Lines)
             .SingleOrDefaultAsync(item => item.CompanyId == companyId && item.Id == entryId, cancellationToken);
-        return entry is null ? null : ToDto(entry);
+        if (entry is null) return null;
+        var reversedByEntryId = await db.JournalEntries.AsNoTracking()
+            .Where(item => item.ReversalOfEntryId == entryId)
+            .Select(item => (long?)item.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+        return ToDto(entry) with { ReversedByEntryId = reversedByEntryId };
     }
 
     public async Task<IReadOnlyList<JournalEntryDto>> GetJournalEntriesAsync(
@@ -1712,7 +1717,7 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             .OrderByDescending(entry => entry.EntryDate)
             .ThenByDescending(entry => entry.Id)
             .ToListAsync(cancellationToken);
-        return entries.Select(ToDto).ToArray();
+        return await ToDtosWithReversalsAsync(entries, cancellationToken);
     }
 
     public async Task<PagedResultDto<JournalEntryDto>> GetJournalEntriesPageAsync(
@@ -1735,8 +1740,118 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             .Take(pageSize)
             .Include(entry => entry.Lines)
             .ToListAsync(cancellationToken);
-        var items = pageEntries.Select(ToDto).ToArray();
+        var items = await ToDtosWithReversalsAsync(pageEntries, cancellationToken);
         return new PagedResultDto<JournalEntryDto>(items, normalizedPage, pageSize, totalCount, totalPages);
+    }
+
+    public async Task<JournalEntryDto?> ReverseJournalEntryAsync(
+        long companyId,
+        long entryId,
+        ReverseJournalEntryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = EnsureTenant();
+        await EnsureCompanyAsync(tenantId, companyId, cancellationToken);
+        var original = await db.JournalEntries
+            .Include(entry => entry.Lines)
+            .SingleOrDefaultAsync(entry => entry.CompanyId == companyId && entry.Id == entryId, cancellationToken);
+        if (original is null) return null;
+        if (original.Status != "Posted")
+            throw new AccountingConflictException("Only posted journal entries can be reversed.");
+        if (original.Description.StartsWith("Opening balances for ", StringComparison.Ordinal))
+            throw new AccountingConflictException(
+                "Fiscal-year opening entries must be corrected through the fiscal-year opening workflow.");
+        if (await IsOperationalJournalEntryAsync(companyId, entryId, cancellationToken))
+            throw new AccountingConflictException(
+                "This journal entry is linked to an operational record. Correct it through that record's workflow instead.");
+        if (await db.JournalEntries.AnyAsync(
+                entry => entry.CompanyId == companyId && entry.ReversalOfEntryId == entryId,
+                cancellationToken))
+            throw new AccountingConflictException("This journal entry has already been reversed.");
+
+        var originalDebit = original.Lines.Sum(line => line.FunctionalDebit);
+        var originalCredit = original.Lines.Sum(line => line.FunctionalCredit);
+        if (original.Lines.Count < 2 || originalDebit <= 0 || originalDebit != originalCredit ||
+            original.TotalDebit != originalDebit || original.TotalCredit != originalCredit)
+            throw new AccountingConflictException("This posted journal entry is not balanced and cannot be reversed.");
+
+        var period = await db.AccountingPeriods
+            .Where(item => item.CompanyId == companyId &&
+                item.Status == "Open" &&
+                item.StartsOn <= request.ReversalDate &&
+                item.EndsOn >= request.ReversalDate)
+            .OrderBy(item => item.StartsOn)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (period is null || !await db.FiscalYears.AnyAsync(
+                year => year.CompanyId == companyId &&
+                        year.Id == period.FiscalYearId &&
+                        year.Status == "Open",
+                cancellationToken))
+            throw new AccountingConflictException(
+                "Choose a reversal date within an open accounting period and open fiscal year.");
+
+        var reversalDescription = $"Reversal of journal entry {original.Id}: {original.Description}";
+        var reversal = new JournalEntry
+        {
+            TenantId = tenantId,
+            CompanyId = companyId,
+            JournalId = original.JournalId,
+            AccountingPeriodId = period.Id,
+            EntryDate = request.ReversalDate,
+            Description = reversalDescription[..Math.Min(500, reversalDescription.Length)],
+            Status = "Posted",
+            TotalDebit = originalCredit,
+            TotalCredit = originalDebit,
+            Revision = 1,
+            ReversalOfEntryId = original.Id,
+            Lines = original.Lines.Select(line => new JournalLine
+            {
+                TenantId = tenantId,
+                CompanyId = companyId,
+                AccountId = line.AccountId,
+                TransactionCurrencyCode = line.TransactionCurrencyCode,
+                Debit = line.Credit,
+                Credit = line.Debit,
+                FunctionalDebit = line.FunctionalCredit,
+                FunctionalCredit = line.FunctionalDebit,
+                ExchangeRate = line.ExchangeRate,
+                Description = line.Description
+            }).ToList()
+        };
+
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        db.JournalEntries.Add(reversal);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            if (currentTenant.UserId is long actorUserId)
+            {
+                db.Notifications.Add(new AppNotification
+                {
+                    TenantId = tenantId,
+                    UserId = actorUserId,
+                    Title = "Journal reversal posted",
+                    Message =
+                        $"Posted reversal #{reversal.Id} on {reversal.EntryDate:yyyy-MM-dd} for journal entry #{original.Id} " +
+                        $"\"{original.Description}\" dated {original.EntryDate:yyyy-MM-dd}.",
+                    Category = "accounting",
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (
+            exception.InnerException is PostgresException
+            {
+                SqlState: PostgresErrorCodes.UniqueViolation,
+                ConstraintName: "UX_JournalEntries_TenantId_CompanyId_ReversalOfEntryId"
+            })
+        {
+            throw new AccountingConflictException("This journal entry has already been reversed.");
+        }
+
+        return ToDto(reversal);
     }
 
     public async Task<JournalEntryDto?> PostAsync(
@@ -2080,6 +2195,55 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
         }
     }
 
+    private async Task<JournalEntryDto[]> ToDtosWithReversalsAsync(
+        IReadOnlyCollection<JournalEntry> entries,
+        CancellationToken cancellationToken)
+    {
+        var entryIds = entries.Select(entry => entry.Id).ToArray();
+        var reversalIds = await db.JournalEntries.AsNoTracking()
+            .Where(entry => entry.ReversalOfEntryId.HasValue &&
+                entryIds.Contains(entry.ReversalOfEntryId.Value))
+            .Select(entry => new { OriginalId = entry.ReversalOfEntryId!.Value, ReversalId = entry.Id })
+            .ToDictionaryAsync(entry => entry.OriginalId, entry => entry.ReversalId, cancellationToken);
+        return entries.Select(entry => ToDto(entry) with
+        {
+            ReversedByEntryId = reversalIds.TryGetValue(entry.Id, out var reversalId)
+                ? reversalId
+                : null
+        }).ToArray();
+    }
+
+    private async Task<bool> IsOperationalJournalEntryAsync(
+        long companyId,
+        long entryId,
+        CancellationToken cancellationToken) =>
+        await db.SalesInvoices.AnyAsync(
+            item => item.CompanyId == companyId && item.JournalEntryId == entryId, cancellationToken) ||
+        await db.SalesCreditNotes.AnyAsync(
+            item => item.CompanyId == companyId && item.JournalEntryId == entryId, cancellationToken) ||
+        await db.PurchaseBills.AnyAsync(
+            item => item.CompanyId == companyId && item.JournalEntryId == entryId, cancellationToken) ||
+        await db.Payments.AnyAsync(
+            item => item.CompanyId == companyId && item.JournalEntryId == entryId, cancellationToken) ||
+        await db.CustomerRefunds.AnyAsync(
+            item => item.CompanyId == companyId && item.JournalEntryId == entryId, cancellationToken) ||
+        await db.InventoryCounts.AnyAsync(
+            item => item.CompanyId == companyId && item.JournalEntryId == entryId, cancellationToken) ||
+        await db.StockMovements.AnyAsync(
+            item => item.CompanyId == companyId && item.JournalEntryId == entryId, cancellationToken) ||
+        await db.ExpenseReports.AnyAsync(
+            item => item.CompanyId == companyId &&
+                (item.JournalEntryId == entryId || item.ReimbursementJournalEntryId == entryId),
+            cancellationToken) ||
+        await db.FixedAssetDepreciations.AnyAsync(
+            item => item.CompanyId == companyId && item.JournalEntryId == entryId, cancellationToken) ||
+        await db.FixedAssets.AnyAsync(
+            item => item.CompanyId == companyId &&
+                (item.AcquisitionJournalEntryId == entryId || item.DisposalJournalEntryId == entryId),
+            cancellationToken) ||
+        await db.FiscalYearClosings.AnyAsync(
+            item => item.CompanyId == companyId && item.JournalEntryId == entryId, cancellationToken);
+
     private async Task SaveAsync(CancellationToken cancellationToken)
     {
         try
@@ -2147,5 +2311,6 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
                 .Select(line => new JournalLineDto(
                     line.Id, line.AccountId, line.TransactionCurrencyCode, line.Debit, line.Credit,
                     line.FunctionalDebit, line.FunctionalCredit, line.ExchangeRate, line.Description))
-                .ToArray());
+                .ToArray(),
+            entry.ReversalOfEntryId);
 }

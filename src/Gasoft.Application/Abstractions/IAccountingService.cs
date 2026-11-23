@@ -115,5 +115,10 @@ public interface IAccountingService
         int pageSize,
         CancellationToken cancellationToken);
     Task<JournalEntryDto?> GetJournalEntryAsync(long companyId, long entryId, CancellationToken cancellationToken);
+    Task<JournalEntryDto?> ReverseJournalEntryAsync(
+        long companyId,
+        long entryId,
+        ReverseJournalEntryRequest request,
+        CancellationToken cancellationToken);
     Task<JournalEntryDto?> PostAsync(long companyId, long entryId, CancellationToken cancellationToken);
 }

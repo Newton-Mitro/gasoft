@@ -836,6 +836,35 @@ public static class AccountingEndpoints
             }
         });
 
+        companies.MapPost("/journal-entries/{entryId:long}/reverse", async (
+            long companyId,
+            long entryId,
+            ReverseJournalEntryRequest request,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var entry = await service.ReverseJournalEntryAsync(
+                    companyId, entryId, request, cancellationToken);
+                return entry is null ? Results.NotFound() : Results.Created(
+                    $"/api/v1/companies/{companyId}/journal-entries/{entry.Id}",
+                    entry);
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (AccountingConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return Results.NotFound(new { error = exception.Message });
+            }
+        });
+
         companies.MapPost("/journal-entries/{entryId:long}/post", async (
             long companyId,
             long entryId,
