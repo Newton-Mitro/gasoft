@@ -1,7 +1,9 @@
 -- Sample master data for Gasoft's PostgreSQL database.
 -- Apply the EF Core migrations first, then replace these IDs with an existing
--- tenant/company pair. The script inserts missing codes and leaves existing
--- records unchanged.
+-- tenant/company pair. Existing records are preserved except NULL company
+-- prices, which are filled with the illustrative amounts below.
+-- Selling prices are illustrative demo values in the company's functional
+-- currency; review them before using the items for live sales.
 --
 -- To find IDs:
 -- SELECT "Id", "Name" FROM "Tenants" ORDER BY "Id";
@@ -77,6 +79,34 @@ BEGIN
      AND category."Code" = seed."CategoryCode"
     WHERE TRUE
     ON CONFLICT ("TenantId", "Sku") DO NOTHING;
+
+    -- Seed illustrative company-specific selling prices. Fill prior NULL
+    -- placeholders, but preserve any price already configured in Inventory.
+    INSERT INTO "CompanyItemPrices"
+        ("TenantId", "CompanyId", "ItemId", "UnitSellingPrice", "CurrencyCode")
+    SELECT
+        target_tenant_id,
+        target_company_id,
+        item."Id",
+        seed."UnitSellingPrice",
+        company."FunctionalCurrencyCode"
+    FROM "Companies" AS company
+    JOIN (VALUES
+        ('PAPER-A4', 75.00::numeric),
+        ('PEN-BLUE', 20.00::numeric),
+        ('MOUSE-USB', 900.00::numeric),
+        ('WATER-BOX', 300.00::numeric)
+    ) AS seed("Sku", "UnitSellingPrice")
+      ON TRUE
+    JOIN "Items" AS item
+      ON item."TenantId" = target_tenant_id
+     AND item."Sku" = seed."Sku"
+    WHERE company."TenantId" = target_tenant_id
+      AND company."Id" = target_company_id
+    ON CONFLICT ("TenantId", "CompanyId", "ItemId") DO UPDATE
+    SET "UnitSellingPrice" = EXCLUDED."UnitSellingPrice",
+        "CurrencyCode" = EXCLUDED."CurrencyCode"
+    WHERE "CompanyItemPrices"."UnitSellingPrice" IS NULL;
 
     INSERT INTO "Warehouses" ("TenantId", "CompanyId", "Code", "Name")
     VALUES (target_tenant_id, target_company_id, 'MAIN', 'Main Warehouse')

@@ -618,13 +618,16 @@
 .receipt-total strong {
   font-size: 22px;
 }
-@media (max-width: 1050px) {
+@media (max-width: 1280px) {
   .pos-layout {
     grid-template-columns: minmax(0, 1fr);
   }
   .pos-catalog,
   .pos-checkout {
     height: auto;
+  }
+  .pos-cart {
+    flex: none;
   }
   .pos-item-grid {
     flex: initial;
