@@ -220,6 +220,91 @@
         <p class="field-validation-error" role="alert">{{ fieldMessages('cart')[0] }}</p>
       }
 
+      <section class="pos-quick-settings" aria-label="Register options">
+        <div class="pos-quick-settings-heading">
+          <strong>For this register</strong>
+          <small>Changes here don’t update company defaults.</small>
+        </div>
+        <div class="pos-quick-settings-grid">
+          <label class="customer-field">
+            Warehouse
+            <select
+              appSearchableSelect
+              name="warehouseId"
+              required
+              aria-label="Warehouse"
+              [(ngModel)]="warehouseId"
+              (ngModelChange)="clearFieldError('warehouseId')"
+            >
+              <option [ngValue]="null">Select warehouse</option>
+              @for (option of options['warehouses']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            @if (fieldMessages('warehouseId').length) {
+              <small class="field-validation-error" role="alert">{{ fieldMessages('warehouseId')[0] }}</small>
+            }
+          </label>
+          <label class="customer-field">
+            Journal
+            <select
+              appSearchableSelect
+              name="journalId"
+              required
+              aria-label="Journal"
+              [(ngModel)]="journalId"
+              (ngModelChange)="clearFieldError('journalId')"
+            >
+              <option [ngValue]="null">Select journal</option>
+              @for (option of options['journals']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            @if (fieldMessages('journalId').length) {
+              <small class="field-validation-error" role="alert">{{ fieldMessages('journalId')[0] }}</small>
+            }
+          </label>
+          <label class="customer-field">
+            Open accounting period
+            <select
+              appSearchableSelect
+              name="accountingPeriodId"
+              required
+              aria-label="Open accounting period"
+              [(ngModel)]="accountingPeriodId"
+              (ngModelChange)="clearFieldError('accountingPeriodId')"
+            >
+              <option [ngValue]="null">Select period</option>
+              @for (option of options['periods']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            @if (fieldMessages('accountingPeriodId').length) {
+              <small class="field-validation-error" role="alert">{{ fieldMessages('accountingPeriodId')[0] }}</small>
+            }
+          </label>
+          <label class="customer-field">
+            Cash / card account
+            <select
+              appSearchableSelect
+              name="settlementAccountId"
+              required
+              aria-label="Cash or card account"
+              [(ngModel)]="settlementAccountId"
+              (ngModelChange)="clearFieldError('settlementAccountId')"
+            >
+              <option [ngValue]="null">Select account</option>
+              @for (option of options['assetAccounts']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            @if (fieldMessages('settlementAccountId').length) {
+              <small class="field-validation-error" role="alert">{{ fieldMessages('settlementAccountId')[0] }}</small>
+            }
+          </label>
+        </div>
+      </section>
+
       <div class="customer-field">
         <label for="pos-customer"
           >Customer <span class="required-marker" aria-label="required">*</span></label
@@ -233,42 +318,19 @@
           [(ngModel)]="partyId"
         >
           <option [ngValue]="null">Choose a customer</option>
+          @if (walkInCustomer) {
+            <option [ngValue]="walkInCustomer.id">Walk-in customer</option>
+          }
           @for (customer of customers; track customer.id) {
             <option [ngValue]="customer.id">
               {{ customer.partyNo }} · {{ customer.displayName }}
             </option>
           }
         </select>
-        @if (!customers.length) {
+        @if (walkInCustomer) {
+          <small>Choose Walk-in customer when the buyer’s details are not needed.</small>
+        } @else if (!customers.length) {
           <small>Add a customer record before taking a sale.</small>
-        }
-      </div>
-
-      <div class="pos-settings-summary">
-        <span class="settings-summary-icon"
-          ><i class="fa-solid fa-sliders" aria-hidden="true"></i
-        ></span>
-        <span class="settings-summary-copy">
-          <strong>POS settings</strong>
-          <small>
-            {{ setupReady ? 'Saved for this company' : 'Defaults are required before checkout' }}
-          </small>
-        </span>
-        @if (setupReady) {
-          <span class="settings-status settings-ready">
-            <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Ready
-          </span>
-        } @else {
-          <span class="settings-status">
-            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Required
-          </span>
-        }
-        @if (auth.isAdministrator()) {
-          <a class="settings-edit-button" routerLink="/settings/pos">Manage</a>
-        } @else if (!setupReady) {
-          <span class="settings-summary-copy">
-            <small>Ask a company administrator to configure defaults.</small>
-          </span>
         }
       </div>
 
@@ -282,7 +344,7 @@
       @if (cart.length && !canCheckout) {
         <p class="checkout-hint">
           <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-          Add items with stock, choose a customer, and complete the required setup to continue.
+          Add items with stock, choose a customer or walk-in, and complete the required setup to continue.
         </p>
       }
       <button

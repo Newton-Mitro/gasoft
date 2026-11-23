@@ -6,6 +6,7 @@ namespace Gasoft.Application.Abstractions;
 public interface IPartyService
 {
     Task<IReadOnlyList<PartyDto>> GetAllAsync(CancellationToken cancellationToken);
+    Task<PartyDto> GetOrCreateWalkInCustomerAsync(CancellationToken cancellationToken);
     Task<PagedResultDto<PartyDto>> GetPageAsync(int page, int pageSize, CancellationToken cancellationToken);
     Task<PartyDto?> GetAsync(long partyId, CancellationToken cancellationToken);
     Task<PartyDto> CreateAsync(CreatePartyRequest request, CancellationToken cancellationToken);

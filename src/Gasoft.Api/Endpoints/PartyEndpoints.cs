@@ -15,6 +15,21 @@ public static class PartyEndpoints
                 Results.Ok(await service.GetAllAsync(cancellationToken)))
             .WithName("GetParties");
 
+        parties.MapPost("/walk-in", async (
+            IPartyService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                return Results.Ok(await service.GetOrCreateWalkInCustomerAsync(cancellationToken));
+            }
+            catch (PartyConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+        })
+        .WithName("GetOrCreateWalkInCustomer");
+
         parties.MapGet("/page", async (
             int page,
             int pageSize,

@@ -1,3 +1,4 @@
+import { NEVER } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { FormValidationService } from '../../../../shared/services/form-validation.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
@@ -31,6 +32,59 @@ describe('PosPageComponent checkout validation', () => {
     expect(validation.messagesFor('partyId')).toEqual(['Select a customer.']);
     expect(validation.messagesFor('cart')).toEqual(['Add at least one item to the sale.']);
     expect(validation.messagesFor('warehouseId')).toEqual(['Select a warehouse.']);
+  });
+
+  it('accepts a walk-in customer for checkout', () => {
+    const page = createPage(vi.fn());
+    page.walkInCustomer = { id: 19, isCustomer: true } as Party;
+    page.partyId = 19;
+
+    page.checkout();
+
+    expect(validation.messagesFor('partyId')).toEqual([]);
+  });
+
+  it('uses the register selections when building a checkout request', () => {
+    const checkout = vi.fn(() => NEVER);
+    const page = createPage(checkout);
+    page.walkInCustomer = { id: 19, isCustomer: true } as Party;
+    page.partyId = 19;
+    page.warehouseId = 2;
+    page.journalId = 3;
+    page.accountingPeriodId = 4;
+    page.revenueAccountId = 5;
+    page.receivableAccountId = 6;
+    page.settlementAccountId = 7;
+    page.inventoryAccountId = 8;
+    page.costOfGoodsSoldAccountId = 9;
+    page.options = {
+      warehouses: [{ value: 2, label: 'Main warehouse' }],
+      journals: [{ value: 3, label: 'Sales journal' }],
+      periods: [{ value: 4, label: 'Open period' }],
+      revenueAccounts: [{ value: 5, label: 'Sales revenue' }],
+      assetAccounts: [
+        { value: 6, label: 'Receivables' },
+        { value: 7, label: 'Cash' },
+        { value: 8, label: 'Inventory' },
+      ],
+      expenseAccounts: [{ value: 9, label: 'Cost of goods sold' }],
+      taxCodes: [],
+    };
+    page.balances = [{ itemId: 11, warehouseId: 2, quantity: 3 } as InventoryBalance];
+    page.cart = [{
+      item: { id: 11, sku: 'SKU-11', name: 'Item' } as Item,
+      quantity: 1,
+      unitPrice: 12,
+    }];
+
+    page.checkout();
+
+    expect(checkout).toHaveBeenCalledWith(expect.objectContaining({
+      warehouseId: 2,
+      journalId: 3,
+      accountingPeriodId: 4,
+      settlementAccountId: 7,
+    }));
   });
 
   it('rejects quantities above warehouse stock and invalid unit prices', () => {

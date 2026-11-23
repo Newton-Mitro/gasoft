@@ -16,6 +16,15 @@ export class PartyService {
     return this.api.get<unknown>(ENDPOINT, false).pipe(map(toParties));
   }
 
+  getWalkInCustomer(): Observable<Party> {
+    return this.api.post<unknown>(`${ENDPOINT}/walk-in`, {}, false).pipe(
+      map(result => {
+        if (!isParty(result)) throw new Error('The walk-in customer response contains an invalid record.');
+        return result;
+      }),
+    );
+  }
+
   getPage(page: number, pageSize: number): Observable<PagedResult<Party>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.api.get<unknown>(`${ENDPOINT}/page`, false, params)

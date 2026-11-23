@@ -54,9 +54,13 @@ If you are starting with a fresh database, this creates the schema and seeds ISO
 
 The notification inbox stores important workflow events (such as postings and period/year status changes) and account-security events. Inbox items are personal to each user and can be marked read or dismissed. Tenant Owners and Admins can review tenant-scoped create, update, delete, posting, status-change, and authentication records in **Administration → Audit history**. Changes to sensitive credential and bank-account fields are excluded from audit details.
 
+### Point of sale
+
+The point-of-sale checkout includes a **Walk-in customer** choice for sales where buyer details are not needed. It reuses a tenant-wide Walk-in Customer record, created automatically the first time the POS loads, so invoices and payments remain linked to a customer.
+
 ### Accounting period controls
 
-New organizations are created with starter account groups and accounts, plus General, Sales, Purchase, Bank, Cash receipts, and Cash payments journals. Fiscal years and accounting periods are not created automatically; add them before entering transactions.
+New organizations are created with starter account groups and accounts, plus General, Sales, Purchase, Bank, Cash receipts, and Cash payments journals. Creating a fiscal year automatically creates contiguous monthly accounting periods from its start date through its end date; the final period may be shorter. Add fiscal years before entering transactions.
 
 Accounting periods can be closed or reopened by workspace Owners and Admins. A reason is required and each change is recorded in the period status history. The close checklist blocks periods with draft journal entries or unreconciled imported bank statement transactions; closed periods reject postings until an authorized user reopens them.
 

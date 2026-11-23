@@ -3312,6 +3312,40 @@ html[data-theme='dark'] .app-shell .main-content .pos-search kbd {
   box-shadow: var(--surface-shadow);
 }
 
+:root .content-area .pos-no-items {
+  border: 1px dotted var(--border);
+}
+
+:root .content-area .pos-quick-settings {
+  margin-bottom: 12px;
+}
+
+:root .content-area .pos-quick-settings-heading {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+:root .content-area .pos-quick-settings-heading strong {
+  color: var(--text-strong);
+  font-size: 11px;
+}
+
+:root .content-area .pos-quick-settings-heading small {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+:root .content-area .pos-quick-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+:root .content-area .pos-quick-settings-grid .customer-field {
+  margin: 0;
+}
+
 :root .content-area
   :is(
     .audit-filters,

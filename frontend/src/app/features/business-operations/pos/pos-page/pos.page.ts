@@ -1,7 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../../core/api.service';
 import { AuthService } from '../../../../core/auth.service';
@@ -38,7 +37,7 @@ interface CartLine {
 
 @Component({
   selector: 'app-pos-page',
-  imports: [FormsModule, FieldValidationDirective, SearchableSelectDirective, RouterLink],
+  imports: [FormsModule, FieldValidationDirective, SearchableSelectDirective],
   templateUrl: './pos.page.html',
   styleUrl: './pos.page.css',
 })
@@ -48,13 +47,13 @@ export class PosPageComponent implements OnInit {
   readonly title = 'Point of sale';
   items: Item[] = [];
   customers: Party[] = [];
+  walkInCustomer: Party | null = null;
   balances: InventoryBalance[] = [];
   options: Record<string, Choice[]> = {};
   cart: CartLine[] = [];
   search = '';
   loading = true;
   saving = false;
-  setupReady = false;
   error = '';
   functionalCurrencyCode = '';
   companyName = '';
@@ -94,6 +93,7 @@ export class PosPageComponent implements OnInit {
       items: this.itemsApi.getAll(),
       balances: this.balancesApi.getAll(),
       parties: this.partiesApi.getAll(),
+      walkInCustomer: this.partiesApi.getWalkInCustomer(),
       companies: this.api.get<CompanyOption[]>('/api/v1/tenant/companies', false),
       warehouses: this.optionData.getOptions('warehouses'),
       journals: this.optionData.getOptions('journals'),
@@ -108,7 +108,10 @@ export class PosPageComponent implements OnInit {
       next: (result) => {
         this.items = result.items;
         this.balances = result.balances;
-        this.customers = result.parties.filter((party) => party.isCustomer);
+        this.walkInCustomer = result.walkInCustomer;
+        this.customers = result.parties.filter(
+          (party) => party.isCustomer && party.id !== this.walkInCustomer?.id,
+        );
         const company = result.companies.find((option) => option.id === companyId);
         if (!company) {
           this.error = 'The selected organization could not be found.';
@@ -129,7 +132,6 @@ export class PosPageComponent implements OnInit {
           taxCodes: result.taxCodes,
         };
         this.setSetupValues(result.posSettings);
-        this.setupReady = this.setupComplete;
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -177,8 +179,7 @@ export class PosPageComponent implements OnInit {
     return (
       this.cart.length > 0 &&
       this.setupComplete &&
-      this.setupReady &&
-      isPositiveId(this.partyId) &&
+      this.hasCustomerSelection(this.partyId) &&
       this.cart.every(
         (line) =>
           Number.isFinite(Number(line.quantity)) &&
@@ -351,7 +352,7 @@ export class PosPageComponent implements OnInit {
 
   private validateCheckout(): FormValidationErrors {
     const errors: FormValidationErrors = {};
-    if (!this.customers.some((customer) => customer.id === this.partyId)) {
+    if (!this.hasCustomerSelection(this.partyId)) {
       errors['partyId'] = ['Select a customer.'];
     }
     if (!this.cart.length) errors['cart'] = ['Add at least one item to the sale.'];
@@ -447,6 +448,11 @@ export class PosPageComponent implements OnInit {
       isPositiveId(value) &&
       (this.options[source] ?? []).some((option) => Number(option.value) === value)
     );
+  }
+
+  private hasCustomerSelection(value: number | null): boolean {
+    return isPositiveId(value) &&
+      (this.walkInCustomer?.id === value || this.customers.some((customer) => customer.id === value));
   }
 
   private setSetupValues(settings: PosSettings): void {

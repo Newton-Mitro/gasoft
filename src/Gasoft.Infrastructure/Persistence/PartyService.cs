@@ -9,6 +9,8 @@ namespace Gasoft.Infrastructure.Persistence;
 
 public sealed class PartyService(AppDbContext dbContext, ICurrentTenant currentTenant) : IPartyService
 {
+    private const string WalkInPartyNo = "WALK-IN";
+
     public async Task<IReadOnlyList<PartyDto>> GetAllAsync(CancellationToken cancellationToken)
     {
         EnsureTenant();
@@ -25,6 +27,40 @@ public sealed class PartyService(AppDbContext dbContext, ICurrentTenant currentT
                 party.Phone,
                 party.DefaultCurrencyCode))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PartyDto> GetOrCreateWalkInCustomerAsync(CancellationToken cancellationToken)
+    {
+        var tenantId = EnsureTenant();
+        var existing = await dbContext.Parties.AsNoTracking()
+            .SingleOrDefaultAsync(party => party.PartyNo == WalkInPartyNo, cancellationToken);
+        if (existing is not null)
+            return ToWalkInCustomerDto(existing);
+
+        var walkInCustomer = new Party
+        {
+            TenantId = tenantId,
+            PartyNo = WalkInPartyNo,
+            DisplayName = "Walk-in Customer",
+            IsCustomer = true,
+            IsSupplier = false
+        };
+        dbContext.Parties.Add(walkInCustomer);
+        try
+        {
+            await SaveAsync(cancellationToken);
+        }
+        catch (PartyConflictException)
+        {
+            dbContext.Entry(walkInCustomer).State = EntityState.Detached;
+            var concurrent = await dbContext.Parties.AsNoTracking()
+                .SingleOrDefaultAsync(party => party.PartyNo == WalkInPartyNo, cancellationToken);
+            if (concurrent is not null)
+                return ToWalkInCustomerDto(concurrent);
+            throw;
+        }
+
+        return ToDto(walkInCustomer);
     }
 
     public async Task<PagedResultDto<PartyDto>> GetPageAsync(
@@ -332,6 +368,13 @@ public sealed class PartyService(AppDbContext dbContext, ICurrentTenant currentT
         party.Email,
         party.Phone,
         party.DefaultCurrencyCode);
+
+    private static PartyDto ToWalkInCustomerDto(Party party)
+    {
+        if (!party.IsCustomer)
+            throw new PartyConflictException("The reserved WALK-IN party number is already used by a non-customer.");
+        return ToDto(party);
+    }
 
     private static PartyAddressDto ToAddressDto(PartyAddress address) => new(
         address.Id,

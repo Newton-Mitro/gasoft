@@ -53,6 +53,32 @@ describe('PartyService', () => {
     ]);
   });
 
+  it('gets or creates the tenant-wide walk-in customer', () => {
+    const calls: unknown[][] = [];
+    const walkIn = {
+      id: 8,
+      partyNo: 'WALK-IN',
+      displayName: 'Walk-in Customer',
+      isCustomer: true,
+      isSupplier: false,
+      email: null,
+      phone: null,
+      defaultCurrencyCode: null,
+    };
+    const api = {
+      post: (endpoint: string, body: unknown, companyScoped: boolean) => {
+        calls.push([endpoint, body, companyScoped]);
+        return of(walkIn);
+      },
+    } as unknown as ApiService;
+    let result: unknown;
+
+    new PartyService(api).getWalkInCustomer().subscribe(value => result = value);
+
+    expect(result).toEqual(walkIn);
+    expect(calls).toEqual([['/api/v1/parties/walk-in', {}, false]]);
+  });
+
   it('rejects malformed party records', () => {
     const api = ({ get: () => of([{ id: 5, partyNo: 'C-5' }]) }) as unknown as ApiService;
     let receivedError: unknown;

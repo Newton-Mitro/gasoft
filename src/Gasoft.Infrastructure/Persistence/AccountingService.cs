@@ -1246,7 +1246,35 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
             EndsOn = request.EndsOn
         };
         db.FiscalYears.Add(year);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await SaveAsync(cancellationToken);
+
+        var periodStart = year.StartsOn;
+        var periodNumber = 0;
+        while (true)
+        {
+            var periodEnd = periodStart.Year == year.EndsOn.Year && periodStart.Month == year.EndsOn.Month
+                ? year.EndsOn
+                : year.StartsOn.AddMonths(++periodNumber).AddDays(-1);
+            if (periodEnd > year.EndsOn)
+                periodEnd = year.EndsOn;
+
+            db.AccountingPeriods.Add(new AccountingPeriod
+            {
+                TenantId = tenantId,
+                CompanyId = companyId,
+                FiscalYearId = year.Id,
+                StartsOn = periodStart,
+                EndsOn = periodEnd
+            });
+
+            if (periodEnd == year.EndsOn)
+                break;
+            periodStart = periodEnd.AddDays(1);
+        }
+
+        await SaveAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return new FiscalYearDto(year.Id, companyId, year.StartsOn, year.EndsOn, year.Status);
     }
 
