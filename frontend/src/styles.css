@@ -3204,6 +3204,11 @@ html[data-theme='dark'] .app-shell .main-content :is(.stock-pill, .settings-stat
   color: var(--success-text);
 }
 
+html[data-theme='dark'] .app-shell .main-content .stock-pill.stock-low {
+  color: var(--warning-text);
+  background: color-mix(in srgb, var(--warning-text) 10%, transparent);
+}
+
 html[data-theme='dark']
   .app-shell
   .main-content
@@ -3225,7 +3230,7 @@ html[data-theme='dark']
     .stock-pill.stock-empty,
     .clear-cart,
     .remove-item:hover,
-    .customer-field small,
+    .customer-field small.field-validation-error,
     .settings-status:not(.settings-ready)
   ) {
   color: var(--error-text);
@@ -3317,7 +3322,7 @@ html[data-theme='dark'] .app-shell .main-content .pos-search kbd {
 }
 
 :root .content-area .pos-quick-settings {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 :root .content-area .pos-quick-settings-heading {

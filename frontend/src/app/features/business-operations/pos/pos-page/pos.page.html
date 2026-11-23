@@ -69,7 +69,11 @@
             <span class="pos-item-copy">
               <strong>{{ item.name }}</strong>
               <small>{{ item.sku }} <span>·</span> {{ item.baseUnitCode }}</small>
-              <span class="stock-pill" [class.stock-empty]="availableQuantity(item.id) <= 0">
+              <span
+                class="stock-pill"
+                [class.stock-empty]="availableQuantity(item.id) <= 0"
+                [class.stock-low]="availableQuantity(item.id) > 0 && availableQuantity(item.id) <= 10"
+              >
                 <i class="fa-solid fa-circle" aria-hidden="true"></i>
                 {{
                   availableQuantity(item.id) > 0
