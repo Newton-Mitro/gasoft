@@ -63,6 +63,7 @@ public sealed class AppDbContext(
     public DbSet<UnitOfMeasure> UnitsOfMeasure => Set<UnitOfMeasure>();
     public DbSet<ItemCategory> ItemCategories => Set<ItemCategory>();
     public DbSet<Item> Items => Set<Item>();
+    public DbSet<CompanyItemPrice> CompanyItemPrices => Set<CompanyItemPrice>();
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<WarehouseLocation> WarehouseLocations => Set<WarehouseLocation>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
@@ -1393,6 +1394,28 @@ public sealed class AppDbContext(
                 .HasPrincipalKey(x => new { x.TenantId, x.Id })
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<UnitOfMeasure>().WithMany().HasForeignKey(x => x.BaseUnitCode).OnDelete(DeleteBehavior.Restrict);
+            entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
+        });
+
+        builder.Entity<CompanyItemPrice>(entity =>
+        {
+            entity.HasKey(x => new { x.TenantId, x.CompanyId, x.ItemId });
+            entity.Property(x => x.UnitSellingPrice).HasPrecision(20, 6);
+            entity.Property(x => x.CurrencyCode).HasMaxLength(3).IsFixedLength().IsRequired();
+            entity.ToTable(table => table.HasCheckConstraint(
+                "CK_CompanyItemPrices_UnitSellingPrice",
+                "\"UnitSellingPrice\" IS NULL OR \"UnitSellingPrice\" >= 0"));
+            entity.HasOne<Company>()
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.CompanyId })
+                .HasPrincipalKey(x => new { x.TenantId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Item)
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.ItemId })
+                .HasPrincipalKey(x => new { x.TenantId, x.Id })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Currency>().WithMany().HasForeignKey(x => x.CurrencyCode).OnDelete(DeleteBehavior.Restrict);
             entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
         });
 

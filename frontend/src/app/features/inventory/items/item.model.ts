@@ -7,6 +7,8 @@ export interface Item {
   name: string;
   baseUnitCode: string;
   costingMethod: CostingMethod;
+  unitSellingPrice: number | null;
+  sellingPriceCurrencyCode: string | null;
 }
 
 export interface ItemPayload {
@@ -15,4 +17,5 @@ export interface ItemPayload {
   name: string;
   baseUnitCode: string;
   costingMethod: CostingMethod;
+  unitSellingPrice: number | null;
 }

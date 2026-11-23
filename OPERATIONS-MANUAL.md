@@ -64,7 +64,7 @@ Use **Customers & suppliers** to add or edit party details, indicate whether a p
 
 ### Point of sale
 
-Open **Sales & Receivables → Point of sale**. Search by item name or SKU, add items, and enter quantities and unit prices. Select the customer, warehouse, open accounting period, journal, and posting accounts before completing checkout. A tax code is optional; when selected, choose its tax liability account. Checkout posts the sales invoice and payment, allocates the payment to the invoice, and issues the sold quantities from the selected warehouse in one transaction. If validation or stock posting fails, the checkout is rolled back. Use **Print receipt** after a successful sale.
+Open **Inventory → Items** and set each item's selling price for the selected company before selling it. Prices use that company's functional currency; an item with no current-company price cannot be added to the register. In **Sales & Receivables → Point of sale**, search by item name or SKU and add priced items. Their configured prices prefill the cart and can be adjusted for the sale. Select the customer, warehouse, open accounting period, journal, and posting accounts before completing checkout. A tax code is optional; when selected, choose its tax liability account. Checkout posts the sales invoice and payment, allocates the payment to the invoice, and issues the sold quantities from the selected warehouse in one transaction. If validation or stock posting fails, the checkout is rolled back. Use **Print receipt** after a successful sale.
 
 ### Sales invoices
 
@@ -94,7 +94,7 @@ Create a credit note from an eligible posted invoice. Select the invoice and ent
 
 ### Inventory setup and stock movements
 
-Create item categories, inventory items, warehouses, and optional warehouse locations before recording movements. Inventory items include an SKU, category, base unit, and costing method.
+Create item categories, inventory items, warehouses, and optional warehouse locations before recording movements. Inventory items include an SKU, category, base unit, and costing method. Configure a selling price for each company in its functional currency from the item form; leaving it blank prevents the item from being sold in that company's POS.
 
 Use **Stock movements → Receive stock** or **Issue stock** to record a movement number, date, item, warehouse, and quantity. Follow the form's prompts for the related journal or period. Posted movements appear in the movement history and affect stock balances.
 

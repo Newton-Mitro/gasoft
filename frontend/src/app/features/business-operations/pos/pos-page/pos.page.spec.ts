@@ -44,6 +44,41 @@ describe('PosPageComponent checkout validation', () => {
     expect(validation.messagesFor('partyId')).toEqual([]);
   });
 
+  it('prefills the configured company selling price when adding an item', () => {
+    const page = createPage(vi.fn());
+    page.functionalCurrencyCode = 'USD';
+    page.balances = [{ itemId: 11, warehouseId: 2, quantity: 3 } as InventoryBalance];
+    const item = {
+      id: 11,
+      sku: 'SKU-11',
+      name: 'Item',
+      unitSellingPrice: 12.5,
+      sellingPriceCurrencyCode: 'USD',
+    } as Item;
+
+    page.addItem(item);
+
+    expect(page.cart).toEqual([{ item, quantity: 1, unitPrice: 12.5 }]);
+  });
+
+  it('does not add an item without a configured selling price', () => {
+    const page = createPage(vi.fn());
+    page.functionalCurrencyCode = 'USD';
+    const item = {
+      id: 11,
+      name: 'Item',
+      unitSellingPrice: null,
+      sellingPriceCurrencyCode: 'USD',
+    } as Item;
+
+    page.addItem(item);
+
+    expect(page.cart).toEqual([]);
+    expect(page.notifications.error).toHaveBeenCalledWith(
+      'Set a selling price for Item in Inventory items before selling it.',
+    );
+  });
+
   it('uses the register selections when building a checkout request', () => {
     const checkout = vi.fn(() => NEVER);
     const page = createPage(checkout);
@@ -72,10 +107,17 @@ describe('PosPageComponent checkout validation', () => {
     };
     page.balances = [{ itemId: 11, warehouseId: 2, quantity: 3 } as InventoryBalance];
     page.cart = [{
-      item: { id: 11, sku: 'SKU-11', name: 'Item' } as Item,
+      item: {
+        id: 11,
+        sku: 'SKU-11',
+        name: 'Item',
+        unitSellingPrice: 12,
+        sellingPriceCurrencyCode: 'USD',
+      } as Item,
       quantity: 1,
       unitPrice: 12,
     }];
+    page.functionalCurrencyCode = 'USD';
 
     page.checkout();
 
@@ -101,7 +143,16 @@ describe('PosPageComponent checkout validation', () => {
     page.inventoryAccountId = 8;
     page.costOfGoodsSoldAccountId = 9;
     page.balances = [{ itemId: 11, warehouseId: 2, quantity: 2 } as InventoryBalance];
-    page.cart = [{ item: { id: 11 } as Item, quantity: 3, unitPrice: -1 }];
+    page.functionalCurrencyCode = 'USD';
+    page.cart = [{
+      item: {
+        id: 11,
+        unitSellingPrice: 12,
+        sellingPriceCurrencyCode: 'USD',
+      } as Item,
+      quantity: 3,
+      unitPrice: -1,
+    }];
 
     page.checkout();
 
@@ -111,6 +162,30 @@ describe('PosPageComponent checkout validation', () => {
     ]);
     expect(validation.messagesFor('lines[0].unitPrice')).toEqual([
       'Enter a valid unit price of zero or more.',
+    ]);
+  });
+
+  it('rejects a cart item without a configured company selling price', () => {
+    const checkout = vi.fn();
+    const page = createPage(checkout);
+    page.customers = [{ id: 7 } as Party];
+    page.partyId = 7;
+    page.functionalCurrencyCode = 'USD';
+    page.cart = [{
+      item: {
+        id: 11,
+        unitSellingPrice: null,
+        sellingPriceCurrencyCode: 'USD',
+      } as Item,
+      quantity: 1,
+      unitPrice: 10,
+    }];
+
+    page.checkout();
+
+    expect(checkout).not.toHaveBeenCalled();
+    expect(validation.messagesFor('lines[0].unitPrice')).toEqual([
+      'Configure a selling price in the selected company currency before checkout.',
     ]);
   });
 

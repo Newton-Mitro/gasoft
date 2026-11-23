@@ -185,6 +185,7 @@ export class PosPageComponent implements OnInit {
           Number.isFinite(Number(line.quantity)) &&
           Number(line.quantity) > 0 &&
           Number(line.quantity) <= this.availableQuantity(line.item.id) &&
+          this.hasSellingPrice(line.item) &&
           line.unitPrice !== null &&
           Number.isFinite(Number(line.unitPrice)) &&
           Number(line.unitPrice) >= 0,
@@ -193,6 +194,17 @@ export class PosPageComponent implements OnInit {
   }
 
   addItem(item: Item): void {
+    if (item.unitSellingPrice === null) {
+      this.notifications.error(`Set a selling price for ${item.name} in Inventory items before selling it.`);
+      return;
+    }
+    if (item.sellingPriceCurrencyCode !== this.functionalCurrencyCode) {
+      this.notifications.error(
+        `Update the selling price for ${item.name} to the selected company's functional currency before selling it.`,
+      );
+      return;
+    }
+
     const available = this.availableQuantity(item.id);
     if (available <= 0) {
       this.notifications.error(`${item.name} is out of stock in the selected warehouse.`);
@@ -207,7 +219,7 @@ export class PosPageComponent implements OnInit {
       return;
     }
     if (line) line.quantity += 1;
-    else this.cart = [...this.cart, { item, quantity: 1, unitPrice: 0 }];
+    else this.cart = [...this.cart, { item, quantity: 1, unitPrice: item.unitSellingPrice }];
     this.formValidation.clear();
     this.lastSale = null;
   }
@@ -251,12 +263,19 @@ export class PosPageComponent implements OnInit {
       .reduce((total, balance) => total + Number(balance.quantity), 0);
   }
 
-  formatMoney(value: number | string): string {
+  hasSellingPrice(item: Item): boolean {
+    return (
+      item.unitSellingPrice !== null &&
+      item.sellingPriceCurrencyCode === this.functionalCurrencyCode
+    );
+  }
+
+  formatMoney(value: number | string, currencyCode = this.functionalCurrencyCode): string {
     const amount = Number(value);
-    if (!Number.isFinite(amount) || !this.functionalCurrencyCode) return String(value);
+    if (!Number.isFinite(amount) || !currencyCode) return String(value);
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
-      currency: this.functionalCurrencyCode,
+      currency: currencyCode,
     }).format(amount);
   }
 
@@ -432,6 +451,13 @@ export class PosPageComponent implements OnInit {
         }
       }
       if (
+        line.item.unitSellingPrice === null ||
+        line.item.sellingPriceCurrencyCode !== this.functionalCurrencyCode
+      ) {
+        errors[`lines[${index}].unitPrice`] = [
+          'Configure a selling price in the selected company currency before checkout.',
+        ];
+      } else if (
         line.unitPrice === null ||
         !Number.isFinite(Number(line.unitPrice)) ||
         Number(line.unitPrice) < 0

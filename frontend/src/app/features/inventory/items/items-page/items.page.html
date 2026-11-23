@@ -67,6 +67,7 @@
                 <th>Category</th>
                 <th>Base unit</th>
                 <th>Costing method</th>
+                <th>Selling price</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -78,6 +79,7 @@
                   <td>{{ item.categoryId }}</td>
                   <td>{{ item.baseUnitCode }}</td>
                   <td>{{ item.costingMethod }}</td>
+                  <td>{{ formatSellingPrice(item) }}</td>
                   <td>
                     <a
                       class="button secondary table-action"

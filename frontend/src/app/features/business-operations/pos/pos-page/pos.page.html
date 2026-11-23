@@ -61,14 +61,27 @@
           <button
             type="button"
             class="pos-item"
-            [disabled]="availableQuantity(item.id) <= 0"
+            [disabled]="availableQuantity(item.id) <= 0 || !hasSellingPrice(item)"
             (click)="addItem(item)"
-            [attr.aria-label]="'Add ' + item.name + ' to cart'"
+            [attr.aria-label]="
+              hasSellingPrice(item)
+                ? 'Add ' + item.name + ' to cart'
+                : 'Set a selling price for ' + item.name + ' before adding it'
+            "
           >
             <span class="pos-item-icon"><i class="fa-solid fa-box" aria-hidden="true"></i></span>
             <span class="pos-item-copy">
               <strong>{{ item.name }}</strong>
               <small>{{ item.sku }} <span>·</span> {{ item.baseUnitCode }}</small>
+              @if (item.unitSellingPrice === null) {
+                <span class="pos-item-price price-unset">Price not set</span>
+              } @else if (item.sellingPriceCurrencyCode !== functionalCurrencyCode) {
+                <span class="pos-item-price price-unset">Update price for {{ functionalCurrencyCode }}</span>
+              } @else {
+                <span class="pos-item-price">{{
+                  formatMoney(item.unitSellingPrice, item.sellingPriceCurrencyCode)
+                }}</span>
+              }
               <span
                 class="stock-pill"
                 [class.stock-empty]="availableQuantity(item.id) <= 0"

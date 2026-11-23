@@ -11,25 +11,25 @@ export class ItemService {
   constructor(private readonly api: ApiService) {}
 
   getAll(): Observable<Item[]> {
-    return this.api.get<unknown>('/api/v1/items', false).pipe(map(toItems));
+    return this.api.get<unknown>('items', true).pipe(map(toItems));
   }
 
   getPage(page: number, pageSize: number): Observable<PagedResult<Item>> {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.api.get<unknown>('/api/v1/items/page', false, params)
+    return this.api.get<unknown>('items/page', true, params)
       .pipe(map(result => parsePagedResult(result, isItem, 'inventory items')));
   }
 
   getById(id: number): Observable<Item> {
-    return this.api.get<Item>(`/api/v1/items/${id}`, false);
+    return this.api.get<Item>(`items/${id}`);
   }
 
   create(payload: ItemPayload): Observable<Item> {
-    return this.api.post<Item>('/api/v1/items', payload, false);
+    return this.api.post<Item>('items', payload);
   }
 
   update(id: number, payload: ItemPayload): Observable<Item> {
-    return this.api.put<Item>(`/api/v1/items/${id}`, payload, false);
+    return this.api.put<Item>(`items/${id}`, payload);
   }
 }
 
@@ -47,5 +47,9 @@ function isItem(value: unknown): value is Item {
     typeof row['sku'] === 'string' &&
     typeof row['name'] === 'string' &&
     typeof row['baseUnitCode'] === 'string' &&
-    (row['costingMethod'] === 'FIFO' || row['costingMethod'] === 'AVCO');
+    (row['costingMethod'] === 'FIFO' || row['costingMethod'] === 'AVCO') &&
+    (row['unitSellingPrice'] === null ||
+      typeof row['unitSellingPrice'] === 'number' && Number.isFinite(row['unitSellingPrice'])) &&
+    (row['sellingPriceCurrencyCode'] === null ||
+      typeof row['sellingPriceCurrencyCode'] === 'string');
 }

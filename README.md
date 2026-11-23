@@ -56,7 +56,7 @@ The notification inbox stores important workflow events (such as postings and pe
 
 ### Point of sale
 
-The point-of-sale checkout includes a **Walk-in customer** choice for sales where buyer details are not needed. It reuses a tenant-wide Walk-in Customer record, created automatically the first time the POS loads, so invoices and payments remain linked to a customer.
+The point-of-sale checkout includes a **Walk-in customer** choice for sales where buyer details are not needed. It reuses a tenant-wide Walk-in Customer record, created automatically the first time the POS loads, so invoices and payments remain linked to a customer. Configure selling prices per company on inventory items; the POS displays and prefills the selected company's functional-currency price and blocks items without one.
 
 ### Accounting period controls
 

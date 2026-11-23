@@ -830,11 +830,30 @@ public sealed class BillingService(
         CheckoutPosSaleRequest request,
         CancellationToken cancellationToken)
     {
-        await EnsureCompanyAsync(companyId, cancellationToken);
+        var company = await EnsureCompanyAsync(companyId, cancellationToken);
         if (request.Lines is null || request.Lines.Count is < 1 or > 100)
             throw Validation("lines", "A POS sale must contain 1–100 lines.");
+        if (!string.Equals(
+                request.CurrencyCode,
+                company.FunctionalCurrencyCode,
+                StringComparison.OrdinalIgnoreCase) ||
+            request.ExchangeRate != 1)
+            throw Validation("currencyCode", "POS sales must use the company's functional currency.");
         if (request.ReceivableAccountId == request.SettlementAccountId)
             throw Validation("settlementAccountId", "Choose a settlement account different from the receivable account.");
+        var itemIds = request.Lines.Select(line => line.ItemId).Distinct().ToArray();
+        var pricedItemIds = await db.CompanyItemPrices
+            .Where(price =>
+                price.CompanyId == companyId &&
+                price.CurrencyCode == company.FunctionalCurrencyCode &&
+                price.UnitSellingPrice.HasValue &&
+                itemIds.Contains(price.ItemId))
+            .Select(price => price.ItemId)
+            .ToHashSetAsync(cancellationToken);
+        if (pricedItemIds.Count != itemIds.Length)
+            throw Validation(
+                "lines",
+                "Configure a selling price in the selected company's functional currency for every item before checkout.");
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var invoiceLines = request.Lines.Select(line => new CreateDocumentLineRequest(

@@ -7,13 +7,15 @@ public sealed record CreateItemRequest(
     string Sku,
     string Name,
     string BaseUnitCode,
-    string CostingMethod);
+    string CostingMethod,
+    decimal? UnitSellingPrice = null);
 public sealed record UpdateItemRequest(
     long CategoryId,
     string Sku,
     string Name,
     string BaseUnitCode,
-    string CostingMethod);
+    string CostingMethod,
+    decimal? UnitSellingPrice = null);
 public sealed record CreateWarehouseRequest(string Code, string Name);
 public sealed record UpdateWarehouseRequest(string Code, string Name);
 public sealed record CreateWarehouseLocationRequest(string Code, string Name);
@@ -61,7 +63,15 @@ public sealed record PostInventoryCountRequest(
 
 public sealed record ItemCategoryDto(long Id, string Code, string Name);
 public sealed record UnitOfMeasureDto(string Code, string Name, byte DecimalPlaces);
-public sealed record ItemDto(long Id, long CategoryId, string Sku, string Name, string BaseUnitCode, string CostingMethod);
+public sealed record ItemDto(
+    long Id,
+    long CategoryId,
+    string Sku,
+    string Name,
+    string BaseUnitCode,
+    string CostingMethod,
+    decimal? UnitSellingPrice,
+    string? SellingPriceCurrencyCode);
 public sealed record WarehouseDto(long Id, long CompanyId, string Code, string Name);
 public sealed record WarehouseLocationDto(long Id, long WarehouseId, string Code, string Name);
 public sealed record StockMovementDto(

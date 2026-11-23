@@ -142,6 +142,72 @@ public static class InventoryEndpoints
         var companies = app.MapGroup("/api/v1/companies/{companyId:long}")
             .RequireAuthorization()
             .AddEndpointFilterFactory(RequestShapeValidationEndpointFilter.Create);
+        companies.MapGet("/items", async (
+            long companyId,
+            IInventoryService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.GetCompanyItemsAsync(companyId, cancellationToken)));
+        companies.MapGet("/items/page", async (
+            long companyId,
+            IInventoryService service,
+            CancellationToken cancellationToken,
+            int page = 1,
+            int pageSize = 25) =>
+        {
+            if (page < 1 || pageSize is < 1 or > 100)
+                return Results.BadRequest(new { error = "Page must be positive and page size must be between 1 and 100." });
+            return Results.Ok(await service.GetCompanyItemsPageAsync(companyId, page, pageSize, cancellationToken));
+        });
+        companies.MapGet("/items/{itemId:long}", async (
+            long companyId,
+            long itemId,
+            IInventoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            var item = await service.GetCompanyItemAsync(companyId, itemId, cancellationToken);
+            return item is null ? Results.NotFound(new { error = "Item was not found." }) : Results.Ok(item);
+        });
+        companies.MapPost("/items", async (
+            long companyId,
+            CreateItemRequest request,
+            IInventoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var item = await service.CreateCompanyItemAsync(companyId, request, cancellationToken);
+                return Results.Created($"/api/v1/companies/{companyId}/items/{item.Id}", item);
+            }
+            catch (InventoryValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (InventoryConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+        });
+        companies.MapPut("/items/{itemId:long}", async (
+            long companyId,
+            long itemId,
+            UpdateItemRequest request,
+            IInventoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var item = await service.UpdateCompanyItemAsync(companyId, itemId, request, cancellationToken);
+                return item is null ? Results.NotFound(new { error = "Item was not found." }) : Results.Ok(item);
+            }
+            catch (InventoryValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (InventoryConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+        });
         companies.MapGet("/warehouses", async (
             long companyId,
             IInventoryService service,

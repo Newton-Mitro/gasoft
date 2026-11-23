@@ -82,7 +82,8 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
         EnsureTenant();
         return await db.Items.AsNoTracking()
             .OrderBy(item => item.Sku)
-            .Select(item => new ItemDto(item.Id, item.CategoryId, item.Sku, item.Name, item.BaseUnitCode, item.CostingMethod))
+            .Select(item => new ItemDto(
+                item.Id, item.CategoryId, item.Sku, item.Name, item.BaseUnitCode, item.CostingMethod, null, null))
             .ToListAsync(cancellationToken);
     }
 
@@ -94,7 +95,8 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
             db.Items.AsNoTracking().OrderBy(item => item.Sku).ThenBy(item => item.Id),
             page,
             pageSize,
-            item => new ItemDto(item.Id, item.CategoryId, item.Sku, item.Name, item.BaseUnitCode, item.CostingMethod),
+            item => new ItemDto(
+                item.Id, item.CategoryId, item.Sku, item.Name, item.BaseUnitCode, item.CostingMethod, null, null),
             cancellationToken);
     }
 
@@ -103,6 +105,126 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
         EnsureTenant();
         var item = await db.Items.AsNoTracking().SingleOrDefaultAsync(value => value.Id == itemId, cancellationToken);
         return item is null ? null : ToDto(item);
+    }
+
+    public async Task<IReadOnlyList<ItemDto>> GetCompanyItemsAsync(
+        long companyId,
+        CancellationToken cancellationToken)
+    {
+        var company = await EnsureCompanyAsync(companyId, cancellationToken);
+        return await CompanyItemsQuery(companyId, company.FunctionalCurrencyCode)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PagedResultDto<ItemDto>> GetCompanyItemsPageAsync(
+        long companyId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var company = await EnsureCompanyAsync(companyId, cancellationToken);
+        return await PagedQuery.ToPageAsync(
+            CompanyItemsQuery(companyId, company.FunctionalCurrencyCode),
+            page,
+            pageSize,
+            item => item,
+            cancellationToken);
+    }
+
+    public async Task<ItemDto?> GetCompanyItemAsync(
+        long companyId,
+        long itemId,
+        CancellationToken cancellationToken)
+    {
+        var company = await EnsureCompanyAsync(companyId, cancellationToken);
+        return await CompanyItemsQuery(companyId, company.FunctionalCurrencyCode, itemId)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<ItemDto> CreateCompanyItemAsync(
+        long companyId,
+        CreateItemRequest request,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = EnsureTenant();
+        var company = await EnsureCompanyAsync(companyId, cancellationToken);
+        var fields = await ValidateItemFieldsAsync(
+            request.CategoryId,
+            request.Sku,
+            request.Name,
+            request.BaseUnitCode,
+            request.CostingMethod,
+            request.UnitSellingPrice,
+            cancellationToken);
+        var item = new Item
+        {
+            TenantId = tenantId,
+            CategoryId = request.CategoryId,
+            Sku = fields.Sku,
+            Name = fields.Name,
+            BaseUnitCode = fields.UnitCode,
+            CostingMethod = fields.CostingMethod
+        };
+        var price = new CompanyItemPrice
+        {
+            TenantId = tenantId,
+            CompanyId = companyId,
+            Item = item,
+            UnitSellingPrice = request.UnitSellingPrice,
+            CurrencyCode = company.FunctionalCurrencyCode
+        };
+        db.Items.Add(item);
+        db.CompanyItemPrices.Add(price);
+        await SaveAsync(cancellationToken);
+        return ToCompanyDto(item, price, company.FunctionalCurrencyCode);
+    }
+
+    public async Task<ItemDto?> UpdateCompanyItemAsync(
+        long companyId,
+        long itemId,
+        UpdateItemRequest request,
+        CancellationToken cancellationToken)
+    {
+        var company = await EnsureCompanyAsync(companyId, cancellationToken);
+        var item = await db.Items.SingleOrDefaultAsync(value => value.Id == itemId, cancellationToken);
+        if (item is null) return null;
+
+        var fields = await ValidateItemFieldsAsync(
+            request.CategoryId,
+            request.Sku,
+            request.Name,
+            request.BaseUnitCode,
+            request.CostingMethod,
+            request.UnitSellingPrice,
+            cancellationToken);
+        if ((item.BaseUnitCode != fields.UnitCode || item.CostingMethod != fields.CostingMethod) &&
+            await db.StockMovements.AnyAsync(movement => movement.ItemId == itemId, cancellationToken))
+            throw new InventoryConflictException("The unit and costing method cannot change after stock movements exist.");
+
+        item.CategoryId = request.CategoryId;
+        item.Sku = fields.Sku;
+        item.Name = fields.Name;
+        item.BaseUnitCode = fields.UnitCode;
+        item.CostingMethod = fields.CostingMethod;
+
+        var price = await db.CompanyItemPrices.SingleOrDefaultAsync(
+            value => value.CompanyId == companyId && value.ItemId == itemId,
+            cancellationToken);
+        if (price is null)
+        {
+            price = new CompanyItemPrice
+            {
+                TenantId = company.TenantId,
+                CompanyId = companyId,
+                ItemId = itemId,
+                CurrencyCode = company.FunctionalCurrencyCode
+            };
+            db.CompanyItemPrices.Add(price);
+        }
+        price.UnitSellingPrice = request.UnitSellingPrice;
+        price.CurrencyCode = company.FunctionalCurrencyCode;
+        await SaveAsync(cancellationToken);
+        return ToCompanyDto(item, price, company.FunctionalCurrencyCode);
     }
 
     public async Task<ItemDto> CreateItemAsync(CreateItemRequest request, CancellationToken cancellationToken)
@@ -1393,6 +1515,72 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
         return ToDto(movement);
     }
 
+    private IQueryable<ItemDto> CompanyItemsQuery(
+        long companyId,
+        string functionalCurrencyCode,
+        long? itemId = null)
+    {
+        var items = db.Items.AsNoTracking();
+        if (itemId.HasValue)
+            items = items.Where(item => item.Id == itemId.Value);
+
+        return
+            from item in items
+            join price in db.CompanyItemPrices.Where(value => value.CompanyId == companyId)
+                on new { item.TenantId, ItemId = item.Id }
+                equals new { price.TenantId, price.ItemId } into prices
+            from price in prices.DefaultIfEmpty()
+            orderby item.Sku, item.Id
+            select new ItemDto(
+                item.Id,
+                item.CategoryId,
+                item.Sku,
+                item.Name,
+                item.BaseUnitCode,
+                item.CostingMethod,
+                price == null || price.CurrencyCode != functionalCurrencyCode
+                    ? null
+                    : price.UnitSellingPrice,
+                functionalCurrencyCode);
+    }
+
+    private async Task<ValidatedItemFields> ValidateItemFieldsAsync(
+        long categoryId,
+        string skuValue,
+        string nameValue,
+        string baseUnitCodeValue,
+        string costingMethodValue,
+        decimal? unitSellingPrice,
+        CancellationToken cancellationToken)
+    {
+        var sku = Normalize(skuValue).ToUpperInvariant();
+        var name = Normalize(nameValue);
+        var unitCode = Normalize(baseUnitCodeValue).ToUpperInvariant();
+        var costingMethod = Normalize(costingMethodValue).ToUpperInvariant();
+        ValidateCodeAndName(sku, name, 60, 200);
+        if (costingMethod is not ("FIFO" or "AVCO"))
+            throw Validation("costingMethod", "Costing method must be FIFO or AVCO.");
+        if (unitSellingPrice is < 0 or > MaximumAmount ||
+            unitSellingPrice.HasValue && decimal.Round(unitSellingPrice.Value, 6) != unitSellingPrice)
+            throw Validation("unitSellingPrice", "Enter a valid selling price with up to 6 decimal places.");
+        if (!await db.ItemCategories.AnyAsync(category => category.Id == categoryId, cancellationToken))
+            throw Validation("categoryId", "Choose an item category in this tenant.");
+        if (!await db.UnitsOfMeasure.AnyAsync(unit => unit.Code == unitCode, cancellationToken))
+            throw Validation("baseUnitCode", "Choose a supported unit of measure.");
+        return new ValidatedItemFields(sku, name, unitCode, costingMethod);
+    }
+
+    private static ItemDto ToCompanyDto(Item item, CompanyItemPrice? price, string defaultCurrencyCode) =>
+        new(
+            item.Id,
+            item.CategoryId,
+            item.Sku,
+            item.Name,
+            item.BaseUnitCode,
+            item.CostingMethod,
+            price is not null && price.CurrencyCode == defaultCurrencyCode ? price.UnitSellingPrice : null,
+            defaultCurrencyCode);
+
     private async Task<Company> EnsureCompanyAsync(long companyId, CancellationToken cancellationToken)
     {
         EnsureTenant();
@@ -1499,7 +1687,9 @@ public sealed class InventoryService(AppDbContext db, ICurrentTenant currentTena
         exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
 
     private static ItemDto ToDto(Item item) =>
-        new(item.Id, item.CategoryId, item.Sku, item.Name, item.BaseUnitCode, item.CostingMethod);
+        new(item.Id, item.CategoryId, item.Sku, item.Name, item.BaseUnitCode, item.CostingMethod, null, null);
+
+    private sealed record ValidatedItemFields(string Sku, string Name, string UnitCode, string CostingMethod);
 
     private static InventoryCountDto ToCountDto(
         InventoryCount count,

@@ -4,7 +4,7 @@ import { Item } from './item.model';
 import { ItemService } from './item.service';
 
 describe('ItemService', () => {
-  it('uses the tenant-wide inventory API for listing items', () => {
+  it('uses the selected company inventory API for listing items and prices', () => {
     const calls: unknown[][] = [];
     const api = {
       get: (endpoint: string, companyScoped: boolean) => {
@@ -16,6 +16,8 @@ describe('ItemService', () => {
           name: 'Widget',
           baseUnitCode: 'EA',
           costingMethod: 'FIFO',
+          unitSellingPrice: 12.5,
+          sellingPriceCurrencyCode: 'USD',
         }]);
       },
     } as unknown as ApiService;
@@ -23,7 +25,7 @@ describe('ItemService', () => {
 
     new ItemService(api).getAll().subscribe(result => rows = result);
 
-    expect(calls).toEqual([['/api/v1/items', false]]);
+    expect(calls).toEqual([['items', true]]);
     expect(rows[0]?.sku).toBe('SKU-1');
   });
 

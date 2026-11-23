@@ -584,6 +584,39 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.ToTable("Companies");
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.CompanyItemPrice", b =>
+                {
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .IsFixedLength();
+
+                    b.Property<decimal?>("UnitSellingPrice")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
+                    b.HasKey("TenantId", "CompanyId", "ItemId");
+
+                    b.HasIndex("CurrencyCode");
+
+                    b.HasIndex("TenantId", "ItemId");
+
+                    b.ToTable("CompanyItemPrices", t =>
+                        {
+                            t.HasCheckConstraint("CK_CompanyItemPrices_UnitSellingPrice", "\"UnitSellingPrice\" IS NULL OR \"UnitSellingPrice\" >= 0");
+                        });
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.CompanyUser", b =>
                 {
                     b.Property<long>("TenantId")
@@ -5120,6 +5153,31 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.CompanyItemPrice", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.Currency", null)
+                        .WithMany()
+                        .HasForeignKey("CurrencyCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.Company", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("TenantId", "ItemId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.CompanyUser", b =>

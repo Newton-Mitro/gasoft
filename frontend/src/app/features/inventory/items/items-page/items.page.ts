@@ -22,13 +22,14 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
   readonly pageKey = 'items';
   readonly title = 'Inventory items';
-  readonly description = 'Maintain products and services tracked in the inventory ledger.';
+  readonly description = 'Maintain inventory items and their selling prices for this company.';
   readonly fields: Field[] = [
     { key: 'categoryId', label: 'Category', type: 'select', required: true, optionSource: 'categories' },
     { key: 'sku', label: 'SKU', required: true },
     { key: 'name', label: 'Item name', required: true },
     { key: 'baseUnitCode', label: 'Base unit', type: 'select', required: true, optionSource: 'units' },
     { key: 'costingMethod', label: 'Costing method', type: 'select', required: true, options: COSTING_METHODS },
+    { key: 'unitSellingPrice', label: 'Selling price (company functional currency)', type: 'number', min: 0, step: 0.000001 },
   ];
   readonly indexPath = '/inventory/items';
   rows: Item[] = [];
@@ -89,12 +90,27 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
       this.error = 'Choose a valid costing method.';
       return;
     }
+    const rawSellingPrice = this.form['unitSellingPrice'];
+    const unitSellingPrice =
+      rawSellingPrice === null || rawSellingPrice === undefined || rawSellingPrice === ''
+        ? null
+        : Number(rawSellingPrice);
+    if (
+      unitSellingPrice !== null &&
+      (!Number.isFinite(unitSellingPrice) ||
+        unitSellingPrice < 0 ||
+        Number(unitSellingPrice.toFixed(6)) !== unitSellingPrice)
+    ) {
+      this.error = 'Enter a selling price with up to 6 decimal places, or leave it blank.';
+      return;
+    }
     const payload: ItemPayload = {
       categoryId: Number(this.form['categoryId']),
       sku: String(this.form['sku'] ?? '').trim(),
       name: String(this.form['name'] ?? '').trim(),
       baseUnitCode: String(this.form['baseUnitCode'] ?? ''),
       costingMethod: costingMethod as CostingMethod,
+      unitSellingPrice,
     };
     if (!Number.isSafeInteger(payload.categoryId) || payload.categoryId < 1) {
       this.error = 'Choose a valid item category.';
@@ -191,6 +207,7 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
           name: item.name,
           baseUnitCode: item.baseUnitCode,
           costingMethod: item.costingMethod,
+          unitSellingPrice: item.unitSellingPrice,
         };
         this.loading = false;
         this.changeDetector.markForCheck();
@@ -202,6 +219,16 @@ export class ItemsPageComponent implements OnInit, OnDestroy {
         this.changeDetector.markForCheck();
       },
     });
+  }
+
+  formatSellingPrice(item: Item): string {
+    if (item.unitSellingPrice === null) return 'Not set';
+    const currencyCode = item.sellingPriceCurrencyCode;
+    if (!currencyCode) return String(item.unitSellingPrice);
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currencyCode,
+    }).format(item.unitSellingPrice);
   }
 }
 

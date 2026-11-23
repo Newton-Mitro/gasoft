@@ -243,6 +243,16 @@
   font-size: 9px;
   letter-spacing: 0.02em;
 }
+.pos-item-price {
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 700;
+}
+.pos-item-price.price-unset {
+  color: var(--warning-text);
+  font-size: 9px;
+  font-weight: 600;
+}
 .stock-pill {
   display: inline-flex;
   width: fit-content;
