@@ -1,5 +1,7 @@
 using Gasoft.Application.Abstractions;
 using Gasoft.Application.Companies;
+using Gasoft.Domain.Entities;
+using Gasoft.Infrastructure.Persistence;
 
 namespace Gasoft.Api.Endpoints;
 
@@ -128,6 +130,8 @@ public static class CompanyAdministrationEndpoints
         app.MapGet("/api/v1/companies/{companyId:long}/export", async (
             long companyId,
             ICompanyDataExportService service,
+            AppDbContext db,
+            ICurrentTenant currentTenant,
             HttpContext httpContext,
             CancellationToken cancellationToken) =>
         {
@@ -135,6 +139,25 @@ public static class CompanyAdministrationEndpoints
             if (export is null)
             {
                 return Results.NotFound(new { error = "Company was not found in this tenant." });
+            }
+
+            if (currentTenant.TenantId is long tenantId)
+            {
+                db.AuditLogs.Add(new AuditLog
+                {
+                    TenantId = tenantId,
+                    ActorUserId = currentTenant.UserId,
+                    Action = "DataExported",
+                    EntityType = nameof(Company),
+                    EntityId = companyId.ToString(),
+                    DetailsJson = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        fileName = export.FileName,
+                        format = "ZIP",
+                    }),
+                    CreatedAt = DateTimeOffset.UtcNow,
+                });
+                await db.SaveChangesAsync(cancellationToken);
             }
 
             httpContext.Response.Headers.CacheControl = "no-store";

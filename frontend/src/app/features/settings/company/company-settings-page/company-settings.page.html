@@ -2,16 +2,41 @@
   <div class="page-heading">
     <div>
       <p class="eyebrow">COMPANY PROFILE</p>
-      <h1><i class="page-heading-icon fa-solid fa-building" aria-hidden="true"></i>Add an organization</h1>
+      <h1><i class="page-heading-icon fa-solid fa-building" aria-hidden="true"></i>Add a company</h1>
       <p class="page-description">
         Starter account groups, accounts, and journals are created automatically. Create fiscal
-        years and accounting periods for your organization after setup.
+        years and accounting periods for your company after setup.
       </p>
     </div>
   </div>
+  <section class="panel company-branding">
+    <div class="company-logo-preview">
+      @if (logoPreview) {
+        <img [src]="logoPreview" alt="Company logo preview" />
+      } @else {
+        <span aria-hidden="true">{{ companyInitial }}</span>
+      }
+    </div>
+    <div class="company-logo-copy">
+      <h2>Company logo</h2>
+      <p>Optional. Upload a JPEG, PNG, or WebP image up to 5 MB.</p>
+      <label class="button secondary logo-picker">
+        Choose image
+        <input
+          name="logo"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          (change)="onLogoSelected($event)"
+        />
+      </label>
+      @if (logoError) {
+        <p class="alert error" role="alert">{{ logoError }}</p>
+      }
+    </div>
+  </section>
   <app-record-form
     pageKey="companies"
-    title="Organizations"
+    title="Companies"
     formMode="create"
     [fields]="createFields"
     [form]="form"
@@ -44,7 +69,7 @@
         }
       </div>
       <div class="company-logo-copy">
-        <h2>Organization logo</h2>
+        <h2>Company logo</h2>
         <p>Upload a JPEG, PNG, or WebP image up to 5 MB.</p>
         <label class="button secondary logo-picker">
           Choose image
@@ -100,7 +125,7 @@
       <p class="page-description">{{ description }}</p>
     </div>
     <div class="heading-actions">
-      <a class="button secondary" routerLink="/settings/company/create">Add organization</a>
+      <a class="button secondary" routerLink="/settings/company/create">Add company</a>
       @if (company) {
         <a class="button primary" routerLink="/settings/company/edit">Edit company</a>
       }
@@ -120,7 +145,7 @@
         }
       </div>
       <div class="company-logo-copy">
-        <h2>Organization logo</h2>
+        <h2>Company logo</h2>
         <p>Upload a JPEG, PNG, or WebP image up to 5 MB.</p>
         <label class="button secondary logo-picker">
           Choose image
@@ -157,7 +182,7 @@
     <section class="panel company-details">
       <div class="table-header">
         <div>
-          <h2>Organization details</h2>
+          <h2>Company details</h2>
           <span>{{ company.code }}</span>
         </div>
       </div>
@@ -214,9 +239,9 @@
       </div>
       <div class="data-export-copy">
         <p class="eyebrow">YOUR DATA, ON YOUR TERMS</p>
-        <h2 id="data-export-title">Export organization data</h2>
+        <h2 id="data-export-title">Export company data</h2>
         <p class="data-export-description">
-          Get a portable ZIP archive of this organization’s records and shared workspace data,
+          Get a portable ZIP archive of this company’s records and shared workspace data,
           ready to keep or review offline.
         </p>
         <div class="data-export-meta">

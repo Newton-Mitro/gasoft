@@ -1,22 +1,22 @@
 # Gasoft Operations Manual
 
-This manual explains the operational workflows available in the Gasoft web application. Menu labels may vary slightly by release. Follow your organization's accounting policies and obtain approval before posting or closing financial records.
+This manual explains the operational workflows available in the Gasoft web application. Menu labels may vary slightly by release. Follow your company's accounting policies and obtain approval before posting or closing financial records.
 
-## 1. Sign in and choose an organization
+## 1. Sign in and choose a company
 
 1. Sign in with your Gasoft account.
-2. Use **Current organization** in the left navigation to select the organization you are working in. Company-scoped records and reports use this selection; changing it reloads the application.
+2. Use **Current company** in the left navigation to select the company you are working in. Company-scoped records and reports use this selection; changing it reloads the application.
 3. Use the left navigation to open a module. Related links are grouped by module, with setup and transaction steps ordered in workflow sequence. On a narrow screen, open the navigation menu first.
 4. Use the profile link to manage your personal account. Appearance and theme color can be changed in the sidebar. The notification inbox contains personal notifications; items can be marked read or dismissed.
 
 Access to some functions depends on your workspace role. For example, audit history and accounting-period/year close or reopen controls are restricted to Owners and Admins.
 
-## 2. First-time organization setup
+## 2. First-time company setup
 
 Complete setup before entering routine transactions:
 
-1. Open **Administration → Company settings**. Add an organization if needed, then review its legal name, code, functional currency, contact details, address, and tax registration number. A company logo can be uploaded as a JPEG, PNG, or WebP image up to 5 MB.
-2. When an organization is created, starter account groups, accounts, and journals are created automatically. Default journals include General, Sales, Purchase, Bank, Cash receipts, and Cash payments. Review **General Ledger → Chart of accounts** and **Journals**; add or edit records to match your approved accounting structure.
+1. Open **Administration → Company settings**. Add a company if needed, then review its legal name, code, functional currency, contact details, address, and tax registration number. A company logo can be uploaded as a JPEG, PNG, or WebP image up to 5 MB.
+2. When a company is created, starter account groups, accounts, and journals are created automatically. Default journals include General, Sales, Purchase, Bank, Cash receipts, and Cash payments. Review **General Ledger → Chart of accounts** and **Journals**; add or edit records to match your approved accounting structure.
 3. Create a fiscal year in **General Ledger → Fiscal years**, then create its accounting periods in **Accounting periods**. Fiscal years and periods are not created automatically.
 4. Configure **Administration → Tax codes & rates** and **Tax registrations** as applicable.
 5. Add customers and suppliers in **Customers & suppliers**. Add their addresses when needed. For emailed quotes, maintain a valid customer email address.
@@ -42,7 +42,7 @@ Open **General Ledger → Journals** to create and maintain journals. Journal ty
 5. Review the draft before posting it from the journal-entry list. Posting writes the entry to the ledger; posted entries are not available for draft editing.
 6. To correct a standalone posted entry, choose **Reverse** and confirm. The system posts a new entry dated today in an open accounting period and fiscal year, swapping each original debit and credit while preserving its account, currency, and exchange rate. The original remains unchanged and is linked to the reversal. Each entry can be reversed only once. Entries generated from sales, purchasing, payment, inventory, expense, fixed-asset, or fiscal-year workflows must be corrected through their source workflow instead. If today has no open accounting period and fiscal year, open them before retrying.
 
-The current journal-entry form has an entry description, but no dedicated party-reference field. If a source identifier is needed, follow your organization's policy for including it in the description or use the relevant sales, purchasing, or payment workflow that records the party.
+The current journal-entry form has an entry description, but no dedicated party-reference field. If a source identifier is needed, follow your company's policy for including it in the description or use the relevant sales, purchasing, or payment workflow that records the party.
 
 ### Fiscal years and accounting periods
 
@@ -126,24 +126,24 @@ Open **Reports** and choose a report:
 - **Balance sheet** shows posted balances as of a selected date; unclosed earnings are included in equity.
 - **Budgets** supports budget entry and budget-versus-actual review.
 - **Cash flow**, **Receivables aging**, and **Payables aging** provide their respective reporting views.
-- **Consolidated trial balance** supports group reporting for selected organizations.
+- **Consolidated trial balance** supports group reporting for selected companies.
 
 Set the date filters before interpreting results. Financial statement reports use posted journal entries; draft activity is not included.
 
 ## 8. Administration and review
 
-- **Company settings**: review organization details, functional currency, and logo.
+- **Company settings**: review company details, functional currency, and logo.
 - **Tax codes & rates**: maintain company tax codes and effective-dated rates. Confirm tax treatment and rates with an authoritative source.
 - **Tax registrations**: review and maintain applicable registrations.
 - **Team members**: add a new account or grant a workspace role to an existing Gasoft user. Edit access to change the role or active membership; deactivate or reactivate users from the list as appropriate.
-- **Audit history**: Owners and Admins can filter tenant audit records by action, record type, and date. Expand **View changes** to inspect available details. Sensitive credential and bank-account fields are excluded from audit details.
+- **Audit history**: Owners and Admins can filter workspace audit records by action, record type, and date. Actions include company/logo updates, data exports, postings, status changes, profile updates, and authentication events. Expand **View changes** to inspect available details. Sensitive credential and bank-account fields are excluded from audit details.
 
 ## 9. Common page controls and troubleshooting
 
 - Use **Add/New** to open a create form and **Edit** to update a draft or editable record. Use **Cancel** to leave without saving.
 - Required fields and inline validation messages indicate missing or invalid values. Correct the field and retry. If an error alert appears, follow its instructions; an error can also indicate a closed period or missing setup data.
 - On list pages, use search or filters before paging. Pagination shows the displayed range and total records; change page size or navigate between pages using its controls.
-- If an option list is empty, check that the required related records exist, are active, and belong to the selected organization. For example, posting may need an open period, active journal, and suitable ledger accounts.
+- If an option list is empty, check that the required related records exist, are active, and belong to the selected company. For example, posting may need an open period, active journal, and suitable ledger accounts.
 - Review document totals, currency, exchange rate, posting accounts, and accounting period before posting. Posting affects the ledger and may restrict later edits.
-- If you cannot see a menu item or action, confirm that you selected the correct organization and that your role is permitted to use it.
+- If you cannot see a menu item or action, confirm that you selected the correct company and that your role is permitted to use it.
 

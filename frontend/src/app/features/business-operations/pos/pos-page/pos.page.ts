@@ -85,7 +85,7 @@ export class PosPageComponent implements OnInit {
     const companyId = this.auth.companyId();
     if (!companyId) {
       this.loading = false;
-      this.error = 'Choose an organization before opening the point of sale.';
+      this.error = 'Choose a company before opening the point of sale.';
       return;
     }
 
@@ -114,7 +114,7 @@ export class PosPageComponent implements OnInit {
         );
         const company = result.companies.find((option) => option.id === companyId);
         if (!company) {
-          this.error = 'The selected organization could not be found.';
+          this.error = 'The selected company could not be found.';
           this.loading = false;
           this.changeDetector.markForCheck();
           return;

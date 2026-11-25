@@ -4,7 +4,7 @@
       <p class="eyebrow">ADMINISTRATION</p>
       <h1><i class="page-heading-icon fa-solid fa-clock-rotate-left" aria-hidden="true"></i>Audit history</h1>
       <p class="page-description">
-        Review changes, posting activity, and security events in this workspace.
+        Review company, accounting, posting, and security activity in this workspace.
       </p>
     </div>
     <span class="audit-total">{{ totalCount }} records</span>
@@ -76,12 +76,18 @@
               <tr>
                 <td class="audit-date">{{ record.createdAt | date: 'medium' }}</td>
                 <td>
-                  <span class="audit-action" [class.posted]="record.action === 'Posted'">{{
-                    record.action
+                  <span class="audit-action"
+                    [class.created]="record.action === 'Created'"
+                    [class.updated]="record.action === 'Updated' || record.action === 'ProfileUpdated' || record.action === 'LogoUpdated'"
+                    [class.deleted]="record.action === 'Deleted'"
+                    [class.posted]="record.action === 'Posted'"
+                    [class.security]="record.action.startsWith('Authentication') || record.action.includes('Password')"
+                    [class.exported]="record.action === 'DataExported'">
+                    {{ formatAction(record.action)
                   }}</span>
                 </td>
                 <td>
-                  <strong>{{ record.entityType }}</strong>
+                  <strong>{{ formatEntityType(record.entityType) }}</strong>
                   @if (record.entityId) {
                     <small>#{{ record.entityId }}</small>
                   }

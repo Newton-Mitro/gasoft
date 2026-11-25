@@ -31,4 +31,12 @@ export interface CreateCompanyPayload {
   code: string;
   legalName: string;
   functionalCurrencyCode: string;
+  phone: string;
+  email: string;
+  website: string;
+  address: string;
+  cityRegion: string;
+  postalCode: string;
+  country: string;
+  taxId: string;
 }

@@ -212,7 +212,7 @@ export class ConsolidationPageComponent implements OnInit {
     }));
     if (translationRates.some(rate => !Number.isFinite(rate.closingRate) || rate.closingRate <= 0 ||
       !Number.isFinite(rate.averageRate) || rate.averageRate <= 0)) {
-      this.error = 'Enter positive closing and average exchange rates for every organization.';
+      this.error = 'Enter positive closing and average exchange rates for every company.';
       return;
     }
     this.saving = true;

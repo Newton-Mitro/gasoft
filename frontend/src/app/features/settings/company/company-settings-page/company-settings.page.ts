@@ -22,7 +22,7 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
   readonly pageKey = 'company';
   readonly title = 'Company settings';
-  readonly description = 'Manage your organization identity, contact details, tax information, and functional currency.';
+  readonly description = 'Manage your company identity, contact details, tax information, and functional currency.';
   readonly fields: Field[] = [
     { key: 'legalName', label: 'Legal name', required: true },
     { key: 'functionalCurrencyCode', label: 'Functional currency', type: 'select', required: true, optionSource: 'currencies' },
@@ -39,6 +39,14 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
     { key: 'code', label: 'Company code', required: true },
     { key: 'legalName', label: 'Legal name', required: true },
     { key: 'functionalCurrencyCode', label: 'Functional currency', type: 'select', required: true, optionSource: 'currencies' },
+    { key: 'phone', label: 'Phone', type: 'tel' },
+    { key: 'email', label: 'Contact email', type: 'email' },
+    { key: 'website', label: 'Website', type: 'url' },
+    { key: 'address', label: 'Street address' },
+    { key: 'cityRegion', label: 'City and region/state' },
+    { key: 'postalCode', label: 'Postal/ZIP code' },
+    { key: 'country', label: 'Country' },
+    { key: 'taxId', label: 'Tax/VAT registration number' },
   ];
   company: Company | null = null;
   form: Record<string, unknown> = {};
@@ -85,6 +93,11 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
     return this.logoPreview ?? this.auth.companyLogoUrl() ?? this.company?.logoUrl ?? null;
   }
 
+  get companyInitial(): string {
+    const legalName = String(this.form['legalName'] ?? '').trim();
+    return legalName ? legalName.charAt(0).toUpperCase() : 'C';
+  }
+
   onLogoSelected(event: Event): void {
     this.logoError = '';
     const input = event.currentTarget as HTMLInputElement;
@@ -115,7 +128,7 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
         this.selectedLogo = null;
         this.logoUploading = false;
         this.revokeLogoPreview();
-        this.notifications.success('Organization logo updated.');
+        this.notifications.success('Company logo updated.');
         this.changeDetector.markForCheck();
       },
       error: error => {
@@ -183,24 +196,59 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const payload: CreateCompanyPayload = { code, legalName, functionalCurrencyCode };
+    const payload: CreateCompanyPayload = {
+      code,
+      legalName,
+      functionalCurrencyCode,
+      phone: String(this.form['phone'] ?? '').trim(),
+      email: String(this.form['email'] ?? '').trim(),
+      website: String(this.form['website'] ?? '').trim(),
+      address: String(this.form['address'] ?? '').trim(),
+      cityRegion: String(this.form['cityRegion'] ?? '').trim(),
+      postalCode: String(this.form['postalCode'] ?? '').trim(),
+      country: String(this.form['country'] ?? '').trim(),
+      taxId: String(this.form['taxId'] ?? '').trim(),
+    };
     this.saving = true;
     this.error = '';
     this.companies.create(payload).subscribe({
-      next: async company => {
+      next: company => {
         this.auth.updateCompanyId(company.id);
-        this.saving = false;
-        await this.notifications.successDialog(`${company.legalName} was created successfully.`);
-        await this.router.navigateByUrl('/settings/company');
-        window.location.reload();
+        if (this.selectedLogo) {
+          this.logoUploading = true;
+          const selectedLogo = this.selectedLogo;
+          this.companies.uploadLogo(company.id, selectedLogo).subscribe({
+            next: async uploadedCompany => {
+              this.logoUploading = false;
+              this.selectedLogo = null;
+              this.auth.updateCompanyLogoUrl(uploadedCompany.logoUrl);
+              this.revokeLogoPreview();
+              await this.finishCreate(company);
+            },
+            error: async error => {
+              this.logoUploading = false;
+              this.notifications.error(errorMessage(error, 'The company was created, but its logo could not be uploaded.'));
+              await this.finishCreate(company);
+            },
+          });
+          return;
+        }
+        void this.finishCreate(company);
       },
       error: error => {
         this.error = '';
-        this.notifications.error(errorMessage(error, 'Could not create the organization.'));
+        this.notifications.error(errorMessage(error, 'Could not create the company.'));
         this.saving = false;
         this.changeDetector.markForCheck();
       },
     });
+  }
+
+  private async finishCreate(company: Company): Promise<void> {
+    this.saving = false;
+    await this.notifications.successDialog(`${company.legalName} was created successfully.`);
+    await this.router.navigateByUrl('/settings/company');
+    window.location.reload();
   }
 
   async exportData(): Promise<void> {
@@ -209,8 +257,8 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
     if (!companyId || !companyCode || this.exporting) return;
 
     const confirmed = await this.notifications.confirm({
-      title: 'Download organization data?',
-      text: 'The ZIP archive contains sensitive organization and financial data. Store it securely.',
+      title: 'Download company data?',
+      text: 'The ZIP archive contains sensitive company and financial data. Store it securely.',
       confirmButtonText: 'Download data',
       icon: 'warning',
     });
@@ -222,16 +270,16 @@ export class CompanySettingsPageComponent implements OnInit, OnDestroy {
         const url = URL.createObjectURL(archive);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `organization-data-${companyCode}-${new Date().toISOString().slice(0, 10)}.zip`;
+        link.download = `company-data-${companyCode}-${new Date().toISOString().slice(0, 10)}.zip`;
         link.click();
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
         this.exporting = false;
-        this.notifications.success('Organization data downloaded.');
+        this.notifications.success('Company data downloaded.');
         this.changeDetector.markForCheck();
       },
       error: error => {
         this.exporting = false;
-        this.notifications.error(errorMessage(error, 'Could not download organization data.'));
+        this.notifications.error(errorMessage(error, 'Could not download company data.'));
         this.changeDetector.markForCheck();
       },
     });

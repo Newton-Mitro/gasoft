@@ -133,7 +133,7 @@ const PREVIEW_CONFIGURATIONS: Record<string, PreviewConfiguration> = {
     icon: 'fa-file-invoice',
     primaryField: 'registrationNumber',
     detailFields: ['jurisdictionId'],
-    description: 'Organization registration',
+    description: 'Company registration',
   },
   company: {
     title: 'Company profile preview',
@@ -141,15 +141,15 @@ const PREVIEW_CONFIGURATIONS: Record<string, PreviewConfiguration> = {
     icon: 'fa-building',
     primaryField: 'legalName',
     detailFields: ['functionalCurrencyCode', 'phone', 'email', 'website', 'cityRegion', 'taxId'],
-    description: 'Organization details',
+    description: 'Company details',
   },
   companies: {
-    title: 'Organization preview',
+    title: 'Company preview',
     eyebrow: 'COMPANY PROFILE',
     icon: 'fa-building',
     primaryField: 'legalName',
     detailFields: ['code', 'functionalCurrencyCode'],
-    description: 'New organization',
+    description: 'New company',
   },
   users: {
     title: 'Team member preview',
@@ -164,6 +164,7 @@ const PREVIEW_CONFIGURATIONS: Record<string, PreviewConfiguration> = {
 const MAX_PREVIEW_FIELDS = 8;
 
 export function shouldShowRecordPreview(pageKey: string, formMode: RecordFormMode, fields: Field[]): boolean {
+  if (pageKey === 'companies' || pageKey === 'company') return false;
   return (formMode === 'create' || formMode === 'edit') &&
     fields.length > 0 &&
     fields.length <= MAX_PREVIEW_FIELDS &&

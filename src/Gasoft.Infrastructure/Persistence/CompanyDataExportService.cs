@@ -69,10 +69,10 @@ public sealed class CompanyDataExportService(AppDbContext db) : ICompanyDataExpo
                 new
                 {
                     formatVersion = 1,
-                    exportType = "Gasoft organization data export",
+                    exportType = "Gasoft company data export",
                     generatedAtUtc = DateTimeOffset.UtcNow,
-                    organization = new { company.Id, company.Code, company.LegalName },
-                    scope = "Company-scoped records and tenant-level records shared by organizations.",
+                    company = new { company.Id, company.Code, company.LegalName },
+                    scope = "Company-scoped records and tenant-level records shared by companies.",
                     excludes = new[]
                     {
                         "Authentication credentials",
@@ -89,7 +89,7 @@ public sealed class CompanyDataExportService(AppDbContext db) : ICompanyDataExpo
                 cancellationToken);
         }
 
-        var fileName = $"organization-data-{company.Code}-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}.zip";
+        var fileName = $"company-data-{company.Code}-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}.zip";
         return new CompanyDataExport(archiveStream.ToArray(), fileName);
     }
 

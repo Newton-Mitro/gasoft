@@ -1,6 +1,17 @@
 namespace Gasoft.Application.Companies;
 
-public sealed record CreateCompanyRequest(string? Code, string? LegalName, string? FunctionalCurrencyCode);
+public sealed record CreateCompanyRequest(
+    string? Code,
+    string? LegalName,
+    string? FunctionalCurrencyCode,
+    string? Phone,
+    string? Email,
+    string? Website,
+    string? Address,
+    string? CityRegion,
+    string? PostalCode,
+    string? Country,
+    string? TaxId);
 
 public sealed record UpdateCompanyRequest(
     string? LegalName,

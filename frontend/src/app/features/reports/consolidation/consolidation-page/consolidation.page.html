@@ -2,7 +2,7 @@
   <div>
     <p class="eyebrow">FINANCIAL REPORTS</p>
     <h1><i class="page-heading-icon fa-solid fa-chart-pie" aria-hidden="true"></i>Consolidated trial balance</h1>
-    <p class="page-description">Combine posted balances from multiple organizations in a shared reporting currency.</p>
+    <p class="page-description">Combine posted balances from multiple companies in a shared reporting currency.</p>
   </div>
   @if (!editing) {
     <button class="button primary" type="button" (click)="beginCreate()"><i class="fa-solid fa-plus" aria-hidden="true"></i> New consolidation group</button>
@@ -19,7 +19,7 @@
     <div class="form-heading">
       <div>
         <h2>{{ selectedGroupId ? 'Edit consolidation group' : 'Create consolidation group' }}</h2>
-        <p>Organizations may use different functional currencies. Translation rates are recorded with each run; rates for balance-sheet accounts and income-statement activity are entered separately.</p>
+        <p>Companies may use different functional currencies. Translation rates are recorded with each run; rates for balance-sheet accounts and income-statement activity are entered separately.</p>
       </div>
     </div>
     <div class="form-grid">
@@ -42,12 +42,12 @@
       </label>
     </div>
     <fieldset class="company-picker">
-      <legend>Organizations <small>Select at least two companies in this workspace</small></legend>
+      <legend>Companies <small>Select at least two companies in this workspace</small></legend>
       @if (!companies.length) {
-        <p class="empty-note">Create a second organization in Company Settings before setting up consolidation.</p>
+        <p class="empty-note">Create a second company in Company Settings before setting up consolidation.</p>
       } @else {
         @if (companies.length < 2) {
-          <p class="empty-note">Create another organization in Company Settings to enable consolidated reporting.</p>
+          <p class="empty-note">Create another company in Company Settings to enable consolidated reporting.</p>
         }
         <div class="company-options">
           @for (company of companies; track company.id) {
@@ -89,7 +89,7 @@
     </div>
     <div class="group-summary">
       <div><span>Reporting currency</span><strong>{{ group.reportingCurrencyCode }}</strong></div>
-      <div><span>Organizations</span><strong>{{ group.companies.length }}</strong></div>
+      <div><span>Companies</span><strong>{{ group.companies.length }}</strong></div>
       <div class="company-chip-list">
         @for (company of group.companies; track company.id) {
           <span class="company-chip">{{ company.code }} · {{ company.legalName }}</span>
@@ -111,9 +111,9 @@
     </div>
     <div class="translation-rates">
       <h3>Translation rates</h3>
-      <p>Enter reporting-currency units per one unit of the organization’s functional currency. Use rates appropriate to the reporting period.</p>
+      <p>Enter reporting-currency units per one unit of the company’s functional currency. Use rates appropriate to the reporting period.</p>
       <div class="table-scroll"><table>
-        <thead><tr><th>Organization</th><th>Functional currency</th><th>Closing rate · balance sheet</th><th>Average rate · revenue & expenses</th></tr></thead>
+        <thead><tr><th>Company</th><th>Functional currency</th><th>Closing rate · balance sheet</th><th>Average rate · revenue & expenses</th></tr></thead>
         <tbody>@for (company of group.companies; track company.id; let index = $index) {
           <tr><td>{{ company.legalName }}</td><td>{{ company.functionalCurrencyCode }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> {{ group.reportingCurrencyCode }}</td>
             <td><app-input type="number" min="0.0000000001" step="0.0000000001" [name]="'translationRate' + index + 'ClosingRate'"
@@ -142,7 +142,7 @@
       <div class="empty-state">
         <span class="empty-icon"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i></span>
         <h3>No consolidation runs yet</h3>
-        <p>Choose a period end to snapshot posted balances from the selected organizations.</p>
+        <p>Choose a period end to snapshot posted balances from the selected companies.</p>
       </div>
     }
 
@@ -160,7 +160,7 @@
           <div><h3>Translation rates used</h3><p>Closing rates apply to assets, liabilities, and equity; average rates apply to period revenue and expenses.</p></div>
         </div>
         <div class="table-scroll"><table>
-          <thead><tr><th>Organization</th><th>Currency</th><th>Closing rate</th><th>Average rate</th></tr></thead>
+          <thead><tr><th>Company</th><th>Currency</th><th>Closing rate</th><th>Average rate</th></tr></thead>
           <tbody>@for (rate of run.translationRates; track rate.companyId) {
             <tr><td>{{ getCompanyName(rate.companyId) }}</td>
               <td>{{ rate.sourceCurrencyCode }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> {{ rate.targetCurrencyCode }}</td>
@@ -233,7 +233,7 @@
   <section class="empty-state panel">
     <span class="empty-icon"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i></span>
     <h3>Set up a consolidation group</h3>
-    <p>Group at least two organizations to prepare a consolidated trial balance in a shared reporting currency.</p>
+    <p>Group at least two companies to prepare a consolidated trial balance in a shared reporting currency.</p>
     <button class="button primary" type="button" (click)="beginCreate()">Create consolidation group</button>
   </section>
 }

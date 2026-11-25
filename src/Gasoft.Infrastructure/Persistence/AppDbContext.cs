@@ -1593,6 +1593,10 @@ public sealed class AppDbContext(
                     return null;
 
                 var entityType = entry.Metadata.ClrType.Name;
+                var modifiedProperties = entry.Properties
+                    .Where(property => property.IsModified)
+                    .Select(property => property.Metadata.Name)
+                    .ToArray();
                 var statusChange = entityType switch
                 {
                     nameof(FiscalYearStatusChange) => ("Fiscal year", "FiscalYearId"),
@@ -1601,12 +1605,17 @@ public sealed class AppDbContext(
                 };
                 var action = statusChange.HasValue
                     ? "StatusChanged"
-                    : entry.State switch
-                    {
-                        EntityState.Added => "Created",
-                        EntityState.Modified => "Updated",
-                        _ => "Deleted"
-                    };
+                    : entry.State == EntityState.Modified &&
+                      entry.Entity is Company &&
+                      modifiedProperties.Length > 0 &&
+                      modifiedProperties.All(property => property == nameof(Company.LogoUrl))
+                        ? "LogoUpdated"
+                        : entry.State switch
+                        {
+                            EntityState.Added => "Created",
+                            EntityState.Modified => "Updated",
+                            _ => "Deleted"
+                        };
                 var changes = entry.Properties
                     .Where(property => !IsSensitiveProperty(property.Metadata.Name))
                     .Where(property => entry.State != EntityState.Modified || property.IsModified)

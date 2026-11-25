@@ -49,7 +49,7 @@ export class PosSettingsPageComponent implements OnInit {
 
   ngOnInit(): void {
     if (!this.auth.companyId()) {
-      this.error = 'Choose an organization before configuring POS settings.';
+      this.error = 'Choose a company before configuring POS settings.';
       this.loading = false;
       return;
     }

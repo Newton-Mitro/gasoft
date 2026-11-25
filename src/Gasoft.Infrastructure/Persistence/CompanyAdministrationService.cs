@@ -60,6 +60,22 @@ public sealed class CompanyAdministrationService(
         if (currencyCode.Length != 3 ||
             !await db.Currencies.AnyAsync(item => item.Code == currencyCode, cancellationToken))
             errors["functionalCurrencyCode"] = ["Choose a supported three-letter currency."];
+        ValidateOptionalLength(errors, "phone", request.Phone, 40);
+        ValidateOptionalLength(errors, "email", request.Email, 320);
+        ValidateOptionalLength(errors, "website", request.Website, 2000);
+        ValidateOptionalLength(errors, "address", request.Address, 250);
+        ValidateOptionalLength(errors, "cityRegion", request.CityRegion, 150);
+        ValidateOptionalLength(errors, "postalCode", request.PostalCode, 30);
+        ValidateOptionalLength(errors, "country", request.Country, 100);
+        ValidateOptionalLength(errors, "taxId", request.TaxId, 100);
+        if (!string.IsNullOrWhiteSpace(request.Email) &&
+            (!MailAddress.TryCreate(request.Email.Trim(), out var mailAddress) ||
+             !string.Equals(mailAddress.Address, request.Email.Trim(), StringComparison.OrdinalIgnoreCase)))
+            errors["email"] = ["Enter a valid contact email address."];
+        if (!string.IsNullOrWhiteSpace(request.Website) &&
+            (!Uri.TryCreate(request.Website.Trim(), UriKind.Absolute, out var website) ||
+             website.Scheme is not ("http" or "https")))
+            errors["website"] = ["Enter a valid website URL beginning with http:// or https://."];
         if (errors.Count != 0) throw new CompanyValidationException(errors);
         if (await db.Companies.AnyAsync(item => item.Code == code, cancellationToken))
             throw CompanyCodeConflict(code);
@@ -69,7 +85,15 @@ public sealed class CompanyAdministrationService(
             TenantId = tenantId.Value,
             Code = code,
             LegalName = legalName,
-            FunctionalCurrencyCode = currencyCode
+            FunctionalCurrencyCode = currencyCode,
+            Phone = Clean(request.Phone),
+            Email = Clean(request.Email),
+            Website = Clean(request.Website),
+            Address = Clean(request.Address),
+            CityRegion = Clean(request.CityRegion),
+            PostalCode = Clean(request.PostalCode),
+            Country = Clean(request.Country),
+            TaxId = Clean(request.TaxId)
         };
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         db.Companies.Add(company);

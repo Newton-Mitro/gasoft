@@ -68,7 +68,7 @@ export class RecordFormComponent {
       'inventory-counts': 'inventory count',
       'tax-registrations': 'tax registration',
 
-      companies: 'organization',
+      companies: 'company',
     };
     if (this.formMode === 'post') return 'Posting details';
     if (this.formMode === 'allocate') return 'Allocate payment';
@@ -109,7 +109,7 @@ export class RecordFormComponent {
     if (this.pageKey === 'purchase-bills') return 'Create bill';
     if (this.pageKey === 'journal-entries') return 'Save draft';
     if (this.pageKey === 'inventory-counts') return 'Create count';
-    if (this.pageKey === 'companies') return 'Create organization';
+    if (this.pageKey === 'companies') return 'Create company';
     return 'Create record';
   }
 

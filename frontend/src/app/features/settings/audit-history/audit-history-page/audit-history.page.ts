@@ -34,6 +34,8 @@ export class AuditHistoryPageComponent implements OnInit {
     { label: 'Deleted', value: 'Deleted' },
     { label: 'Posted', value: 'Posted' },
     { label: 'Status changed', value: 'StatusChanged' },
+    { label: 'Logo updated', value: 'LogoUpdated' },
+    { label: 'Data exported', value: 'DataExported' },
     { label: 'Profile updated', value: 'ProfileUpdated' },
     { label: 'Authentication succeeded', value: 'AuthenticationSucceeded' },
     { label: 'Authentication failed', value: 'AuthenticationFailed' },
@@ -105,5 +107,37 @@ export class AuditHistoryPageComponent implements OnInit {
     } catch {
       return value;
     }
+  }
+
+  formatAction(action: string): string {
+    const labels: Record<string, string> = {
+      Created: 'Created',
+      Updated: 'Updated',
+      Deleted: 'Deleted',
+      Posted: 'Posted',
+      StatusChanged: 'Status changed',
+      LogoUpdated: 'Logo updated',
+      DataExported: 'Data exported',
+      ProfileUpdated: 'Profile updated',
+      AuthenticationSucceeded: 'Signed in',
+      AuthenticationFailed: 'Sign-in failed',
+      PasswordReset: 'Password reset',
+      PasswordChanged: 'Password changed',
+    };
+    return labels[action] ?? action;
+  }
+
+  formatEntityType(entityType: string): string {
+    const labels: Record<string, string> = {
+      ChartOfAccount: 'Chart of account',
+      FiscalYearStatusChange: 'Fiscal year',
+      AccountingPeriodStatusChange: 'Accounting period',
+      JournalEntry: 'Journal entry',
+      Company: 'Company',
+      ApplicationUser: 'User',
+    };
+    return labels[entityType] ?? entityType
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/^./, character => character.toUpperCase());
   }
 }

@@ -148,6 +148,31 @@
   color: var(--accent-text);
 }
 
+.audit-action.created {
+  background: #e8f5eb;
+  color: #23633f;
+}
+
+.audit-action.updated {
+  background: #edf3fb;
+  color: #315d88;
+}
+
+.audit-action.deleted {
+  background: #fff0ed;
+  color: #9a4237;
+}
+
+.audit-action.security {
+  background: #f3eff9;
+  color: #645184;
+}
+
+.audit-action.exported {
+  background: #f6f1e8;
+  color: #806738;
+}
+
 .audit-details summary {
   color: var(--accent-text);
   font-size: 10px;
