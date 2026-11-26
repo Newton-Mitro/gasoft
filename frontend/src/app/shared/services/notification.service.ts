@@ -23,6 +23,14 @@ interface PromptOptions {
 export class NotificationService {
   private readonly toast = inject(HotToastService);
 
+  private async loadSweetAlert() {
+    const [, sweetAlert] = await Promise.all([
+      import('sweetalert2/dist/sweetalert2.min.css'),
+      import('sweetalert2/dist/sweetalert2.esm.all.js'),
+    ]);
+    return sweetAlert.default;
+  }
+
   success(message: string): void {
     this.toast.success(message, { className: 'app-toast app-toast-success' });
   }
@@ -40,7 +48,7 @@ export class NotificationService {
   }
 
   successDialog(message: string): Promise<void> {
-    return import('sweetalert2').then(({ default: Swal }) =>
+    return this.loadSweetAlert().then(Swal =>
       Swal.fire({
         title: 'Success',
         text: message,
@@ -57,7 +65,7 @@ export class NotificationService {
 
   confirm(options: ConfirmationOptions): Promise<boolean> {
     const confirmButtonVariant = options.confirmButtonVariant ?? 'primary';
-    return import('sweetalert2').then(({ default: Swal }) => Swal.fire({
+    return this.loadSweetAlert().then(Swal => Swal.fire({
       title: options.title,
       text: options.text,
       icon: options.icon ?? 'warning',
@@ -77,7 +85,7 @@ export class NotificationService {
   }
 
   prompt(options: PromptOptions): Promise<string | null> {
-    return import('sweetalert2').then(({ default: Swal }) => Swal.fire({
+    return this.loadSweetAlert().then(Swal => Swal.fire({
       title: options.title,
       input: 'textarea',
       inputLabel: options.text,

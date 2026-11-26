@@ -58,6 +58,8 @@ function isSalesInvoice(value: unknown): value is SalesInvoice {
     isNumericValue(row['exchangeRate']) &&
     isNumericValue(row['grandTotal']) &&
     isNumericValue(row['allocatedTotal']) &&
+    isNumericValue(row['creditedTotal']) &&
+    isNumericValue(row['refundedTotal']) &&
     typeof row['status'] === 'string' &&
     (row['lines'] === undefined ||
       (Array.isArray(row['lines']) && row['lines'].every(isInvoiceLine)));

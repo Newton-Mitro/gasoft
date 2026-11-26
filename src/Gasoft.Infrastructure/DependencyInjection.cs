@@ -19,6 +19,7 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("Configure ConnectionStrings:Default.");
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
         services.AddDataProtection().SetApplicationName("Gasoft");
+        services.AddHostedService<NotificationEmailOutboxWorker>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentTenant, CurrentTenant>();
         services.AddScoped<IPartyService, PartyService>();
@@ -27,9 +28,11 @@ public static class DependencyInjection
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ITenantRegistrationService, TenantRegistrationService>();
         services.AddScoped<IAccountingService, AccountingService>();
+        services.AddScoped<IJournalEntryService, JournalEntryService>();
         services.AddScoped<IBillingService, BillingService>();
         services.AddScoped<IPosSettingsService, PosSettingsService>();
         services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<IStockMovementService, StockMovementService>();
         services.AddScoped<ICompanyReadService, CompanyReadService>();
         services.AddScoped<ISalesQuoteService, SalesQuoteService>();
         services.AddScoped<IBudgetService, BudgetService>();
@@ -43,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<IConsolidationService, ConsolidationService>();
         services.AddScoped<IBankReconciliationService, BankReconciliationService>();
         services.AddScoped<IExpenseReportService, ExpenseReportService>();
+        services.AddScoped<NotificationEmailOutboxProcessor>();
         services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.User.RequireUniqueEmail = true;

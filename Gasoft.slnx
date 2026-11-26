@@ -5,4 +5,7 @@
     <Project Path="src/Gasoft.Domain/Gasoft.Domain.csproj" />
     <Project Path="src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Gasoft.Infrastructure.Tests/Gasoft.Infrastructure.Tests.csproj" />
+  </Folder>
 </Solution>

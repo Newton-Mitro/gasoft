@@ -514,18 +514,18 @@ public sealed class FixedAssetService(AppDbContext db, ICurrentTenant currentTen
         decimal debit,
         decimal credit,
         string description) => new()
-    {
-        TenantId = tenantId,
-        CompanyId = companyId,
-        AccountId = accountId,
-        TransactionCurrencyCode = currencyCode,
-        Debit = debit,
-        Credit = credit,
-        FunctionalDebit = debit,
-        FunctionalCredit = credit,
-        ExchangeRate = 1,
-        Description = description
-    };
+        {
+            TenantId = tenantId,
+            CompanyId = companyId,
+            AccountId = accountId,
+            TransactionCurrencyCode = currencyCode,
+            Debit = debit,
+            Credit = credit,
+            FunctionalDebit = debit,
+            FunctionalCredit = credit,
+            ExchangeRate = 1,
+            Description = description
+        };
 
     private async Task<Dictionary<long, string>> GetAccountTypesAsync(
         long companyId,

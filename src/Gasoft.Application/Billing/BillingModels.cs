@@ -110,6 +110,8 @@ public sealed record InvoiceDto(
     decimal TaxTotal,
     decimal GrandTotal,
     decimal AllocatedTotal,
+    decimal CreditedTotal,
+    decimal RefundedTotal,
     string Status,
     IReadOnlyList<DocumentLineDto> Lines);
 

@@ -15,6 +15,8 @@ describe('SalesInvoiceService', () => {
       exchangeRate: '1.000000',
       grandTotal: '25.00',
       allocatedTotal: '0.00',
+      creditedTotal: '0.00',
+      refundedTotal: '0.00',
       status: 'Draft',
       lines: [{ accountId: 9, taxCodeId: null, description: 'Service', quantity: '1', unitPrice: '25' }],
     };
@@ -67,6 +69,8 @@ describe('SalesInvoiceService', () => {
       exchangeRate: 1,
       grandTotal: 25,
       allocatedTotal: 0,
+      creditedTotal: 0,
+      refundedTotal: 0,
       status: 'Draft',
     };
     const api = ({ get: () => of({ items: [invoice] }) }) as unknown as ApiService;

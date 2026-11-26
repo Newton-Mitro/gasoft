@@ -23,6 +23,7 @@ DECLARE
     opening_equity_value numeric(20, 6);
     opening_total_debit numeric(20, 6);
     current_period_id bigint;
+    current_period_count integer;
     general_journal_id bigint;
     functional_currency_code character(3);
     opening_journal_id bigint;
@@ -32,7 +33,8 @@ DECLARE
     opening_account_count integer;
     legacy_journal_matches boolean;
 BEGIN
-    IF target_tenant_id <= 0 OR target_company_id <= 0 THEN
+    IF target_tenant_id IS NULL OR target_tenant_id <= 0
+       OR target_company_id IS NULL OR target_company_id <= 0 THEN
         RAISE EXCEPTION 'Set target_tenant_id and target_company_id before running this script.';
     END IF;
 
@@ -237,8 +239,8 @@ BEGIN
         WHERE company."TenantId" = target_tenant_id
           AND company."Id" = target_company_id;
 
-        SELECT period."Id"
-        INTO current_period_id
+        SELECT COUNT(*)::integer, MIN(period."Id")
+        INTO current_period_count, current_period_id
         FROM "AccountingPeriods" AS period
         WHERE period."TenantId" = target_tenant_id
           AND period."CompanyId" = target_company_id
@@ -252,11 +254,11 @@ BEGIN
                 AND fiscal_year."CompanyId" = target_company_id
                 AND fiscal_year."Id" = period."FiscalYearId"
                 AND fiscal_year."Status" = 'Open'
-          )
-        ORDER BY period."StartsOn"
-        LIMIT 1;
+          );
 
-        IF current_period_id IS NULL THEN
+        IF current_period_count > 1 THEN
+            RAISE EXCEPTION 'Multiple open accounting periods contain today; resolve the overlapping periods before seeding opening balances.';
+        ELSIF current_period_count = 0 THEN
             RAISE EXCEPTION 'Create an open accounting period containing today before seeding opening balances.';
         END IF;
 

@@ -105,7 +105,7 @@ export class SalesCreditNotesPageComponent implements OnInit {
 
   get creditableInvoices(): SalesInvoice[] {
     return this.invoices.filter(invoice =>
-      invoice.status === 'Posted' && Number(invoice.allocatedTotal) < Number(invoice.grandTotal));
+      invoice.status === 'Posted' && Number(invoice.creditedTotal) < Number(invoice.grandTotal));
   }
 
   get taxCodeIds(): number[] {

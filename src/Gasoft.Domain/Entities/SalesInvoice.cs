@@ -15,6 +15,8 @@ public sealed class SalesInvoice : TenantOwnedEntity
     public decimal TaxTotal { get; set; }
     public decimal GrandTotal { get; set; }
     public decimal AllocatedTotal { get; set; }
+    public decimal CreditedTotal { get; set; }
+    public decimal RefundedTotal { get; set; }
     public string Status { get; set; } = "Draft";
     public int Revision { get; set; }
     public ICollection<SalesInvoiceLine> Lines { get; set; } = new List<SalesInvoiceLine>();

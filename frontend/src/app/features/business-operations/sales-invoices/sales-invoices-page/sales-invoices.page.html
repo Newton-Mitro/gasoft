@@ -99,6 +99,8 @@
                 <th>Currency</th>
                 <th>Total</th>
                 <th>Allocated</th>
+                <th>Credited</th>
+                <th>Refunded</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -112,6 +114,8 @@
                   <td>{{ invoice.currencyCode }}</td>
                   <td>{{ invoice.grandTotal }}</td>
                   <td>{{ invoice.allocatedTotal }}</td>
+                  <td>{{ invoice.creditedTotal }}</td>
+                  <td>{{ invoice.refundedTotal }}</td>
                   <td>
                     <span class="status-tag" [class.posted]="invoice.status === 'Posted'">{{
                       invoice.status

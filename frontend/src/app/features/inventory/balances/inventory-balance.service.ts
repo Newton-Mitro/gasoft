@@ -38,7 +38,9 @@ function isInventoryBalance(value: unknown): value is InventoryBalance {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
   return isScalar(row['itemId']) &&
+    typeof row['itemName'] === 'string' &&
     isScalar(row['warehouseId']) &&
+    typeof row['warehouseName'] === 'string' &&
     isScalar(row['quantity']) &&
     isScalar(row['value']);
 }

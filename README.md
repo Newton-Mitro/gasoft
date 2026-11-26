@@ -8,6 +8,17 @@ Multi-tenant accounting software starter: .NET 10 API, PostgreSQL, ASP.NET Core 
 - Node.js 22.12+ and npm
 - PostgreSQL 16+
 
+## Run backend tests
+
+The PostgreSQL outbox integration tests require a disposable test database. Set `GASOFT_TEST_POSTGRES` to its connection string; the tests create a unique schema, apply migrations there, and drop that schema afterward. They do not use or migrate the application database.
+
+```sh
+GASOFT_TEST_POSTGRES='Host=localhost;Port=5432;Database=gasoft_test;Username=postgres;Password=<test-password>' \
+  dotnet test Gasoft.slnx --configuration Release
+```
+
+Without this variable, the PostgreSQL integration tests are skipped.
+
 ## Run locally
 
 Run the API and frontend in separate terminals. The commands below assume you run them from the repository root.
@@ -29,13 +40,13 @@ The API requires a database connection string and a JWT signing key of at least 
 
 ```sh
 dotnet user-secrets init --project src/Gasoft.Api
-dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=gasoft;Username=gasoft;Password=1056027" --project src/Gasoft.Api
+dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=gasoft;Username=gasoft;Password=<replace-with-local-postgres-password>" --project src/Gasoft.Api
 dotnet user-secrets set "Jwt:SigningKey" "$(openssl rand -base64 48)" --project src/Gasoft.Api
 ```
 
 The key-generation command requires `openssl`. If you already initialized User Secrets for this project, skip `dotnet user-secrets init`.
 
-In the connection-string command above, replace the password placeholder with the exact password entered for the PostgreSQL `gasoft` user. If you already have User Secrets configured, set or update the connection string explicitly:
+Replace `<replace-with-local-postgres-password>` with the password entered for the PostgreSQL `gasoft` user before running the command. Do not commit credentials. If you already have User Secrets configured, set or update the connection string explicitly.
 
 ### 3. Apply database migrations
 
@@ -52,7 +63,7 @@ If you are starting with a fresh database, this creates the schema and seeds ISO
 
 ### Notifications and audit history
 
-The notification inbox stores important workflow events across sales, purchasing, payments, expenses, inventory, accounting, fixed assets, banking, and account security. Inbox items are personal to each user and can be marked read or dismissed. Configure per-event **in-app** and **email** delivery in **Administration → Notification settings**; in-app delivery stays enabled by default, while email delivery is opt-in. Workspace Owners and Admins configure tenant SMTP in **Administration → Email configuration**; tenant SMTP takes priority for notifications and sales quotes. If a tenant has no SMTP configuration, notifications use the optional server-wide `Email` SMTP settings. Configure SMTP passwords through secret storage or the `Email__SmtpPassword` environment variable rather than committing credentials. SMTP passwords saved for a tenant are protected with ASP.NET Core Data Protection; persist and share the Data Protection key ring across application restarts and instances so they remain readable. Account recovery email continues to use server-wide SMTP configuration. Tenant Owners and Admins can review tenant-scoped audit records in **Administration → Audit history**. Workflow audit actions use specific event-style labels, with generic and legacy actions retained for existing records. Changes to sensitive credential and bank-account fields are excluded from audit details.
+The notification inbox stores important workflow events across sales, purchasing, payments, expenses, inventory, accounting, fixed assets, banking, and account security. Inbox items are personal to each user and can be marked read or dismissed. Configure per-event **in-app** and **email** delivery in **Administration → Notification settings**; in-app delivery stays enabled by default, while email delivery is opt-in. Email notifications are queued with the workflow change and sent by a background worker; temporary delivery failures are retried and terminal failures are logged and retained for diagnosis. Workspace Owners and Admins configure tenant SMTP in **Administration → Email configuration**; tenant SMTP takes priority for notifications and sales quotes. If a tenant has no SMTP configuration, notifications use the optional server-wide `Email` SMTP settings. Configure SMTP passwords through secret storage or the `Email__SmtpPassword` environment variable rather than committing credentials. SMTP passwords saved for a tenant are protected with ASP.NET Core Data Protection; persist and share the Data Protection key ring across application restarts and instances so they remain readable. Account recovery email continues to use server-wide SMTP configuration. Tenant Owners and Admins can review tenant-scoped audit records in **Administration → Audit history**. Workflow audit actions use specific event-style labels, with generic and legacy actions retained for existing records. Changes to sensitive credential and bank-account fields are excluded from audit details.
 
 ### Point of sale
 
@@ -68,11 +79,13 @@ Fiscal years can be closed after they contain accounting periods, all periods ar
 
 ### 4. Start the API
 
+For a fresh local database that needs ownership or schema permissions fixed, run the following using a PostgreSQL administrator:
+
 ```
 sudo -u postgres psql -d postgres
 ```
 
-```
+```sql
 ALTER DATABASE gasoft OWNER TO gasoft;
 \connect gasoft
 ALTER SCHEMA public OWNER TO gasoft;
@@ -80,30 +93,28 @@ GRANT USAGE, CREATE ON SCHEMA public TO gasoft;
 \q
 ```
 
-```
-dotnet ef database update \
-  --project src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj \
-  --startup-project src/Gasoft.Api/Gasoft.Api.csproj \
-  --context AppDbContext
-```
-
-```
-dotnet ef database drop --force \
-  --project src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj \
-  --startup-project src/Gasoft.Api/Gasoft.Api.csproj \
-  --context AppDbContext
-
-dotnet ef database update \
-  --project src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj \
-  --startup-project src/Gasoft.Api/Gasoft.Api.csproj \
-  --context AppDbContext
-```
+Apply migrations with the command in step 3. Existing databases are updated without deleting their data.
 
 ```sh
 dotnet run --project src/Gasoft.Api --launch-profile http
 ```
 
 The API listens at `http://localhost:5035`. Check `http://localhost:5035/health` before continuing.
+
+### Optional: reset a disposable local database
+
+**Destructive:** this permanently drops the database selected by the configured connection string. Never use it with a database containing data you need.
+
+```sh
+dotnet ef database drop --force \
+  --project src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj \
+  --startup-project src/Gasoft.Api/Gasoft.Api.csproj \
+  --context AppDbContext
+dotnet ef database update \
+  --project src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj \
+  --startup-project src/Gasoft.Api/Gasoft.Api.csproj \
+  --context AppDbContext
+```
 
 ```sh
 cd frontend

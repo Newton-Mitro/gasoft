@@ -52,6 +52,14 @@ describe('CompanyService', () => {
       code: 'NEWCO',
       legalName: 'New Company',
       functionalCurrencyCode: 'USD',
+      phone: '',
+      email: '',
+      website: '',
+      address: '',
+      cityRegion: '',
+      postalCode: '',
+      country: '',
+      taxId: '',
     };
 
     service.getById(3).subscribe();

@@ -5,24 +5,18 @@ using Gasoft.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace Gasoft.Infrastructure.Persistence;
 
 public sealed class AppDbContext(
     DbContextOptions<AppDbContext> options,
-    ICurrentTenant currentTenant,
-    IEmailPasswordProtector emailPasswordProtector,
-    ISmtpEmailTransport smtpEmailTransport,
-    IOptions<EmailOptions> emailOptions,
-    ILogger<AppDbContext> logger)
+    ICurrentTenant currentTenant)
     : IdentityDbContext<ApplicationUser, IdentityRole<long>, long>(options)
 {
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<AppNotification> Notifications => Set<AppNotification>();
+    public DbSet<NotificationEmailOutbox> NotificationEmailOutbox => Set<NotificationEmailOutbox>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
     public DbSet<TenantEmailConfiguration> TenantEmailConfigurations => Set<TenantEmailConfiguration>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -96,9 +90,8 @@ public sealed class AppDbContext(
         if (pendingAudits.Count == 0)
         {
             var notifications = CapturePendingNotifications();
-            var result = base.SaveChanges(acceptAllChangesOnSuccess);
-            SendNotificationEmailsAsync(notifications, CancellationToken.None).GetAwaiter().GetResult();
-            return result;
+            QueueNotificationEmails(notifications);
+            return base.SaveChanges(acceptAllChangesOnSuccess);
         }
         using var transaction = Database.CurrentTransaction is null
             ? Database.BeginTransaction()
@@ -106,6 +99,7 @@ public sealed class AppDbContext(
         var entriesNormalized = false;
         try
         {
+            QueueNotificationEmails(CapturePendingNotifications());
             var result = base.SaveChanges(acceptAllChangesOnSuccess);
             if (!acceptAllChangesOnSuccess)
             {
@@ -114,11 +108,11 @@ public sealed class AppDbContext(
             }
             PersistAuditEntries(pendingAudits);
             var notifications = CapturePendingNotifications();
+            QueueNotificationEmails(notifications);
             base.SaveChanges();
             if (!acceptAllChangesOnSuccess)
                 RestoreEntriesAfterAuditSave(pendingAudits);
             transaction?.Commit();
-            SendNotificationEmailsAsync(notifications, CancellationToken.None).GetAwaiter().GetResult();
             return result;
         }
         catch
@@ -138,9 +132,8 @@ public sealed class AppDbContext(
         if (pendingAudits.Count == 0)
         {
             var notifications = CapturePendingNotifications();
-            var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-            await SendNotificationEmailsAsync(notifications, cancellationToken);
-            return result;
+            QueueNotificationEmails(notifications);
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
         await using var transaction = Database.CurrentTransaction is null
             ? await Database.BeginTransactionAsync(cancellationToken)
@@ -148,6 +141,7 @@ public sealed class AppDbContext(
         var entriesNormalized = false;
         try
         {
+            QueueNotificationEmails(CapturePendingNotifications());
             var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
             if (!acceptAllChangesOnSuccess)
             {
@@ -156,12 +150,12 @@ public sealed class AppDbContext(
             }
             await PersistAuditEntriesAsync(pendingAudits, cancellationToken);
             var notifications = CapturePendingNotifications();
+            QueueNotificationEmails(notifications);
             await base.SaveChangesAsync(cancellationToken);
             if (!acceptAllChangesOnSuccess)
                 RestoreEntriesAfterAuditSave(pendingAudits);
             if (transaction is not null)
                 await transaction.CommitAsync(cancellationToken);
-            await SendNotificationEmailsAsync(notifications, cancellationToken);
             return result;
         }
         catch
@@ -181,6 +175,7 @@ public sealed class AppDbContext(
         builder.Entity<AppNotification>(entity =>
         {
             entity.HasKey(x => x.Id);
+            entity.HasAlternateKey(x => new { x.TenantId, x.Id });
             entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
             entity.Property(x => x.Message).HasMaxLength(1000).IsRequired();
             entity.Property(x => x.Category).HasMaxLength(40).IsRequired();
@@ -192,6 +187,40 @@ public sealed class AppDbContext(
                 x.TenantId == CurrentTenantId.Value &&
                 CurrentUserId.HasValue &&
                 x.UserId == CurrentUserId.Value);
+        });
+
+        builder.Entity<NotificationEmailOutbox>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(1000).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.NextAttemptAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.LeaseExpiresAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.SentAt).HasColumnType("timestamp with time zone");
+            entity.Property(x => x.LastError).HasMaxLength(2000);
+            entity.HasIndex(x => new { x.TenantId, x.NotificationId }).IsUnique();
+            entity.HasIndex(x => new { x.Status, x.NextAttemptAt, x.LeaseExpiresAt });
+            entity.HasQueryFilter(x =>
+                CurrentTenantId.HasValue &&
+                x.TenantId == CurrentTenantId.Value &&
+                CurrentUserId.HasValue &&
+                x.UserId == CurrentUserId.Value);
+            entity.HasOne(x => x.Notification)
+                .WithMany()
+                .HasForeignKey(x => new { x.TenantId, x.NotificationId })
+                .HasPrincipalKey(x => new { x.TenantId, x.Id })
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.ToTable(table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_NotificationEmailOutbox_Status",
+                    "\"Status\" IN ('Pending', 'Processing', 'Sent', 'Failed')");
+                table.HasCheckConstraint(
+                    "CK_NotificationEmailOutbox_Attempts",
+                    "\"AttemptCount\" >= 0");
+            });
         });
 
         builder.Entity<NotificationPreference>(entity =>
@@ -946,6 +975,8 @@ public sealed class AppDbContext(
             entity.Property(x => x.TaxTotal).HasPrecision(20, 6);
             entity.Property(x => x.GrandTotal).HasPrecision(20, 6);
             entity.Property(x => x.AllocatedTotal).HasPrecision(20, 6);
+            entity.Property(x => x.CreditedTotal).HasPrecision(20, 6);
+            entity.Property(x => x.RefundedTotal).HasPrecision(20, 6);
             entity.Property(x => x.Status).HasMaxLength(20).IsRequired();
             entity.Property(x => x.Revision).IsConcurrencyToken();
             entity.HasOne<Company>()
@@ -966,7 +997,7 @@ public sealed class AppDbContext(
             entity.HasOne<Currency>().WithMany().HasForeignKey(x => x.CurrencyCode).OnDelete(DeleteBehavior.Restrict);
             entity.ToTable(table => table.HasCheckConstraint(
                 "CK_SalesInvoices_Totals",
-                "\"NetTotal\" >= 0 AND \"TaxTotal\" >= 0 AND \"GrandTotal\" = \"NetTotal\" + \"TaxTotal\" AND \"AllocatedTotal\" >= 0 AND \"AllocatedTotal\" <= \"GrandTotal\""));
+                "\"NetTotal\" >= 0 AND \"TaxTotal\" >= 0 AND \"GrandTotal\" = \"NetTotal\" + \"TaxTotal\" AND \"AllocatedTotal\" >= 0 AND \"AllocatedTotal\" <= \"GrandTotal\" AND \"CreditedTotal\" >= 0 AND \"CreditedTotal\" <= \"GrandTotal\" AND \"RefundedTotal\" >= 0 AND \"RefundedTotal\" <= \"CreditedTotal\""));
             entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
         });
 
@@ -1869,20 +1900,20 @@ public sealed class AppDbContext(
         var recipients = recipientIds.Distinct().ToArray();
         if (events.Length == 0 || recipients.Length == 0) return;
         foreach (var workflowEvent in events)
-        foreach (var recipientId in recipients)
-        {
-            if (workflowEvent.NotificationEventType is not string eventType) continue;
-            Notifications.Add(new AppNotification
+            foreach (var recipientId in recipients)
             {
-                TenantId = workflowEvent.TenantId,
-                UserId = recipientId,
-                Title = workflowEvent.NotificationTitle!,
-                Message = workflowEvent.NotificationMessage!,
-                Category = "workflow",
-                EventType = eventType,
-                CreatedAt = DateTimeOffset.UtcNow
-            });
-        }
+                if (workflowEvent.NotificationEventType is not string eventType) continue;
+                Notifications.Add(new AppNotification
+                {
+                    TenantId = workflowEvent.TenantId,
+                    UserId = recipientId,
+                    Title = workflowEvent.NotificationTitle!,
+                    Message = workflowEvent.NotificationMessage!,
+                    Category = "workflow",
+                    EventType = eventType,
+                    CreatedAt = DateTimeOffset.UtcNow
+                });
+            }
     }
 
     private AppNotification[] CapturePendingNotifications() =>
@@ -1891,87 +1922,26 @@ public sealed class AppDbContext(
             .Select(entry => entry.Entity)
             .ToArray();
 
-    private async Task SendNotificationEmailsAsync(
-        IEnumerable<AppNotification> notifications,
-        CancellationToken cancellationToken)
+    private void QueueNotificationEmails(IEnumerable<AppNotification> notifications)
     {
-        foreach (var notification in notifications)
+        var queuedNotifications = ChangeTracker.Entries<NotificationEmailOutbox>()
+            .Select(entry => entry.Reference(outbox => outbox.Notification).CurrentValue)
+            .OfType<AppNotification>()
+            .ToHashSet(ReferenceEqualityComparer.Instance);
+        foreach (var notification in notifications.Distinct())
         {
-            var preference = await NotificationPreferences.IgnoreQueryFilters()
-                .SingleOrDefaultAsync(item =>
-                    item.TenantId == notification.TenantId &&
-                    item.UserId == notification.UserId &&
-                    item.EventType == notification.EventType,
-                    cancellationToken);
-            if (preference?.EmailEnabled != true) continue;
-            var configuration = await TenantEmailConfigurations.IgnoreQueryFilters()
-                .SingleOrDefaultAsync(item => item.TenantId == notification.TenantId, cancellationToken);
-            var tenantSmtpConfigured = configuration is not null &&
-                !string.IsNullOrWhiteSpace(configuration.SmtpHost) &&
-                configuration.SmtpPort is > 0 and <= 65535 &&
-                !string.IsNullOrWhiteSpace(configuration.FromEmail) &&
-                (string.IsNullOrWhiteSpace(configuration.SmtpUsername) ||
-                 !string.IsNullOrEmpty(configuration.ProtectedSmtpPassword));
-            var useGlobalSmtp = !tenantSmtpConfigured && emailOptions.Value.IsSmtpConfigured;
-            if (!tenantSmtpConfigured && !useGlobalSmtp)
+            if (queuedNotifications.Contains(notification)) continue;
+            NotificationEmailOutbox.Add(new NotificationEmailOutbox
             {
-                logger.LogWarning(
-                    "Email notification for event {EventType} was not sent because neither tenant nor global SMTP is configured for tenant {TenantId}.",
-                    notification.EventType,
-                    notification.TenantId);
-                continue;
-            }
-
-            var email = await Users.IgnoreQueryFilters()
-                .Where(user => user.Id == notification.UserId)
-                .Select(user => user.Email)
-                .SingleOrDefaultAsync(cancellationToken);
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                logger.LogWarning(
-                    "Email notification for user {UserId} and event {EventType} was not sent because no email address is available.",
-                    notification.UserId,
-                    notification.EventType);
-                continue;
-            }
-
-            try
-            {
-                var deliverySettings = tenantSmtpConfigured && configuration is not null
-                    ? new SmtpDeliverySettings(
-                        configuration.SmtpHost,
-                        configuration.SmtpPort,
-                        configuration.SmtpUsername,
-                        configuration.ProtectedSmtpPassword is null
-                            ? null
-                            : emailPasswordProtector.Unprotect(configuration.ProtectedSmtpPassword),
-                        configuration.FromEmail,
-                        configuration.FromName)
-                    : new SmtpDeliverySettings(
-                        emailOptions.Value.SmtpHost,
-                        emailOptions.Value.SmtpPort,
-                        emailOptions.Value.SmtpUsername,
-                        emailOptions.Value.SmtpPassword,
-                        emailOptions.Value.FromAddress,
-                        emailOptions.Value.FromName);
-                await smtpEmailTransport.SendAsync(
-                    deliverySettings,
-                    email,
-                    notification.Title,
-                    $"<p>{System.Net.WebUtility.HtmlEncode(notification.Message)}</p>",
-                    notification.Message,
-                    cancellationToken);
-            }
-            catch (Exception exception) when (
-                exception is System.Net.Mail.SmtpException or FormatException or InvalidOperationException or
-                    System.Security.Cryptography.CryptographicException)
-            {
-                logger.LogError(
-                    exception,
-                    "Could not send email notification for user {UserId} and event {EventType}.",
-                    notification.UserId,
-                    notification.EventType);
-            }
+                TenantId = notification.TenantId,
+                NotificationId = notification.Id,
+                UserId = notification.UserId,
+                EventType = notification.EventType,
+                Title = notification.Title,
+                Message = notification.Message,
+                NextAttemptAt = DateTimeOffset.UtcNow,
+                Notification = notification
+            });
         }
     }
 

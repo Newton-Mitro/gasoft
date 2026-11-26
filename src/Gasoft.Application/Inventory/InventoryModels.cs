@@ -87,7 +87,13 @@ public sealed record StockMovementDto(
     decimal QuantityOut,
     decimal UnitCost,
     decimal TotalCost);
-public sealed record StockBalanceDto(long ItemId, long WarehouseId, decimal Quantity, decimal Value);
+public sealed record StockBalanceDto(
+    long ItemId,
+    string ItemName,
+    long WarehouseId,
+    string WarehouseName,
+    decimal Quantity,
+    decimal Value);
 public sealed record InventoryCountLineDto(
     long ItemId,
     decimal SystemQuantity,

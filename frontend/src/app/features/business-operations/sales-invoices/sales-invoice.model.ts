@@ -17,6 +17,8 @@ export interface SalesInvoice {
   exchangeRate: number | string;
   grandTotal: number | string;
   allocatedTotal: number | string;
+  creditedTotal: number | string;
+  refundedTotal: number | string;
   status: string;
   lines?: SalesInvoiceLine[];
 }

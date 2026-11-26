@@ -3,7 +3,6 @@
 @import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
 @import '@fortawesome/fontawesome-free/css/solid.min.css';
 @import '@ngxpert/hot-toast/styles.css';
-@import 'sweetalert2/dist/sweetalert2.min.css';
 
 :root {
   color-scheme: light;

@@ -21,12 +21,12 @@
     } @else {
       <div class="table-scroll">
         <table>
-          <thead><tr><th>Item ID</th><th>Warehouse ID</th><th>Quantity</th><th>Value</th></tr></thead>
+          <thead><tr><th>Item</th><th>Warehouse</th><th>Quantity</th><th>Value</th></tr></thead>
           <tbody>
             @for (balance of rows; track $index) {
               <tr>
-                <td>{{ balance.itemId }}</td>
-                <td>{{ balance.warehouseId }}</td>
+                <td>{{ balance.itemName }}</td>
+                <td>{{ balance.warehouseName }}</td>
                 <td>{{ balance.quantity }}</td>
                 <td>{{ formatValue(balance.value) }}</td>
               </tr>
