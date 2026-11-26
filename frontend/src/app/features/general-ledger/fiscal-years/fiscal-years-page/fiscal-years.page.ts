@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
-import { combineLatest, Subscription } from 'rxjs';
+import { combineLatest, forkJoin, Subscription } from 'rxjs';
 import { errorMessage } from '../../../../shared/utils/page-utils';
 import { RecordFormComponent } from '../../../../shared/components/record-form/record-form.component';
 import { PageChange, PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
@@ -54,6 +54,7 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
   statusHistory: FiscalYearStatusChange[] = [];
   equityAccountOptions: Choice[] = [];
   retainedEarningsAccountId: number | null = null;
+  allFiscalYears: FiscalYear[] = [];
   view: 'index' | 'create' | 'edit' = 'index';
   private routeSubscription?: Subscription;
   private currentRecordId: number | null = null;
@@ -201,6 +202,16 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
     return new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
   }
 
+  isFirstFiscalYear(year: FiscalYear): boolean {
+    return this.previousFiscalYear(year) === null;
+  }
+
+  previousFiscalYear(year: FiscalYear): FiscalYear | null {
+    return this.allFiscalYears
+      .filter(candidate => candidate.id !== year.id && candidate.endsOn < year.startsOn)
+      .sort((left, right) => right.endsOn.localeCompare(left.endsOn))[0] ?? null;
+  }
+
   private loadCloseChecklist(year: FiscalYear): void {
     this.error = '';
     this.busyYearId = year.id;
@@ -279,10 +290,12 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
   }
 
   async prepareOpeningBalances(year: FiscalYear): Promise<void> {
+    const previousYear = this.previousFiscalYear(year);
+    if (year.status !== 'Open' || !previousYear || previousYear.status !== 'Closed') return;
     const confirmed = await this.notifications.confirm({
-      title: 'Prepare opening balances?',
-      text: 'The prior fiscal year must be closed and any required closing journal posted. This creates or returns the opening journal in the first accounting period; review and post it before use.',
-      confirmButtonText: 'Prepare opening balances',
+      title: 'Carry forward balances?',
+      text: 'The previous fiscal year must be closed, any required closing journal must be posted, and the new year’s first accounting period must be open. This creates or returns a draft journal for review; it does not post automatically.',
+      confirmButtonText: 'Carry forward balances',
       icon: 'question',
     });
     if (!confirmed) return;
@@ -293,7 +306,7 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
         this.busyYearId = null;
         this.notifications.success(entry.status === 'Posted'
           ? `Opening-balance journal ${entry.id} is already posted; no duplicate was created.`
-          : `Draft opening-balance journal ${entry.id} is ready for review and posting for ${year.startsOn}.`);
+          : `Draft opening-balance journal ${entry.id} is ready for review and posting.`);
         this.success = '';
         this.changeDetector.markForCheck();
       },
@@ -392,8 +405,12 @@ export class FiscalYearsPageComponent implements OnInit, OnDestroy {
 
   private loadRows(): void {
     this.loading = true;
-    this.fiscalYears.getPage(this.page, this.pageSize).subscribe({
-      next: result => {
+    forkJoin({
+      result: this.fiscalYears.getPage(this.page, this.pageSize),
+      years: this.fiscalYears.getAll(),
+    }).subscribe({
+      next: ({ result, years }) => {
+        this.allFiscalYears = years;
         this.rows = result.items;
         this.page = result.page;
         this.pageSize = result.pageSize;

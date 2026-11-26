@@ -65,6 +65,7 @@ describe('FiscalYearService', () => {
     service.getCloseChecklist(3).subscribe();
     service.prepareClosingJournal(3, 10).subscribe();
     service.prepareOpeningBalances(4).subscribe();
+    service.prepareInitialOpeningBalances(5, [{ accountId: 11, debit: 100, credit: 0 }]).subscribe();
     service.postClosingJournal(17).subscribe();
     service.close(3, 'Year end complete').subscribe();
     service.reopen(3, 'Audit adjustment').subscribe();
@@ -74,6 +75,9 @@ describe('FiscalYearService', () => {
       ['GET', 'fiscal-years/3/close-checklist', true],
       ['POST', 'fiscal-years/3/closing-journal', { retainedEarningsAccountId: 10 }, true],
       ['POST', 'fiscal-years/4/opening-balances', {}, true],
+      ['POST', 'fiscal-years/5/initial-opening-balances', {
+        lines: [{ accountId: 11, debit: 100, credit: 0 }],
+      }, true],
       ['POST', 'journal-entries/17/post', {}, true],
       ['POST', 'fiscal-years/3/close', { reason: 'Year end complete' }, true],
       ['POST', 'fiscal-years/3/reopen', { reason: 'Audit adjustment' }, true],

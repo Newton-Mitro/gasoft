@@ -409,6 +409,172 @@ public sealed partial class AccountingService
         return ToDto(entry);
     }
 
+    public async Task<JournalEntryDto?> PrepareInitialFiscalYearOpeningBalancesAsync(
+        long companyId,
+        long fiscalYearId,
+        PrepareInitialFiscalYearOpeningBalancesRequest request,
+        CancellationToken cancellationToken)
+    {
+        var tenantId = EnsureTenant();
+        await EnsureCompanyAsync(tenantId, companyId, cancellationToken);
+
+        await using var transaction = await db.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, cancellationToken);
+        var year = await db.FiscalYears.SingleOrDefaultAsync(
+            item => item.CompanyId == companyId && item.Id == fiscalYearId,
+            cancellationToken);
+        if (year is null) return null;
+        if (year.Status != "Open")
+            throw new AccountingConflictException("Starting balances can only be prepared for an open fiscal year.");
+        if (await db.FiscalYears.AnyAsync(
+                item => item.CompanyId == companyId && item.EndsOn < year.StartsOn,
+                cancellationToken))
+            throw new AccountingConflictException(
+                "Starting balances are only for a company's first fiscal year. Use carry-forward balances for later years.");
+
+        var firstPeriod = await db.AccountingPeriods
+            .Where(period => period.CompanyId == companyId && period.FiscalYearId == fiscalYearId)
+            .OrderBy(period => period.StartsOn)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (firstPeriod is null ||
+            firstPeriod.StartsOn > year.StartsOn ||
+            firstPeriod.EndsOn < year.StartsOn)
+            throw new AccountingConflictException(
+                "Create an accounting period that includes the fiscal year start before preparing starting balances.");
+        if (firstPeriod.Status != "Open")
+            throw new AccountingConflictException(
+                "Open the first accounting period before preparing starting balances.");
+
+        var openingDescription = $"Opening balances for {year.StartsOn:yyyy-MM-dd} to {year.EndsOn:yyyy-MM-dd}";
+        if (await db.JournalEntries.AnyAsync(
+                entry => entry.CompanyId == companyId &&
+                         entry.AccountingPeriodId == firstPeriod.Id &&
+                         entry.Description == openingDescription,
+                cancellationToken))
+            throw new AccountingConflictException(
+                "A starting-balance journal already exists. Review it in Journal entries instead of creating a duplicate.");
+
+        if (request.Lines is null || request.Lines.Count is < 1 or > 999)
+            throw Validation("lines", "Add between 1 and 999 balance-sheet account lines.");
+
+        var accountIds = request.Lines.Select(line => line.AccountId).ToArray();
+        if (accountIds.Distinct().Count() != accountIds.Length)
+            throw Validation("lines", "Each account can appear only once in the starting balances.");
+
+        var accounts = await (
+            from account in db.ChartOfAccounts
+            join accountGroup in db.AccountGroups
+                on new { account.TenantId, account.CompanyId, GroupId = account.AccountGroupId }
+                equals new { accountGroup.TenantId, accountGroup.CompanyId, GroupId = accountGroup.Id }
+            where account.CompanyId == companyId && accountIds.Contains(account.Id)
+            select new
+            {
+                account.Id,
+                account.Code,
+                account.IsActive,
+                account.AllowPosting,
+                accountGroup.AccountType
+            })
+            .ToDictionaryAsync(account => account.Id, cancellationToken);
+        if (accounts.Count != accountIds.Length ||
+            accounts.Values.Any(account =>
+                !account.IsActive ||
+                !account.AllowPosting ||
+                account.Code == "3000" ||
+                account.AccountType is not ("Asset" or "Liability" or "Equity")))
+            throw Validation(
+                "lines",
+                "Choose active, postable Asset, Liability, or Equity accounts. Opening Balance Equity is added automatically.");
+
+        var company = await db.Companies.SingleAsync(item => item.Id == companyId, cancellationToken);
+        var functionalCurrency = await db.Currencies.SingleOrDefaultAsync(
+            currency => currency.Code == company.FunctionalCurrencyCode,
+            cancellationToken);
+        if (functionalCurrency is null)
+            throw new AccountingConflictException("The company's functional currency is not available.");
+
+        var openingLines = new List<JournalLine>(request.Lines.Count + 1);
+        foreach (var line in request.Lines)
+        {
+            if (line.AccountId <= 0 ||
+                line.Debit < 0 ||
+                line.Credit < 0 ||
+                (line.Debit == 0) == (line.Credit == 0) ||
+                line.Debit > MaximumAmount ||
+                line.Credit > MaximumAmount)
+                throw Validation("lines", "Each line needs one positive debit or credit within the supported amount range.");
+            if (decimal.Round(line.Debit, functionalCurrency.DecimalPlaces) != line.Debit ||
+                decimal.Round(line.Credit, functionalCurrency.DecimalPlaces) != line.Credit)
+                throw Validation(
+                    "lines",
+                    $"{company.FunctionalCurrencyCode} supports {functionalCurrency.DecimalPlaces} decimal places.");
+
+            openingLines.Add(CreateOpeningLine(
+                tenantId,
+                companyId,
+                line.AccountId,
+                company.FunctionalCurrencyCode,
+                line.Debit - line.Credit));
+        }
+
+        var difference = openingLines.Sum(line => line.FunctionalDebit) -
+                         openingLines.Sum(line => line.FunctionalCredit);
+        if (difference != 0)
+        {
+            if (Math.Abs(difference) > MaximumAmount)
+                throw Validation("lines", "The Opening Balance Equity adjustment exceeds the supported amount range.");
+
+            var openingEquityAccountId = await (
+                from account in db.ChartOfAccounts
+                join accountGroup in db.AccountGroups
+                    on new { account.TenantId, account.CompanyId, GroupId = account.AccountGroupId }
+                    equals new { accountGroup.TenantId, accountGroup.CompanyId, GroupId = accountGroup.Id }
+                where account.CompanyId == companyId &&
+                      account.Code == "3000" &&
+                      account.IsActive &&
+                      account.AllowPosting &&
+                      accountGroup.AccountType == "Equity"
+                select (long?)account.Id)
+                .SingleOrDefaultAsync(cancellationToken);
+            if (openingEquityAccountId is null)
+                throw new AccountingConflictException(
+                    "An active Opening Balance Equity account (3000) is required to balance the starting journal.");
+
+            openingLines.Add(CreateOpeningLine(
+                tenantId,
+                companyId,
+                openingEquityAccountId.Value,
+                company.FunctionalCurrencyCode,
+                -difference));
+        }
+
+        var generalJournal = await db.Journals.SingleOrDefaultAsync(
+            journal => journal.CompanyId == companyId && journal.Code == "GEN" && journal.IsActive,
+            cancellationToken);
+        if (generalJournal is null)
+            throw new AccountingConflictException("An active General journal (GEN) is required for starting balances.");
+
+        var entry = await journalEntries.CreateDraftAsync(
+            companyId,
+            new CreateJournalEntryRequest(
+                generalJournal.Id,
+                firstPeriod.Id,
+                year.StartsOn,
+                openingDescription,
+                openingLines.Select(line => new CreateJournalLineRequest(
+                    line.AccountId,
+                    line.TransactionCurrencyCode,
+                    line.Debit,
+                    line.Credit,
+                    line.ExchangeRate,
+                    line.Description)).ToArray()),
+            cancellationToken);
+        if (entry is null) return null;
+
+        await transaction.CommitAsync(cancellationToken);
+        return entry;
+    }
+
     public async Task<FiscalYearDto?> CloseFiscalYearAsync(
         long companyId,
         long fiscalYearId,

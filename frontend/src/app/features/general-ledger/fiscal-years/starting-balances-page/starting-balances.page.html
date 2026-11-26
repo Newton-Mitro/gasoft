@@ -1,0 +1,73 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">FISCAL YEAR</p>
+    <h1><i class="page-heading-icon fa-solid fa-scale-balanced" aria-hidden="true"></i>Set starting balances</h1>
+    <p class="page-description">Enter the opening position for your company’s first fiscal year.</p>
+  </div>
+  <div class="heading-actions">
+    <a class="button secondary" [routerLink]="indexPath">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Fiscal years
+    </a>
+  </div>
+</div>
+
+@if (loading) {
+  <div class="loading-card"><span class="spinner"></span> Loading fiscal year…</div>
+}
+
+@if (error) {
+  <div class="alert error" role="alert">{{ error }}</div>
+}
+
+@if (result) {
+  <section class="panel success-state" aria-labelledby="starting-balances-success-title">
+    <span class="empty-icon success-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+    <h3 id="starting-balances-success-title">Starting-balance draft created</h3>
+    <p>Draft journal #{{ result.id }} is ready. Review and post it before using the ledger.</p>
+    <div class="heading-actions success-actions">
+      <a class="button primary" routerLink="/general-ledger/journal-entries">
+        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> Review journal
+      </a>
+      <a class="button secondary" [routerLink]="indexPath">Fiscal years</a>
+    </div>
+  </section>
+}
+
+@if (year && !result) {
+  <section class="panel starting-balances-panel" aria-labelledby="opening-balance-title">
+    <div class="table-header">
+      <div>
+        <h2 id="opening-balance-title">Opening balances</h2>
+        <span>{{ year.startsOn }} to {{ year.endsOn }}</span>
+      </div>
+      <span class="table-badge">Functional currency</span>
+    </div>
+    <div class="starting-balances-content">
+      <p>
+        Enter balance-sheet amounts in your company’s functional currency. Any difference is added
+        to Opening Balance Equity (3000). This creates an unposted draft dated {{ year.startsOn }}
+        in the first accounting period, which must be open and include the fiscal year start date.
+      </p>
+      @if (accountsFailed) {
+        <button class="button secondary account-load-retry" type="button" (click)="retryLoadingAccounts()">
+          Retry loading accounts
+        </button>
+      }
+      <app-journal-entry-lines-editor
+        [lines]="lines"
+        [accounts]="accountOptions"
+        [accountsLoading]="accountsLoading"
+        [accountsFailed]="accountsFailed"
+        balancingAccountLabel="Opening Balance Equity"
+        [maxLines]="999"
+        (linesChange)="setLines($event)"
+      />
+      <div class="heading-actions starting-balances-actions">
+        <button class="button secondary" type="button" [disabled]="saving" (click)="cancel()">Cancel</button>
+        <button class="button primary" type="button" [disabled]="!canCreate" (click)="createDraft()">
+          {{ saving ? 'Creating draft…' : 'Create draft journal' }}
+        </button>
+      </div>
+    </div>
+  </section>
+}

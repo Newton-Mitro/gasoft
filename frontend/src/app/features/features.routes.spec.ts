@@ -2,11 +2,18 @@ import { BUSINESS_OPERATIONS_ROUTES } from './business-operations/business-opera
 import { AUTH_ROUTES } from './auth/auth.routes';
 import { DASHBOARD_ROUTES } from './dashboard/dashboard.routes';
 import { GENERAL_LEDGER_ROUTES } from './general-ledger/general-ledger.routes';
+import { FISCAL_YEARS_ROUTES } from './general-ledger/fiscal-years/fiscal-years.routes';
 import { INVENTORY_ROUTES } from './inventory/inventory.routes';
 import { PROFILE_ROUTES } from './profile/profile.routes';
 import { SETTINGS_ROUTES } from './settings/settings.routes';
 
 describe('feature routes', () => {
+  it('provides a separate route for first-year starting balances', () => {
+    expect(FISCAL_YEARS_ROUTES.find(route =>
+      route.path === 'general-ledger/fiscal-years/:recordId/starting-balances')?.data?.['view'])
+      .toBe('starting-balances');
+  });
+
   it('keeps auth, dashboard, and profile routes in their feature definitions', () => {
     expect(AUTH_ROUTES.map((route) => route.path)).toEqual([
       'login',

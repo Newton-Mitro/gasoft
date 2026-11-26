@@ -82,10 +82,19 @@
                   <td>{{ year.status }}</td>
                   <td>
                     @if (year.status === 'Open') {
-                      <button class="button secondary table-action" type="button"
-                        [disabled]="busyYearId === year.id" (click)="prepareOpeningBalances(year)">
-                        {{ busyYearId === year.id ? 'Preparing…' : 'Opening balances' }}
-                      </button>
+                      @if (isFirstFiscalYear(year)) {
+                        <a class="button secondary table-action"
+                          [routerLink]="[indexPath, year.id, 'starting-balances']">
+                          Set starting balances
+                        </a>
+                      } @else if (previousFiscalYear(year); as previousYear) {
+                        <button class="button secondary table-action" type="button"
+                          [disabled]="busyYearId === year.id || previousYear.status !== 'Closed'"
+                          [title]="previousYear.status !== 'Closed' ? 'Close the previous fiscal year first.' : null"
+                          (click)="prepareOpeningBalances(year)">
+                          {{ busyYearId === year.id ? 'Preparing…' : previousYear.status === 'Closed' ? 'Carry forward balances' : 'Close prior year first' }}
+                        </button>
+                      }
                       <button class="button secondary table-action warning-action" type="button"
                         [disabled]="busyYearId === year.id" (click)="changeStatus(year, 'close')">
                         {{ busyYearId === year.id ? 'Checking…' : 'Close' }}

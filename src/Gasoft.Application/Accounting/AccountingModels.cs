@@ -117,6 +117,12 @@ public sealed record FiscalYearClosingLineDto(
     decimal Debit,
     decimal Credit);
 public sealed record PrepareFiscalYearClosingRequest(long RetainedEarningsAccountId);
+public sealed record PrepareInitialFiscalYearOpeningBalancesRequest(
+    IReadOnlyList<InitialFiscalYearOpeningBalanceLineRequest> Lines);
+public sealed record InitialFiscalYearOpeningBalanceLineRequest(
+    long AccountId,
+    decimal Debit,
+    decimal Credit);
 public sealed record FiscalYearStatusChangeDto(
     long Id,
     string FromStatus,

@@ -314,6 +314,33 @@ public static class AccountingEndpoints
             }
         })
         .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"));
+        companies.MapPost("/fiscal-years/{fiscalYearId:long}/initial-opening-balances", async (
+            long companyId,
+            long fiscalYearId,
+            PrepareInitialFiscalYearOpeningBalancesRequest request,
+            IAccountingService service,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var entry = await service.PrepareInitialFiscalYearOpeningBalancesAsync(
+                    companyId, fiscalYearId, request, cancellationToken);
+                return entry is null
+                    ? Results.NotFound(new { error = "Fiscal year was not found in this company." })
+                    : Results.Created(
+                        $"/api/v1/companies/{companyId}/journal-entries/{entry.Id}",
+                        entry);
+            }
+            catch (AccountingValidationException exception)
+            {
+                return ValidationProblem(exception);
+            }
+            catch (AccountingConflictException exception)
+            {
+                return Results.Conflict(new { error = exception.Message });
+            }
+        })
+        .RequireAuthorization(policy => policy.RequireRole("Owner", "Admin"));
         companies.MapPost("/fiscal-years/{fiscalYearId:long}/close", async (
             long companyId,
             long fiscalYearId,

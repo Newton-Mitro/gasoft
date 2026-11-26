@@ -22,7 +22,13 @@ export class JournalEntryLinesEditorComponent {
   @Input() accountsLoading = false;
   @Input() accountsFailed = false;
   @Input() currencyCode = '';
+  @Input() balancingAccountLabel: string | null = null;
+  @Input() maxLines = 1000;
   @Output() readonly linesChange = new EventEmitter<JournalEntryLineForm[]>();
+
+  get minimumLines(): number {
+    return this.balancingAccountLabel ? 1 : 2;
+  }
 
   get totalDebits(): number {
     return this.lines.reduce((sum, line) => sum + (line.debit ?? 0), 0);
@@ -37,26 +43,38 @@ export class JournalEntryLinesEditorComponent {
   }
 
   get hasBalancedLines(): boolean {
+    if (this.balancingAccountLabel) {
+      return this.lines.length >= this.minimumLines &&
+        this.lines.every(isValidJournalEntryLine);
+    }
     return isBalancedJournalEntry(this.lines);
   }
 
   get balanceMessage(): string {
-    if (this.lines.length < 2) return 'Add at least two lines to create a journal entry.';
+    if (this.lines.length < this.minimumLines) {
+      return this.balancingAccountLabel
+        ? 'Add at least one starting-balance line.'
+        : 'Add at least two lines to create a journal entry.';
+    }
     if (this.lines.some(line => line.accountId === null)) return 'Choose an account for every line.';
     if (this.lines.some(line => !isValidJournalEntryLine(line))) return 'Choose an account and enter a positive debit or credit on each line, but not both.';
     if (Math.abs(this.difference) > JOURNAL_ENTRY_BALANCE_TOLERANCE) {
+      if (this.balancingAccountLabel) {
+        return `${this.balancingAccountLabel} will be ${this.difference > 0 ? 'credited' : 'debited'} by ${this.formatAmount(Math.abs(this.difference))}.`;
+      }
       return `Entry is out of balance by ${this.formatAmount(Math.abs(this.difference))}.`;
     }
+    if (this.balancingAccountLabel) return 'Starting balances are balanced; no adjustment is needed.';
     return 'Debits and credits are balanced.';
   }
 
   addLine(): void {
-    if (this.lines.length >= 1000) return;
+    if (this.lines.length >= this.maxLines) return;
     this.emitLines([...this.lines, this.newLine()]);
   }
 
   removeLine(index: number): void {
-    if (this.lines.length <= 2) return;
+    if (this.lines.length <= this.minimumLines) return;
     this.emitLines(this.lines.filter((_, lineIndex) => lineIndex !== index));
   }
 

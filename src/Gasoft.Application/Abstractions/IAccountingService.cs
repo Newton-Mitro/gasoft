@@ -54,6 +54,11 @@ public interface IAccountingService
         long companyId,
         long fiscalYearId,
         CancellationToken cancellationToken);
+    Task<JournalEntryDto?> PrepareInitialFiscalYearOpeningBalancesAsync(
+        long companyId,
+        long fiscalYearId,
+        PrepareInitialFiscalYearOpeningBalancesRequest request,
+        CancellationToken cancellationToken);
     Task<FiscalYearDto?> CloseFiscalYearAsync(
         long companyId,
         long fiscalYearId,

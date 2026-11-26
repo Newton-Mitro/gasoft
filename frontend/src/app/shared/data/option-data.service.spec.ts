@@ -87,6 +87,35 @@ describe('OptionDataService', () => {
     expect(options).toEqual([{ label: '3100 · Retained earnings', value: 3 }]);
   });
 
+  it('limits initial opening-balance options to balance-sheet accounts and excludes Opening Balance Equity', () => {
+    const api = {
+      get: (endpoint: string) => of(endpoint === 'accounts'
+        ? [
+            { id: 3, accountGroupId: 10, code: '1000', name: 'Cash', allowPosting: true, isActive: true },
+            { id: 4, accountGroupId: 20, code: '2000', name: 'Payables', allowPosting: true, isActive: true },
+            { id: 5, accountGroupId: 30, code: '3100', name: 'Retained earnings', allowPosting: true, isActive: true },
+            { id: 6, accountGroupId: 40, code: '4000', name: 'Sales', allowPosting: true, isActive: true },
+            { id: 7, accountGroupId: 30, code: '3000', name: 'Opening balance equity', allowPosting: true, isActive: true },
+          ]
+        : [
+            { id: 10, accountType: 'Asset' },
+            { id: 20, accountType: 'Liability' },
+            { id: 30, accountType: 'Equity' },
+            { id: 40, accountType: 'Revenue' },
+          ]),
+    } as unknown as ApiService;
+    const service = new OptionDataService(api, new OptionDataCacheService());
+    let options: { label: string; value: string | number }[] = [];
+
+    service.getOpeningBalanceAccountOptions().subscribe(result => options = result);
+
+    expect(options).toEqual([
+      { label: '1000 · Cash', value: 3 },
+      { label: '2000 · Payables', value: 4 },
+      { label: '3100 · Retained earnings', value: 5 },
+    ]);
+  });
+
   it('filters posting accounts by account type', () => {
     const api = {
       get: (endpoint: string) => of(endpoint === 'accounts'

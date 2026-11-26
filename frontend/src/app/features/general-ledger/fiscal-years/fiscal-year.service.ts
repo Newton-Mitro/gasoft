@@ -9,6 +9,7 @@ import {
   FiscalYearCloseChecklist,
   FiscalYearPayload,
   FiscalYearStatusChange,
+  InitialOpeningBalanceLine,
 } from './fiscal-year.model';
 
 @Injectable({ providedIn: 'root' })
@@ -61,6 +62,17 @@ export class FiscalYearService {
     return this.api.post<{ id: number; status: string }>(
       `fiscal-years/${id}/opening-balances`,
       {},
+      true,
+    );
+  }
+
+  prepareInitialOpeningBalances(
+    id: number,
+    lines: InitialOpeningBalanceLine[],
+  ): Observable<{ id: number; status: string }> {
+    return this.api.post<{ id: number; status: string }>(
+      `fiscal-years/${id}/initial-opening-balances`,
+      { lines },
       true,
     );
   }

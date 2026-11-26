@@ -48,6 +48,23 @@ describe('JournalEntryLinesEditorComponent', () => {
     expect(component.balanceMessage).toBe('Debits and credits are balanced.');
   });
 
+  it('accepts a starting-balance line and explains the Opening Balance Equity adjustment', () => {
+    const component = new JournalEntryLinesEditorComponent();
+    component.balancingAccountLabel = 'Opening Balance Equity';
+    component.lines = [{ accountId: 10, debit: 500, credit: 0 }];
+
+    expect(component.hasBalancedLines).toBe(true);
+    expect(component.balanceMessage).toBe('Opening Balance Equity will be credited by 500.00.');
+  });
+
+  it('keeps the normal two-line balance requirement for journal entries', () => {
+    const component = new JournalEntryLinesEditorComponent();
+    component.lines = [{ accountId: 10, debit: 500, credit: 0 }];
+
+    expect(component.hasBalancedLines).toBe(false);
+    expect(component.balanceMessage).toBe('Add at least two lines to create a journal entry.');
+  });
+
   it('keeps line accounts selected when account options arrive after the entry', async () => {
     TestBed.configureTestingModule({ imports: [JournalEntryLinesEditorComponent] });
     const fixture = TestBed.createComponent(JournalEntryLinesEditorComponent);
