@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+!.env.example
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/.angular
+**/coverage
+**/TestResults
+src/Gasoft.Api/App_Data/uploads

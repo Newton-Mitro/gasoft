@@ -155,6 +155,10 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+.field-grid.company-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .field-grid label {
   display: flex;
   min-width: 0;
@@ -310,6 +314,10 @@
 }
 
 @media (max-width: 700px) {
+  .field-grid.company-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .form-panel-heading {
     padding: 23px 20px 20px;
   }
@@ -336,6 +344,7 @@
 
 @media (max-width: 520px) {
   .field-grid,
+  .field-grid.company-fields,
   .field-grid.transaction-fields {
     grid-template-columns: 1fr;
   }

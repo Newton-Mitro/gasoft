@@ -22,9 +22,8 @@ Gasoft is a multi-tenant accounting and business operations application. It prov
 ## Requirements
 
 - Git
-- .NET 10 SDK
-- Node.js 22.12 or later and npm
-- PostgreSQL 16 or later
+- Docker Engine and Docker Compose V2 for the containerized setup
+- Or, for the native setup: .NET 10 SDK, Node.js 22.12 or later and npm, and PostgreSQL 16 or later
 
 ## Clone the repository
 
@@ -33,9 +32,39 @@ git clone https://github.com/Newton-Mitro/gasoft.git
 cd gasoft
 ```
 
+## Run with Docker Compose
+
+Install Docker Engine (or Docker Desktop) and the Compose V2 plugin using the [official Docker instructions](https://docs.docker.com/get-docker/). Verify the installation:
+
+```sh
+docker --version
+docker compose version
+```
+
+Create a local environment file and generate random values for the database password and JWT signing key:
+
+```sh
+cp .env.example .env
+openssl rand -hex 32
+```
+
+Run `openssl rand -hex 32` a second time for a separate value, then put the generated values in `.env` as `POSTGRES_PASSWORD` and `JWT_SIGNING_KEY`. Keep `.env` private; it is excluded from Git.
+
+Start the app from the repository root:
+
+```sh
+docker compose up --build -d
+```
+
+Compose starts PostgreSQL, applies the EF Core migration to its persistent database volume, and then starts the API and Angular development server. Open [http://localhost:4200](http://localhost:4200). The API health check is at [http://localhost:5035/health](http://localhost:5035/health).
+
+Stop the containers with `docker compose down`. The PostgreSQL database and uploaded files are stored in persistent volumes. To permanently delete the database and uploads, use `docker compose down --volumes`; this is destructive.
+
+This Compose configuration is intended for local development, not production deployment. It exposes the frontend and API on localhost and uses the Angular development server.
+
 ## Run locally
 
-The API and frontend run in separate terminals. The commands below assume a Linux development environment; use your PostgreSQL service's equivalent commands on other operating systems.
+The native setup runs the API and frontend in separate terminals. The commands below assume a Linux development environment; use your PostgreSQL service's equivalent commands on other operating systems.
 
 ### 1. Create a fresh PostgreSQL database
 

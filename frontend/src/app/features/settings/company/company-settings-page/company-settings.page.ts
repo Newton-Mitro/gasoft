@@ -20,7 +20,7 @@ import { FieldValidationDirective } from '../../../../shared/directives/field-va
 })
 export class CompanySettingsPageComponent implements OnInit, OnDestroy {
   readonly notifications = inject(NotificationService);
-  readonly pageKey = 'company';
+  readonly pageKey = 'companies';
   readonly title = 'Company settings';
   readonly description = 'Manage your company identity, contact details, tax information, and functional currency.';
   readonly fields: Field[] = [
