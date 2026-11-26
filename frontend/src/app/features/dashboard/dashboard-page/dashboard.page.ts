@@ -8,7 +8,11 @@ import { errorMessage } from '../../../shared/utils/page-utils';
 import { DataRow } from '../../../shared/models/shared.models';
 import { NotificationService } from '../../../shared/services/notification.service';
 import { FinancialReportService } from '../../reports/data-access/report.service';
-import { IncomeStatementReport } from '../../reports/data-access/report.model';
+import {
+  BalanceSheetReport,
+  CashFlowReport,
+  IncomeStatementReport,
+} from '../../reports/data-access/report.model';
 
 interface DashboardSummary {
   currencyCode: string;
@@ -16,6 +20,7 @@ interface DashboardSummary {
   totalEntries: number;
   totalAssets: number;
   totalLiabilitiesAndEquity: number;
+  cashMovement: number;
   netIncome: number;
   totalRevenue: number;
   totalExpenses: number;
@@ -36,6 +41,13 @@ interface DashboardTrend {
   expenses: number;
   revenueHeight: number;
   expensesHeight: number;
+}
+
+interface DashboardGraphValue {
+  label: string;
+  amount: number;
+  width: number;
+  kind: 'asset' | 'liability' | 'equity' | 'operating' | 'investing' | 'financing' | 'unclassified';
 }
 
 interface PageResult<T> {
@@ -68,6 +80,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   readonly summary = signal<DashboardSummary | null>(null);
   readonly activity = signal<DashboardActivity[]>([]);
   readonly trend = signal<DashboardTrend[]>([]);
+  readonly position = signal<DashboardGraphValue[]>([]);
+  readonly cashFlow = signal<DashboardGraphValue[]>([]);
   readonly currentYear = new Date().getFullYear();
   private requestSubscription?: Subscription;
 
@@ -143,7 +157,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.requestSubscription = forkJoin({
       trial: this.api.get<DataRow>('reports/trial-balance'),
       income: this.reports.getIncomeStatement({ fromDate: yearStart, toDate: today }),
-      balance: this.api.get<DataRow>('reports/balance-sheet'),
+      balance: this.reports.getBalanceSheet({ asOfDate: today }),
+      cashFlow: this.reports.getCashFlow({ fromDate: yearStart, toDate: today }),
       accounts: this.api.get<PageResult<unknown>>(
         'accounts/page',
         true,
@@ -163,12 +178,15 @@ export class DashboardPage implements OnInit, OnDestroy {
           currencyCode: String(result.trial['currencyCode'] ?? result.income.currencyCode ?? 'USD'),
           totalAccounts: this.numberValue(result.accounts.totalCount),
           totalEntries: this.numberValue(result.entries.totalCount),
-          totalAssets: this.numberValue(result.balance['totalAssets']),
-          totalLiabilitiesAndEquity: this.numberValue(result.balance['totalLiabilitiesAndEquity']),
+          totalAssets: result.balance.totalAssets,
+          totalLiabilitiesAndEquity: result.balance.totalLiabilitiesAndEquity,
+          cashMovement: result.cashFlow.actualCashMovement,
           netIncome: result.income.netIncome,
           totalRevenue: result.income.totalRevenue,
           totalExpenses: result.income.totalExpenses,
         });
+        this.position.set(this.buildPosition(result.balance));
+        this.cashFlow.set(this.buildCashFlow(result.cashFlow));
         this.activity.set(result.entries.items.map(entry => ({
           id: entry.id,
           entryDate: entry.entryDate,
@@ -203,6 +221,33 @@ export class DashboardPage implements OnInit, OnDestroy {
       ...month,
       revenueHeight: Math.max(month.revenue > 0 ? 4 : 0, month.revenue / maximum * 100),
       expensesHeight: Math.max(month.expenses > 0 ? 4 : 0, month.expenses / maximum * 100),
+    }));
+  }
+
+  private buildPosition(report: BalanceSheetReport): DashboardGraphValue[] {
+    const values = [
+      { label: 'Assets', amount: report.totalAssets, kind: 'asset' as const },
+      { label: 'Liabilities', amount: report.totalLiabilities, kind: 'liability' as const },
+      { label: 'Equity', amount: report.totalEquity, kind: 'equity' as const },
+    ];
+    const maximum = Math.max(1, ...values.map(value => Math.abs(value.amount)));
+    return values.map(value => ({
+      ...value,
+      width: value.amount === 0 ? 0 : Math.max(4, Math.abs(value.amount) / maximum * 100),
+    }));
+  }
+
+  private buildCashFlow(report: CashFlowReport): DashboardGraphValue[] {
+    const values = [
+      { label: 'Operating', amount: report.direct.operating.net, kind: 'operating' as const },
+      { label: 'Investing', amount: report.direct.investing.net, kind: 'investing' as const },
+      { label: 'Financing', amount: report.direct.financing.net, kind: 'financing' as const },
+      { label: 'Unclassified', amount: report.direct.unclassified.net, kind: 'unclassified' as const },
+    ];
+    const maximum = Math.max(1, ...values.map(value => Math.abs(value.amount)));
+    return values.map(value => ({
+      ...value,
+      width: value.amount === 0 ? 0 : Math.max(4, Math.abs(value.amount) / maximum * 100),
     }));
   }
 

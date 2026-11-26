@@ -75,8 +75,7 @@
           <span class="nav-heading">{{ section.label }}</span>
           @for (link of section.links; track link.path) {
             @if (
-              (link.path !== '/settings/audit-history' &&
-                link.path !== '/settings/email') ||
+              (link.path !== '/settings/audit-history' && link.path !== '/settings/email') ||
               auth.isAdministrator()
             ) {
               <a
@@ -159,7 +158,6 @@
         <strong>{{ currentCompany?.legalName ?? 'Company workspace' }}</strong></span
       >
       <div class="topbar-right">
-        <span class="status-pill"><span></span> All systems ready</span>
         <app-notification-inbox />
         <span class="avatar-small">
           @if (auth.profile()?.profileImageUrl; as profileImageUrl) {

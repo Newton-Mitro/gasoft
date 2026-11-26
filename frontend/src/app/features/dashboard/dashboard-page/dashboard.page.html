@@ -115,6 +115,93 @@
     </section>
   </div>
 
+  <div class="dashboard-insight-grid">
+    <section class="panel dashboard-insight-panel" aria-labelledby="position-chart-title">
+      <div class="dashboard-panel-heading">
+        <div>
+          <p class="eyebrow">BALANCE SHEET</p>
+          <h2 id="position-chart-title">Financial position</h2>
+          <p class="dashboard-panel-description">Assets, liabilities, and equity as of {{ today }}</p>
+        </div>
+        <a class="dashboard-link" routerLink="/reports/balance-sheet">View report <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+      </div>
+      <div class="dashboard-graph-list" role="list" aria-label="Balance-sheet totals">
+        @for (item of position(); track item.kind) {
+          <div class="dashboard-graph-row" role="listitem">
+            <div class="dashboard-graph-label">
+              <span>{{ item.label }}</span>
+              <strong [class.negative-value]="item.amount < 0">{{ currency(item.amount) }}</strong>
+            </div>
+            <div
+              class="dashboard-graph-track"
+              role="meter"
+              [attr.aria-label]="item.label + ' balance: ' + currency(item.amount)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-valuenow]="item.width"
+            >
+              <span
+                class="dashboard-graph-fill"
+                [class.asset]="item.kind === 'asset'"
+                [class.liability]="item.kind === 'liability'"
+                [class.equity]="item.kind === 'equity'"
+                [class.negative]="item.amount < 0"
+                [style.width.%]="item.width"
+              ></span>
+            </div>
+          </div>
+        }
+      </div>
+      <div class="dashboard-insight-total">
+        <span>Total liabilities &amp; equity</span>
+        <strong>{{ currency(snapshot.totalLiabilitiesAndEquity) }}</strong>
+      </div>
+    </section>
+
+    <section class="panel dashboard-insight-panel" aria-labelledby="cash-flow-chart-title">
+      <div class="dashboard-panel-heading">
+        <div>
+          <p class="eyebrow">CASH FLOW</p>
+          <h2 id="cash-flow-chart-title">Movement by activity</h2>
+          <p class="dashboard-panel-description">Year to date · {{ snapshot.currencyCode }}</p>
+        </div>
+        <a class="dashboard-link" routerLink="/reports/cash-flow">View report <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+      </div>
+      <div class="dashboard-graph-list" role="list" aria-label="Year-to-date cash flow by activity">
+        @for (item of cashFlow(); track item.kind) {
+          <div class="dashboard-graph-row" role="listitem">
+            <div class="dashboard-graph-label">
+              <span>{{ item.label }}</span>
+              <strong [class.negative-value]="item.amount < 0">{{ currency(item.amount) }}</strong>
+            </div>
+            <div
+              class="dashboard-graph-track"
+              role="meter"
+              [attr.aria-label]="item.label + ' net cash flow: ' + currency(item.amount)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-valuenow]="item.width"
+            >
+              <span
+                class="dashboard-graph-fill"
+                [class.operating]="item.kind === 'operating'"
+                [class.investing]="item.kind === 'investing'"
+                [class.financing]="item.kind === 'financing'"
+                [class.unclassified]="item.kind === 'unclassified'"
+                [class.negative]="item.amount < 0"
+                [style.width.%]="item.width"
+              ></span>
+            </div>
+          </div>
+        }
+      </div>
+      <div class="dashboard-insight-total">
+        <span>Actual cash movement</span>
+        <strong [class.negative-value]="snapshot.cashMovement < 0">{{ currency(snapshot.cashMovement) }}</strong>
+      </div>
+    </section>
+  </div>
+
   <section class="dashboard-bottom-grid">
     <a class="dashboard-action-card" routerLink="/general-ledger/accounts">
       <span class="action-card-icon"><i class="fa-solid fa-sitemap" aria-hidden="true"></i></span>

@@ -95,6 +95,100 @@
   gap: 15px;
 }
 
+.dashboard-insight-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.dashboard-insight-panel {
+  min-width: 0;
+  padding: 20px;
+}
+
+.dashboard-graph-list {
+  display: grid;
+  gap: 17px;
+  margin-top: 24px;
+}
+
+.dashboard-graph-row {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-graph-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.dashboard-graph-label strong {
+  color: var(--text-strong);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-graph-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+
+.dashboard-graph-fill {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  transition: width .25s ease;
+}
+
+.dashboard-graph-fill.asset,
+.dashboard-graph-fill.operating {
+  background: var(--accent);
+}
+
+.dashboard-graph-fill.liability,
+.dashboard-graph-fill.investing {
+  background: color-mix(in srgb, var(--focus-color) 72%, var(--surface));
+}
+
+.dashboard-graph-fill.equity,
+.dashboard-graph-fill.financing {
+  background: var(--success-text);
+}
+
+.dashboard-graph-fill.unclassified {
+  background: var(--text-muted);
+}
+
+.dashboard-graph-fill.negative {
+  background: var(--error-text);
+}
+
+.dashboard-insight-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 13px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.dashboard-insight-total strong {
+  color: var(--text-strong);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
 .dashboard-chart-panel,
 .dashboard-activity-panel {
   min-width: 0;
@@ -464,8 +558,13 @@
   }
 
   .dashboard-chart-panel,
-  .dashboard-activity-panel {
+  .dashboard-activity-panel,
+  .dashboard-insight-panel {
     padding: 15px;
+  }
+
+  .dashboard-insight-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .dashboard-link {
