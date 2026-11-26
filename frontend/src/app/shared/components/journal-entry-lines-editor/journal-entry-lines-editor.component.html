@@ -15,14 +15,14 @@
       <span class="journal-line-number">Line {{ i + 1 }}</span>
       <label>
         <span class="visually-hidden">Account for line {{ i + 1 }}</span>
-        <select appSearchableSelect [name]="'journalLineAccount' + i" required [disabled]="accountsLoading || accountsFailed" [value]="line.accountId ?? ''" (change)="updateLine(i, 'accountId', $any($event.target).value)">
-          <option value="" disabled>
+        <select appSearchableSelect [name]="'journalLineAccount' + i" required [disabled]="accountsLoading || accountsFailed" [ngModel]="line.accountId" [ngModelOptions]="{ standalone: true }" (ngModelChange)="updateLine(i, 'accountId', $event)">
+          <option [ngValue]="null" disabled>
             @if (accountsLoading) { Loading accounts... }
             @else if (accountsFailed) { Could not load accounts }
             @else { {{ accounts.length ? 'Select an account' : 'No posting accounts available' }} }
           </option>
           @for (account of accounts; track account.value) {
-            <option [value]="account.value">{{ account.label }}</option>
+            <option [ngValue]="account.value">{{ account.label }}</option>
           }
         </select>
       </label>

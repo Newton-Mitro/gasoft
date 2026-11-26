@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import {
   isBalancedJournalEntry,
   isValidJournalEntryLine,
@@ -11,7 +12,7 @@ import { InputComponent } from '../input/input.component';
 
 @Component({
   selector: 'app-journal-entry-lines-editor',
-  imports: [FieldValidationDirective, SearchableSelectDirective, InputComponent],
+  imports: [FormsModule, FieldValidationDirective, SearchableSelectDirective, InputComponent],
   styleUrl: './journal-entry-lines-editor.component.css',
   templateUrl: './journal-entry-lines-editor.component.html',
 })

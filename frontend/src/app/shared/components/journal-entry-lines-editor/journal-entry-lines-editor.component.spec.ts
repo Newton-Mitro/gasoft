@@ -1,6 +1,9 @@
+import { TestBed } from '@angular/core/testing';
 import { JournalEntryLinesEditorComponent } from './journal-entry-lines-editor.component';
 
 describe('JournalEntryLinesEditorComponent', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
   it('adds and removes lines while preserving the minimum of two', () => {
     const component = new JournalEntryLinesEditorComponent();
     component.lines = [
@@ -43,5 +46,36 @@ describe('JournalEntryLinesEditorComponent', () => {
     expect(component.totalCredits).toBe(25);
     expect(component.hasBalancedLines).toBe(true);
     expect(component.balanceMessage).toBe('Debits and credits are balanced.');
+  });
+
+  it('keeps line accounts selected when account options arrive after the entry', async () => {
+    TestBed.configureTestingModule({ imports: [JournalEntryLinesEditorComponent] });
+    const fixture = TestBed.createComponent(JournalEntryLinesEditorComponent);
+    fixture.componentInstance.lines = [
+      { accountId: 10, debit: 100, credit: 0 },
+      { accountId: 11, debit: 0, credit: 100 },
+    ];
+    fixture.detectChanges();
+
+    fixture.componentInstance.accounts = [
+      { value: 10, label: '1000 · Cash and cash equivalents' },
+      { value: 11, label: '1100 · Accounts receivable' },
+    ];
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const selects = Array.from(fixture.nativeElement.querySelectorAll('select')) as HTMLSelectElement[];
+    expect(selects.map(select => select.selectedOptions[0]?.textContent?.trim())).toEqual([
+      '1000 · Cash and cash equivalents',
+      '1100 · Accounts receivable',
+    ]);
+    const triggers = Array.from(fixture.nativeElement.querySelectorAll('.searchable-select-trigger')) as HTMLButtonElement[];
+    expect(triggers.map(trigger => trigger.textContent?.trim())).toEqual([
+      '1000 · Cash and cash equivalents',
+      '1100 · Accounts receivable',
+    ]);
+
+    fixture.destroy();
   });
 });

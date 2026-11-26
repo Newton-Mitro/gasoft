@@ -8,14 +8,14 @@
       <legend>Line {{ i + 1 }}</legend>
       <label>
         {{ accountLabel }}
-        <select appSearchableSelect [name]="'lineAccount' + i" required [disabled]="accountsLoading || accountsFailed" [value]="line.accountId ?? ''" (change)="updateLine(i, 'accountId', $any($event.target).value)">
-          <option value="" disabled>
+        <select appSearchableSelect [name]="'lineAccount' + i" required [disabled]="accountsLoading || accountsFailed" [ngModel]="line.accountId" [ngModelOptions]="{ standalone: true }" (ngModelChange)="updateLine(i, 'accountId', $event)">
+          <option [ngValue]="null" disabled>
             @if (accountsLoading) { Loading accounts… }
             @else if (accountsFailed) { Could not load accounts }
             @else { Select account }
           </option>
           @for (choice of accounts; track choice.value) {
-            <option [value]="choice.value">{{ choice.label }}</option>
+            <option [ngValue]="choice.value">{{ choice.label }}</option>
           }
         </select>
       </label>
@@ -33,14 +33,14 @@
       </label>
       <label>
         Tax code (optional)
-        <select appSearchableSelect [name]="'lineTaxCode' + i" [disabled]="taxCodesLoading || taxCodesFailed" [value]="line.taxCodeId ?? ''" (change)="updateLine(i, 'taxCodeId', $any($event.target).value)">
-          <option value="">
+        <select appSearchableSelect [name]="'lineTaxCode' + i" [disabled]="taxCodesLoading || taxCodesFailed" [ngModel]="line.taxCodeId" [ngModelOptions]="{ standalone: true }" (ngModelChange)="updateLine(i, 'taxCodeId', $event)">
+          <option [ngValue]="null">
             @if (taxCodesLoading) { Loading tax codes… }
             @else if (taxCodesFailed) { Could not load tax codes }
             @else { No tax }
           </option>
           @for (choice of taxCodes; track choice.value) {
-            <option [value]="choice.value">{{ choice.label }}</option>
+            <option [ngValue]="choice.value">{{ choice.label }}</option>
           }
         </select>
       </label>
