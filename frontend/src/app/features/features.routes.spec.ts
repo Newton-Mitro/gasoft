@@ -40,6 +40,8 @@ describe('feature routes', () => {
     expect(routedPages.has('fixed-assets')).toBe(true);
     expect(routedPages.has('pos')).toBe(true);
     expect(routedPages.has('pos-settings')).toBe(true);
+    expect(routedPages.has('notification-settings')).toBe(true);
+    expect(routedPages.has('email-configuration')).toBe(true);
   });
 
   it('routes resource pages through distinct feature components', () => {

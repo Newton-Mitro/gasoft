@@ -150,6 +150,8 @@ export class Shell {
       links: [
         { label: 'POS settings', path: '/settings/pos', icon: 'fa-cash-register' },
         { label: 'Company settings', path: '/settings/company', icon: 'fa-gears' },
+        { label: 'Notification settings', path: '/settings/notifications', icon: 'fa-bell' },
+        { label: 'Email configuration', path: '/settings/email', icon: 'fa-envelope' },
         { label: 'Tax codes & rates', path: '/settings/tax-codes', icon: 'fa-percent' },
         {
           label: 'Tax registrations',

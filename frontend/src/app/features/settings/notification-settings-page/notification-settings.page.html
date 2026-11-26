@@ -1,0 +1,171 @@
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">PERSONAL PREFERENCES</p>
+    <h1><i class="page-heading-icon fa-solid fa-bell" aria-hidden="true"></i>Notification settings</h1>
+    <p class="page-description">Choose what reaches you and where. Changes apply to your account only.</p>
+  </div>
+  <button
+    class="button primary save-button"
+    type="button"
+    [disabled]="loading || saving || !hasUnsavedChanges"
+    (click)="save()"
+  >
+    <i class="fa-solid" [class.fa-check]="saved && !hasUnsavedChanges" [class.fa-floppy-disk]="!saved || hasUnsavedChanges" aria-hidden="true"></i>
+    {{ saving ? 'Saving…' : saved && !hasUnsavedChanges ? 'Saved' : 'Save changes' }}
+  </button>
+</div>
+
+@if (error) {
+  <div class="alert error" role="alert">{{ error }}</div>
+}
+@if (saved && !hasUnsavedChanges) {
+  <div class="alert success" role="status">Your notification preferences are up to date.</div>
+}
+@if (loading) {
+  <div class="loading-card"><span class="spinner"></span> Loading notification settings…</div>
+} @else {
+  <div class="notification-settings">
+    @if (emailConfigurationSource === 'tenant') {
+      <div class="delivery-status configured" role="status">
+        <span class="delivery-status-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+        <div>
+          <strong>Workspace email is ready</strong>
+          <span>Workspace SMTP is active and takes priority over the server-wide fallback.</span>
+        </div>
+      </div>
+    } @else if (emailConfigurationSource === 'global') {
+      <div class="delivery-status fallback" role="status">
+        <span class="delivery-status-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></span>
+        <div>
+          <strong>Using server email fallback</strong>
+          <span>A workspace Owner or Admin can set a dedicated mail server under Administration → Email configuration.</span>
+        </div>
+      </div>
+    } @else {
+      <div class="delivery-status unavailable" role="status">
+        <span class="delivery-status-icon"><i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i></span>
+        <div>
+          <strong>Email delivery needs setup</strong>
+          <span>Your email choices are saved and will take effect once SMTP is configured for this workspace or server.</span>
+        </div>
+      </div>
+    }
+
+    <section class="event-settings panel" aria-labelledby="events-heading">
+      <header class="event-toolbar">
+        <div class="event-toolbar-copy">
+          <p class="eyebrow">DELIVERY RULES</p>
+          <h2 id="events-heading">Choose by event</h2>
+          <span>
+            @if (searchTerm) {
+              Showing {{ visibleEventCount }} of {{ events.length }} events
+            } @else {
+              {{ events.length }} events across {{ eventGroups.length }} categories
+            }
+          </span>
+        </div>
+        <div class="event-search">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input
+            name="eventSearch"
+            type="search"
+            placeholder="Search events"
+            [(ngModel)]="searchTerm"
+            aria-label="Search notification events"
+          />
+          @if (searchTerm) {
+            <button type="button" class="clear-search" (click)="clearSearch()" aria-label="Clear event search">
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          }
+        </div>
+      </header>
+
+      <div class="channel-column-headings" aria-hidden="true">
+        <span>Event</span>
+        <span><i class="fa-solid fa-bell" aria-hidden="true"></i> In-app</span>
+        <span><i class="fa-solid fa-envelope" aria-hidden="true"></i> Email</span>
+      </div>
+
+      <div class="event-groups">
+        @for (group of visibleEventGroups; track group.category) {
+          <section class="event-group" [attr.aria-label]="group.category + ' notification events'">
+            <header class="event-group-header">
+              <div class="category-title">
+                <span class="category-icon">
+                  <i [class]="'fa-solid ' + categoryIcon(group.category)" aria-hidden="true"></i>
+                </span>
+                <div>
+                  <h3>{{ group.category }}</h3>
+                  <span>{{ group.events.length }} {{ group.events.length === 1 ? 'event' : 'events' }}</span>
+                </div>
+              </div>
+              <div class="group-bulk-controls" role="group" [attr.aria-label]="'Toggle all ' + group.category + ' events'">
+                <label class="bulk-control">
+                  <span>All</span>
+                  <input
+                    type="checkbox"
+                    [name]="group.category + '-in-app-all'"
+                    [checked]="isGroupEnabled(group, 'inAppEnabled')"
+                    [indeterminate]="isGroupPartiallyEnabled(group, 'inAppEnabled')"
+                    [attr.aria-label]="'Enable all in-app notifications for ' + group.category"
+                    (change)="setGroupEnabled(group, 'inAppEnabled', $event)"
+                  />
+                </label>
+                <label class="bulk-control">
+                  <span>All</span>
+                  <input
+                    type="checkbox"
+                    [name]="group.category + '-email-all'"
+                    [checked]="isGroupEnabled(group, 'emailEnabled')"
+                    [indeterminate]="isGroupPartiallyEnabled(group, 'emailEnabled')"
+                    [attr.aria-label]="'Enable all email notifications for ' + group.category"
+                    (change)="setGroupEnabled(group, 'emailEnabled', $event)"
+                  />
+                </label>
+              </div>
+            </header>
+
+            <div class="event-list">
+              @for (event of group.events; track event.eventType) {
+                <article class="event-row">
+                  <div class="event-copy">
+                    <strong>{{ event.name }}</strong>
+                    <span>{{ event.description }}</span>
+                  </div>
+                  <label class="channel-toggle" [attr.aria-label]="'In-app notification for ' + event.name">
+                    <input
+                      type="checkbox"
+                      [name]="event.eventType + '-in-app'"
+                      [(ngModel)]="event.inAppEnabled"
+                      (ngModelChange)="saved = false"
+                    />
+                    <span class="toggle-track"></span>
+                    <span class="screen-reader-only">In-app notification</span>
+                  </label>
+                  <label class="channel-toggle" [attr.aria-label]="'Email notification for ' + event.name">
+                    <input
+                      type="checkbox"
+                      [name]="event.eventType + '-email'"
+                      [(ngModel)]="event.emailEnabled"
+                      (ngModelChange)="saved = false"
+                    />
+                    <span class="toggle-track"></span>
+                    <span class="screen-reader-only">Email notification</span>
+                  </label>
+                </article>
+              }
+            </div>
+          </section>
+        } @empty {
+          <div class="empty-search">
+            <span class="empty-search-icon"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span>
+            <strong>No matching events</strong>
+            <span>Try another search term or clear your search.</span>
+            <button class="button secondary" type="button" (click)="clearSearch()">Clear search</button>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+}

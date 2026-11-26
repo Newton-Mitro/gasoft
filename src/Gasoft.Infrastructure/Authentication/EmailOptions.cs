@@ -1,3 +1,5 @@
+using System.Net.Mail;
+
 namespace Gasoft.Infrastructure.Authentication;
 
 public sealed class EmailOptions
@@ -19,6 +21,11 @@ public sealed class EmailOptions
 
     public bool IsSmtpConfigured =>
         !string.IsNullOrWhiteSpace(SmtpHost) &&
+        SmtpHost.Length <= 253 &&
+        Uri.CheckHostName(SmtpHost) != UriHostNameType.Unknown &&
+        !SmtpHost.Any(char.IsWhiteSpace) &&
         SmtpPort is > 0 and <= 65535 &&
-        !string.IsNullOrWhiteSpace(FromAddress);
+        MailAddress.TryCreate(FromAddress, out var fromAddress) &&
+        string.Equals(fromAddress.Address, FromAddress, StringComparison.OrdinalIgnoreCase) &&
+        (string.IsNullOrWhiteSpace(SmtpUsername) || !string.IsNullOrEmpty(SmtpPassword));
 }

@@ -2,6 +2,7 @@ using Gasoft.Application.Abstractions;
 using Gasoft.Application.Accounting;
 using Gasoft.Application.Common;
 using Gasoft.Domain.Entities;
+using Gasoft.Domain.Notifications;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -1835,6 +1836,7 @@ public sealed class AccountingService(AppDbContext db, ICurrentTenant currentTen
                         $"Posted reversal #{reversal.Id} on {reversal.EntryDate:yyyy-MM-dd} for journal entry #{original.Id} " +
                         $"\"{original.Description}\" dated {original.EntryDate:yyyy-MM-dd}.",
                     Category = "accounting",
+                    EventType = NotificationEvents.JournalReversalPosted,
                     CreatedAt = DateTimeOffset.UtcNow
                 });
                 await db.SaveChangesAsync(cancellationToken);

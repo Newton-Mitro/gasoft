@@ -1,0 +1,75 @@
+<form (ngSubmit)="save()">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">WORKSPACE SETTINGS</p>
+      <h1><i class="page-heading-icon fa-solid fa-envelope" aria-hidden="true"></i>Email configuration</h1>
+      <p class="page-description">Configure the workspace SMTP server for email notifications and sales quotes.</p>
+    </div>
+    <button class="button primary" type="submit" [disabled]="loading || saving">
+      {{ saving ? 'Saving…' : 'Save configuration' }}
+    </button>
+  </div>
+
+  @if (error) {
+    <div class="alert error" role="alert">{{ error }}</div>
+  }
+  @if (saved) {
+    <div class="alert success" role="status">Email configuration saved.</div>
+  }
+  @if (loading) {
+    <div class="loading-card"><span class="spinner"></span> Loading email configuration…</div>
+  } @else {
+    <section class="panel email-configuration-panel" aria-labelledby="smtp-settings-heading">
+      <div class="table-header">
+        <div>
+          <h2 id="smtp-settings-heading">Outgoing mail server</h2>
+          <span>TLS is enabled for SMTP connections.</span>
+        </div>
+      </div>
+      <div class="email-configuration-fields">
+        <label>
+          SMTP host
+          <input name="smtpHost" type="text" autocomplete="off" [(ngModel)]="smtpHost" required />
+        </label>
+        <label>
+          SMTP port
+          <input name="smtpPort" type="number" min="1" max="65535" [(ngModel)]="smtpPort" required />
+        </label>
+        <label>
+          SMTP username <span class="optional">(optional)</span>
+          <input name="smtpUsername" type="text" autocomplete="username" [(ngModel)]="smtpUsername" />
+        </label>
+        <label>
+          SMTP password <span class="optional">(optional)</span>
+          <input
+            name="smtpPassword"
+            type="password"
+            autocomplete="new-password"
+            [(ngModel)]="smtpPassword"
+            (input)="clearPassword = false"
+          />
+        </label>
+        <label>
+          Sender email address
+          <input name="fromEmail" type="email" autocomplete="email" [(ngModel)]="fromEmail" required />
+        </label>
+        <label>
+          Sender name
+          <input name="fromName" type="text" autocomplete="organization" [(ngModel)]="fromName" required />
+        </label>
+      </div>
+      <div class="email-configuration-help">
+        @if (hasPassword) {
+          <p>A password is saved securely. Leave the password field blank to keep it unchanged.</p>
+          <label class="clear-password">
+            <input type="checkbox" name="clearPassword" [(ngModel)]="clearPassword" />
+            Clear the saved SMTP password
+          </label>
+          <p>To remove SMTP authentication, clear the username as well as the saved password.</p>
+        } @else {
+          <p>SMTP passwords are encrypted before being stored. Leave authentication fields blank if your server does not require a login.</p>
+        }
+      </div>
+    </section>
+  }
+</form>

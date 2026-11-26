@@ -29,6 +29,10 @@ describe('AuditHistoryPageComponent', () => {
           pageSize: 1,
           totalCount: 2,
           totalPages: 2,
+          actions: [
+            { action: 'Updated', category: 'General', name: 'Updated' },
+            { action: 'sales-invoice-posted', category: 'Sales', name: 'Sales invoice posted' },
+          ],
         });
       }),
     };
@@ -45,6 +49,11 @@ describe('AuditHistoryPageComponent', () => {
 
     expect(fixture.componentInstance.loading).toBe(false);
     expect(fixture.componentInstance.totalCount).toBe(2);
+    expect(fixture.componentInstance.formatAction('sales-invoice-posted')).toBe('Sales invoice posted');
+    expect(fixture.componentInstance.actions).toContainEqual({
+      label: 'Sales · Sales invoice posted',
+      value: 'sales-invoice-posted',
+    });
     expect(fixture.nativeElement.querySelector('.audit-table tbody tr td')?.textContent).not.toContain(
       'Loading',
     );
@@ -59,5 +68,10 @@ describe('AuditHistoryPageComponent', () => {
     const requestParams = api.get.mock.calls.at(-1)?.[2] as HttpParams;
     expect(requestParams.get('page')).toBe('2');
     expect(fixture.componentInstance.records[0].id).toBe(2);
+
+    fixture.componentInstance.action = 'sales-invoice-posted';
+    fixture.componentInstance.applyFilters();
+    const filterParams = api.get.mock.calls.at(-1)?.[2] as HttpParams;
+    expect(filterParams.get('action')).toBe('sales-invoice-posted');
   });
 });

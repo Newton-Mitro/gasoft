@@ -7,6 +7,7 @@ public sealed class AppNotification : TenantOwnedEntity
     public required string Title { get; set; }
     public required string Message { get; set; }
     public required string Category { get; set; }
+    public required string EventType { get; set; }
     public string? Link { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ReadAt { get; set; }

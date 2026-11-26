@@ -143,7 +143,8 @@
   white-space: nowrap;
 }
 
-.audit-action.posted {
+.audit-action.posted,
+.audit-action.workflow {
   background: var(--accent-soft);
   color: var(--accent-text);
 }

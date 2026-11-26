@@ -1,12 +1,12 @@
-using System.Net;
-using System.Net.Mail;
 using System.Text.Encodings.Web;
 using Gasoft.Application.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace Gasoft.Infrastructure.Authentication;
 
-public sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSender
+public sealed class SmtpEmailSender(
+    IOptions<EmailOptions> options,
+    ISmtpEmailTransport transport) : IEmailSender
 {
     private readonly EmailOptions settings = options.Value;
 
@@ -44,27 +44,18 @@ public sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSend
         if (!CanSendEmail)
             throw new InvalidOperationException("SMTP email settings are incomplete.");
 
-        using var message = new MailMessage
-        {
-            From = new MailAddress(settings.FromAddress, settings.FromName),
-            Subject = subject,
-            Body = htmlBody,
-            IsBodyHtml = true,
-        };
-        message.To.Add(new MailAddress(email));
-        message.AlternateViews.Add(AlternateView.CreateAlternateViewFromString(
+        await transport.SendAsync(
+            new SmtpDeliverySettings(
+                settings.SmtpHost,
+                settings.SmtpPort,
+                settings.SmtpUsername,
+                settings.SmtpPassword,
+                settings.FromAddress,
+                settings.FromName),
+            email,
+            subject,
+            htmlBody,
             textBody,
-            null,
-            "text/plain"));
-
-        using var client = new SmtpClient(settings.SmtpHost, settings.SmtpPort)
-        {
-            EnableSsl = true,
-            UseDefaultCredentials = false,
-        };
-        if (!string.IsNullOrWhiteSpace(settings.SmtpUsername))
-            client.Credentials = new NetworkCredential(settings.SmtpUsername, settings.SmtpPassword);
-
-        await client.SendMailAsync(message, cancellationToken);
+            cancellationToken);
     }
 }

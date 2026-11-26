@@ -1,6 +1,7 @@
 using System.Net.Mail;
 using Gasoft.Application.Abstractions;
 using Gasoft.Domain.Entities;
+using Gasoft.Domain.Notifications;
 using Gasoft.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -197,6 +198,7 @@ public sealed class AuthService(
                     Title = "Password changed",
                     Message = "Your account password was changed.",
                     Category = "security",
+                    EventType = NotificationEvents.PasswordChanged,
                     CreatedAt = DateTimeOffset.UtcNow
                 });
             }
@@ -232,7 +234,9 @@ public sealed class AuthService(
         {
             TenantId = tenantId,
             ActorUserId = action == "AuthenticationSucceeded" ? userId : null,
-            Action = action,
+            Action = action == "AuthenticationFailed"
+                ? NotificationEvents.SignInAttemptRejected
+                : action,
             EntityType = "Authentication",
             DetailsJson = action == "AuthenticationSucceeded"
                 ? "{\"result\":\"succeeded\"}"
@@ -257,6 +261,7 @@ public sealed class AuthService(
                     Title = "Sign-in attempt rejected",
                     Message = "A sign-in attempt for this workspace was rejected.",
                     Category = "security",
+                    EventType = NotificationEvents.SignInAttemptRejected,
                     CreatedAt = DateTimeOffset.UtcNow
                 });
             }

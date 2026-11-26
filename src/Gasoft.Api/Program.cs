@@ -96,6 +96,7 @@ app.MapBudgetEndpoints();
 app.MapFixedAssetEndpoints();
 app.MapExpenseEndpoints();
 app.MapNotificationAndAuditEndpoints();
+app.MapTenantEmailConfigurationEndpoints();
 
 app.Run();
 

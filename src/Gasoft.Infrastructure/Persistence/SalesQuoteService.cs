@@ -15,7 +15,8 @@ namespace Gasoft.Infrastructure.Persistence;
 public sealed class SalesQuoteService(
     AppDbContext db,
     ICurrentTenant currentTenant,
-    IEmailSender emailSender,
+    IEmailPasswordProtector emailPasswordProtector,
+    ISmtpEmailTransport smtpEmailTransport,
     IBillingService billing,
     ILogger<SalesQuoteService> logger) : ISalesQuoteService
 {
@@ -146,10 +147,12 @@ public sealed class SalesQuoteService(
         long quoteId,
         CancellationToken cancellationToken)
     {
-        if (!emailSender.CanSendEmail)
+        var smtpConfiguration = await db.TenantEmailConfigurations
+            .SingleOrDefaultAsync(cancellationToken);
+        if (currentTenant.TenantId is null || smtpConfiguration is null)
             throw new SalesQuoteDeliveryException(
                 SalesQuoteDeliveryFailure.Unavailable,
-                "Outgoing email is not configured. Contact your administrator.");
+                "Outgoing email is not configured for this workspace. Contact your administrator.");
 
         await using var transaction = await db.Database.BeginTransactionAsync(
             System.Data.IsolationLevel.Serializable,
@@ -229,7 +232,17 @@ public sealed class SalesQuoteService(
 
         try
         {
-            await emailSender.SendEmailAsync(
+            var password = smtpConfiguration.ProtectedSmtpPassword is null
+                ? null
+                : emailPasswordProtector.Unprotect(smtpConfiguration.ProtectedSmtpPassword);
+            await smtpEmailTransport.SendAsync(
+                new SmtpDeliverySettings(
+                    smtpConfiguration.SmtpHost,
+                    smtpConfiguration.SmtpPort,
+                    smtpConfiguration.SmtpUsername,
+                    password,
+                    smtpConfiguration.FromEmail,
+                    smtpConfiguration.FromName),
                 recipient.Address,
                 $"Your sales quote from {company.LegalName}",
                 htmlBody,

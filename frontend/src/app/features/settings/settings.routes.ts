@@ -8,6 +8,22 @@ import { USERS_ROUTES } from './users/users.routes';
 
 export const SETTINGS_ROUTES: Routes = [
   {
+    path: 'settings/email',
+    loadComponent: () =>
+      import('./email-configuration-page/email-configuration.page').then(
+        (module) => module.EmailConfigurationPageComponent,
+      ),
+    data: { page: 'email-configuration' },
+  },
+  {
+    path: 'settings/notifications',
+    loadComponent: () =>
+      import('./notification-settings-page/notification-settings.page').then(
+        (module) => module.NotificationSettingsPageComponent,
+      ),
+    data: { page: 'notification-settings' },
+  },
+  {
     path: 'settings/pos',
     loadComponent: () =>
       import('../business-operations/pos/pos-settings-page/pos-settings.page').then(

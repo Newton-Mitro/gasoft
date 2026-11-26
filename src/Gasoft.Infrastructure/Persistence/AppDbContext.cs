@@ -1,21 +1,30 @@
 using Gasoft.Application.Abstractions;
 using Gasoft.Domain.Entities;
+using Gasoft.Domain.Notifications;
 using Gasoft.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace Gasoft.Infrastructure.Persistence;
 
 public sealed class AppDbContext(
     DbContextOptions<AppDbContext> options,
-    ICurrentTenant currentTenant)
+    ICurrentTenant currentTenant,
+    IEmailPasswordProtector emailPasswordProtector,
+    ISmtpEmailTransport smtpEmailTransport,
+    IOptions<EmailOptions> emailOptions,
+    ILogger<AppDbContext> logger)
     : IdentityDbContext<ApplicationUser, IdentityRole<long>, long>(options)
 {
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<AppNotification> Notifications => Set<AppNotification>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<TenantEmailConfiguration> TenantEmailConfigurations => Set<TenantEmailConfiguration>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<TenantUser> TenantUsers => Set<TenantUser>();
     public DbSet<Company> Companies => Set<Company>();
@@ -85,7 +94,12 @@ public sealed class AppDbContext(
     {
         var pendingAudits = CaptureAuditEntries();
         if (pendingAudits.Count == 0)
-            return base.SaveChanges(acceptAllChangesOnSuccess);
+        {
+            var notifications = CapturePendingNotifications();
+            var result = base.SaveChanges(acceptAllChangesOnSuccess);
+            SendNotificationEmailsAsync(notifications, CancellationToken.None).GetAwaiter().GetResult();
+            return result;
+        }
         using var transaction = Database.CurrentTransaction is null
             ? Database.BeginTransaction()
             : null;
@@ -99,10 +113,12 @@ public sealed class AppDbContext(
                 entriesNormalized = true;
             }
             PersistAuditEntries(pendingAudits);
+            var notifications = CapturePendingNotifications();
             base.SaveChanges();
             if (!acceptAllChangesOnSuccess)
                 RestoreEntriesAfterAuditSave(pendingAudits);
             transaction?.Commit();
+            SendNotificationEmailsAsync(notifications, CancellationToken.None).GetAwaiter().GetResult();
             return result;
         }
         catch
@@ -120,7 +136,12 @@ public sealed class AppDbContext(
     {
         var pendingAudits = CaptureAuditEntries();
         if (pendingAudits.Count == 0)
-            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        {
+            var notifications = CapturePendingNotifications();
+            var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            await SendNotificationEmailsAsync(notifications, cancellationToken);
+            return result;
+        }
         await using var transaction = Database.CurrentTransaction is null
             ? await Database.BeginTransactionAsync(cancellationToken)
             : null;
@@ -134,11 +155,13 @@ public sealed class AppDbContext(
                 entriesNormalized = true;
             }
             await PersistAuditEntriesAsync(pendingAudits, cancellationToken);
+            var notifications = CapturePendingNotifications();
             await base.SaveChangesAsync(cancellationToken);
             if (!acceptAllChangesOnSuccess)
                 RestoreEntriesAfterAuditSave(pendingAudits);
             if (transaction is not null)
                 await transaction.CommitAsync(cancellationToken);
+            await SendNotificationEmailsAsync(notifications, cancellationToken);
             return result;
         }
         catch
@@ -161,6 +184,7 @@ public sealed class AppDbContext(
             entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
             entity.Property(x => x.Message).HasMaxLength(1000).IsRequired();
             entity.Property(x => x.Category).HasMaxLength(40).IsRequired();
+            entity.Property(x => x.EventType).HasMaxLength(100).HasDefaultValue("legacy").IsRequired();
             entity.Property(x => x.Link).HasMaxLength(500);
             entity.HasIndex(x => new { x.TenantId, x.UserId, x.DismissedAt, x.CreatedAt });
             entity.HasQueryFilter(x =>
@@ -168,6 +192,29 @@ public sealed class AppDbContext(
                 x.TenantId == CurrentTenantId.Value &&
                 CurrentUserId.HasValue &&
                 x.UserId == CurrentUserId.Value);
+        });
+
+        builder.Entity<NotificationPreference>(entity =>
+        {
+            entity.HasKey(x => new { x.TenantId, x.UserId, x.EventType });
+            entity.Property(x => x.EventType).HasMaxLength(100).IsRequired();
+            entity.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasQueryFilter(x =>
+                CurrentTenantId.HasValue &&
+                x.TenantId == CurrentTenantId.Value &&
+                CurrentUserId.HasValue &&
+                x.UserId == CurrentUserId.Value);
+        });
+
+        builder.Entity<TenantEmailConfiguration>(entity =>
+        {
+            entity.HasKey(x => x.TenantId);
+            entity.Property(x => x.SmtpHost).HasMaxLength(253).IsRequired();
+            entity.Property(x => x.SmtpUsername).HasMaxLength(200);
+            entity.Property(x => x.ProtectedSmtpPassword).HasMaxLength(8192);
+            entity.Property(x => x.FromEmail).HasMaxLength(320).IsRequired();
+            entity.Property(x => x.FromName).HasMaxLength(200).IsRequired();
+            entity.HasQueryFilter(x => CurrentTenantId.HasValue && x.TenantId == CurrentTenantId.Value);
         });
 
         builder.Entity<AuditLog>(entity =>
@@ -1583,6 +1630,7 @@ public sealed class AppDbContext(
             .Where(entry =>
                 entry.Entity is not AuditLog &&
                 entry.Entity is not AppNotification &&
+                entry.Entity is not NotificationPreference &&
                 entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted &&
                 entry.Metadata.FindProperty(nameof(TenantOwnedEntity.TenantId)) is not null)
             .Select(entry =>
@@ -1635,30 +1683,42 @@ public sealed class AppDbContext(
                             ":",
                             key.Properties.Select(property => entry.Property(property.Name).CurrentValue?.ToString() ?? string.Empty));
                 var entityName = statusChange?.Name ?? entityType;
-                var postsRecord = entry.Properties.Any(property =>
-                    property.Metadata.Name.Equals("Status", StringComparison.OrdinalIgnoreCase) &&
-                    property.CurrentValue is string status &&
-                    status.Equals("Posted", StringComparison.OrdinalIgnoreCase) &&
-                    (entry.State == EntityState.Added ||
-                     !string.Equals(property.OriginalValue as string, status, StringComparison.OrdinalIgnoreCase)));
+                var statusProperty = entry.Properties.FirstOrDefault(property =>
+                    property.Metadata.Name.Equals("Status", StringComparison.OrdinalIgnoreCase));
                 var statusValue = statusChange.HasValue
                     ? entry.Property("ToStatus").CurrentValue?.ToString()
-                    : null;
+                    : statusProperty?.CurrentValue?.ToString();
+                var statusChanged = statusChange.HasValue ||
+                    statusProperty is not null &&
+                    (entry.State == EntityState.Added || statusProperty.IsModified);
+                var postsRecord = statusChanged &&
+                    statusValue?.Equals("Posted", StringComparison.OrdinalIgnoreCase) == true;
                 var journalEntry = entry.Entity as JournalEntry;
-                var notificationTitle = postsRecord
-                    ? journalEntry?.ReversalOfEntryId is not null
-                        ? "Journal reversal posted"
-                        : $"{entityName} posted"
-                    : statusChange.HasValue ? $"{entityName} status changed" : null;
+                var notificationEventType = statusChanged || entry.State == EntityState.Added
+                    ? NotificationEvents.ResolveWorkflowEventType(
+                        entityType,
+                        statusValue,
+                        journalEntry?.Description,
+                        journalEntry?.ReversalOfEntryId,
+                        entry.State == EntityState.Added)
+                    : null;
+                var notificationDefinition = notificationEventType is null
+                    ? null
+                    : NotificationEvents.Find(notificationEventType);
+                var auditAction = notificationEventType ??
+                    (postsRecord ? "Posted" : action);
+                if (notificationEventType is null &&
+                    entityType == nameof(BankStatementTransaction) &&
+                    entry.State == EntityState.Added)
+                    auditAction = NotificationEvents.BankStatementImported;
+                var notificationTitle = notificationDefinition?.Name;
                 var notificationMessage = postsRecord
-                    ? journalEntry is null
-                        ? $"A {entityName} record was posted."
-                        : journalEntry.ReversalOfEntryId is long originalEntryId
-                            ? $"Journal entry #{originalEntryId} was reversed on {journalEntry.EntryDate:yyyy-MM-dd} with debit and credit amounts swapped."
-                            : $"Journal entry #{journalEntry.Id} \"{journalEntry.Description}\" was posted on {journalEntry.EntryDate:yyyy-MM-dd}."
-                    : statusChange.HasValue && !string.IsNullOrWhiteSpace(statusValue)
-                        ? $"A {entityName} was {statusValue}."
-                        : null;
+                    ? journalEntry?.ReversalOfEntryId is long originalEntryId
+                        ? $"Journal entry #{originalEntryId} was reversed on {journalEntry.EntryDate:yyyy-MM-dd} with debit and credit amounts swapped."
+                        : journalEntry is not null
+                            ? $"Journal entry #{journalEntry.Id} \"{journalEntry.Description}\" was posted on {journalEntry.EntryDate:yyyy-MM-dd}."
+                            : notificationDefinition?.Description
+                    : notificationDefinition?.Description;
                 return new PendingAuditEntry(
                     entry.Entity,
                     entry.State,
@@ -1670,12 +1730,13 @@ public sealed class AppDbContext(
                         property => property.OriginalValue),
                     tenantId.Value,
                     currentTenant.UserId,
-                    postsRecord ? "Posted" : action,
+                    auditAction,
                     entityName,
                     entityId,
                     JsonSerializer.Serialize(changes),
                     notificationTitle,
-                    notificationMessage);
+                    notificationMessage,
+                    notificationEventType);
             })
             .Where(entry => entry is not null)
             .Select(entry => entry!)
@@ -1804,9 +1865,13 @@ public sealed class AppDbContext(
 
     private void AddNotifications(IEnumerable<PendingAuditEntry> workflowEvents, IEnumerable<long> recipientIds)
     {
-        foreach (var workflowEvent in workflowEvents)
-        foreach (var recipientId in recipientIds)
+        var events = workflowEvents.ToArray();
+        var recipients = recipientIds.Distinct().ToArray();
+        if (events.Length == 0 || recipients.Length == 0) return;
+        foreach (var workflowEvent in events)
+        foreach (var recipientId in recipients)
         {
+            if (workflowEvent.NotificationEventType is not string eventType) continue;
             Notifications.Add(new AppNotification
             {
                 TenantId = workflowEvent.TenantId,
@@ -1814,8 +1879,99 @@ public sealed class AppDbContext(
                 Title = workflowEvent.NotificationTitle!,
                 Message = workflowEvent.NotificationMessage!,
                 Category = "workflow",
+                EventType = eventType,
                 CreatedAt = DateTimeOffset.UtcNow
             });
+        }
+    }
+
+    private AppNotification[] CapturePendingNotifications() =>
+        ChangeTracker.Entries<AppNotification>()
+            .Where(entry => entry.State == EntityState.Added)
+            .Select(entry => entry.Entity)
+            .ToArray();
+
+    private async Task SendNotificationEmailsAsync(
+        IEnumerable<AppNotification> notifications,
+        CancellationToken cancellationToken)
+    {
+        foreach (var notification in notifications)
+        {
+            var preference = await NotificationPreferences.IgnoreQueryFilters()
+                .SingleOrDefaultAsync(item =>
+                    item.TenantId == notification.TenantId &&
+                    item.UserId == notification.UserId &&
+                    item.EventType == notification.EventType,
+                    cancellationToken);
+            if (preference?.EmailEnabled != true) continue;
+            var configuration = await TenantEmailConfigurations.IgnoreQueryFilters()
+                .SingleOrDefaultAsync(item => item.TenantId == notification.TenantId, cancellationToken);
+            var tenantSmtpConfigured = configuration is not null &&
+                !string.IsNullOrWhiteSpace(configuration.SmtpHost) &&
+                configuration.SmtpPort is > 0 and <= 65535 &&
+                !string.IsNullOrWhiteSpace(configuration.FromEmail) &&
+                (string.IsNullOrWhiteSpace(configuration.SmtpUsername) ||
+                 !string.IsNullOrEmpty(configuration.ProtectedSmtpPassword));
+            var useGlobalSmtp = !tenantSmtpConfigured && emailOptions.Value.IsSmtpConfigured;
+            if (!tenantSmtpConfigured && !useGlobalSmtp)
+            {
+                logger.LogWarning(
+                    "Email notification for event {EventType} was not sent because neither tenant nor global SMTP is configured for tenant {TenantId}.",
+                    notification.EventType,
+                    notification.TenantId);
+                continue;
+            }
+
+            var email = await Users.IgnoreQueryFilters()
+                .Where(user => user.Id == notification.UserId)
+                .Select(user => user.Email)
+                .SingleOrDefaultAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                logger.LogWarning(
+                    "Email notification for user {UserId} and event {EventType} was not sent because no email address is available.",
+                    notification.UserId,
+                    notification.EventType);
+                continue;
+            }
+
+            try
+            {
+                var deliverySettings = tenantSmtpConfigured && configuration is not null
+                    ? new SmtpDeliverySettings(
+                        configuration.SmtpHost,
+                        configuration.SmtpPort,
+                        configuration.SmtpUsername,
+                        configuration.ProtectedSmtpPassword is null
+                            ? null
+                            : emailPasswordProtector.Unprotect(configuration.ProtectedSmtpPassword),
+                        configuration.FromEmail,
+                        configuration.FromName)
+                    : new SmtpDeliverySettings(
+                        emailOptions.Value.SmtpHost,
+                        emailOptions.Value.SmtpPort,
+                        emailOptions.Value.SmtpUsername,
+                        emailOptions.Value.SmtpPassword,
+                        emailOptions.Value.FromAddress,
+                        emailOptions.Value.FromName);
+                await smtpEmailTransport.SendAsync(
+                    deliverySettings,
+                    email,
+                    notification.Title,
+                    $"<p>{System.Net.WebUtility.HtmlEncode(notification.Message)}</p>",
+                    notification.Message,
+                    cancellationToken);
+            }
+            catch (Exception exception) when (
+                exception is System.Net.Mail.SmtpException or FormatException or InvalidOperationException or
+                    System.Security.Cryptography.CryptographicException)
+            {
+                logger.LogError(
+                    exception,
+                    "Could not send email notification for user {UserId} and event {EventType}.",
+                    notification.UserId,
+                    notification.EventType);
+            }
         }
     }
 
@@ -1848,5 +2004,6 @@ public sealed class AppDbContext(
         string? EntityId,
         string DetailsJson,
         string? NotificationTitle,
-        string? NotificationMessage);
+        string? NotificationMessage,
+        string? NotificationEventType);
 }

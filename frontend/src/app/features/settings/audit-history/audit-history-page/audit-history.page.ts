@@ -20,6 +20,16 @@ interface AuditRecord {
   createdAt: string;
 }
 
+interface AuditActionDefinition {
+  action: string;
+  category: string;
+  name: string;
+}
+
+interface AuditHistoryResponse extends PagedResult<AuditRecord> {
+  actions: AuditActionDefinition[];
+}
+
 @Component({
   selector: 'app-audit-history-page',
   imports: [DatePipe, FormsModule, InputComponent, PaginationComponent, SearchableSelectDirective],
@@ -27,21 +37,8 @@ interface AuditRecord {
   styleUrl: './audit-history.page.css',
 })
 export class AuditHistoryPageComponent implements OnInit {
-  readonly actions = [
-    { label: 'All actions', value: '' },
-    { label: 'Created', value: 'Created' },
-    { label: 'Updated', value: 'Updated' },
-    { label: 'Deleted', value: 'Deleted' },
-    { label: 'Posted', value: 'Posted' },
-    { label: 'Status changed', value: 'StatusChanged' },
-    { label: 'Logo updated', value: 'LogoUpdated' },
-    { label: 'Data exported', value: 'DataExported' },
-    { label: 'Profile updated', value: 'ProfileUpdated' },
-    { label: 'Authentication succeeded', value: 'AuthenticationSucceeded' },
-    { label: 'Authentication failed', value: 'AuthenticationFailed' },
-    { label: 'Password reset', value: 'PasswordReset' },
-    { label: 'Password changed', value: 'PasswordChanged' },
-  ];
+  actions: { label: string; value: string }[] = [{ label: 'All actions', value: '' }];
+  private actionDefinitions = new Map<string, AuditActionDefinition>();
   records: AuditRecord[] = [];
   action = '';
   entity = '';
@@ -72,9 +69,17 @@ export class AuditHistoryPageComponent implements OnInit {
     if (this.from) params = params.set('from', new Date(`${this.from}T00:00:00.000Z`).toISOString());
     if (this.to) params = params.set('to', new Date(`${this.to}T23:59:59.999Z`).toISOString());
 
-    this.api.get<PagedResult<AuditRecord>>('/api/v1/audit', false, params).subscribe({
+    this.api.get<AuditHistoryResponse>('/api/v1/audit', false, params).subscribe({
       next: result => {
         this.records = result.items;
+        this.actionDefinitions = new Map(result.actions.map(item => [item.action, item]));
+        this.actions = [
+          { label: 'All actions', value: '' },
+          ...result.actions.map(item => ({
+            label: `${item.category} · ${item.name}`,
+            value: item.action,
+          })),
+        ];
         this.page = result.page;
         this.pageSize = result.pageSize;
         this.totalCount = result.totalCount;
@@ -110,21 +115,26 @@ export class AuditHistoryPageComponent implements OnInit {
   }
 
   formatAction(action: string): string {
-    const labels: Record<string, string> = {
-      Created: 'Created',
-      Updated: 'Updated',
-      Deleted: 'Deleted',
-      Posted: 'Posted',
-      StatusChanged: 'Status changed',
-      LogoUpdated: 'Logo updated',
-      DataExported: 'Data exported',
-      ProfileUpdated: 'Profile updated',
-      AuthenticationSucceeded: 'Signed in',
-      AuthenticationFailed: 'Sign-in failed',
-      PasswordReset: 'Password reset',
-      PasswordChanged: 'Password changed',
-    };
-    return labels[action] ?? action;
+    return this.actionDefinitions.get(action)?.name ??
+      action.replace(/-/g, ' ')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/^./, character => character.toUpperCase());
+  }
+
+  isWorkflowAction(action: string): boolean {
+    const category = this.actionDefinitions.get(action)?.category;
+    return !!category &&
+      !['General', 'Company', 'Security', 'Administration'].includes(category);
+  }
+
+  isPostedAction(action: string): boolean {
+    return action === 'Posted' || action.endsWith('-posted');
+  }
+
+  isSecurityAction(action: string): boolean {
+    return this.actionDefinitions.get(action)?.category === 'Security' ||
+      action.startsWith('Authentication') ||
+      action.includes('Password');
   }
 
   formatEntityType(entityType: string): string {

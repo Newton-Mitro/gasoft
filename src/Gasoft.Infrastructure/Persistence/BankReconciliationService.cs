@@ -1,11 +1,13 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Gasoft.Application.Abstractions;
 using Gasoft.Application.Accounting;
 using Gasoft.Application.BankReconciliation;
 using Gasoft.Application.Common;
 using Gasoft.Domain.Entities;
+using Gasoft.Domain.Notifications;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -229,6 +231,21 @@ public sealed class BankReconciliationService(
 
         db.BankStatementTransactions.AddRange(imported);
         await db.SaveChangesAsync(cancellationToken);
+        if (imported.Count > 0 && currentTenant.UserId is long userId)
+        {
+            db.Notifications.Add(new AppNotification
+            {
+                TenantId = bankAccount.TenantId,
+                UserId = userId,
+                Title = "Bank statement imported",
+                Message = $"{imported.Count} statement transaction(s) were imported; {duplicateCount} duplicate(s) were skipped.",
+                Category = "banking",
+                EventType = NotificationEvents.BankStatementImported,
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
         return new BankStatementImportResultDto(imported.Count, duplicateCount, parsed.Rows.Count);
     }
 
@@ -377,6 +394,31 @@ public sealed class BankReconciliationService(
         {
             throw Concurrent(exception);
         }
+        if (remainingAmount - amount == 0 && currentTenant.UserId is long userId)
+        {
+            db.AuditLogs.Add(new AuditLog
+            {
+                TenantId = bankAccount.TenantId,
+                ActorUserId = userId,
+                Action = NotificationEvents.BankTransactionReconciled,
+                EntityType = nameof(BankStatementTransaction),
+                EntityId = statement.Id.ToString(),
+                DetailsJson = JsonSerializer.Serialize(new { journalLineId = line.Id, amount }),
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+            db.Notifications.Add(new AppNotification
+            {
+                TenantId = bankAccount.TenantId,
+                UserId = userId,
+                Title = "Bank transaction reconciled",
+                Message = $"Statement transaction \"{statement.Description}\" is fully matched to a posted ledger entry.",
+                Category = "banking",
+                EventType = NotificationEvents.BankTransactionReconciled,
+                CreatedAt = DateTimeOffset.UtcNow
+            });
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
         return new BankMatchResultDto(statement.Id, line.Id, amount);
     }
 

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Gasoft.Application.Abstractions;
 using Gasoft.Application.Authentication;
 using Gasoft.Domain.Entities;
+using Gasoft.Domain.Notifications;
 using Gasoft.Infrastructure.Persistence;
 
 namespace Gasoft.Api.Endpoints;
@@ -155,7 +156,7 @@ public static class AccountEndpoints
             {
                 TenantId = tenantId,
                 ActorUserId = userId,
-                Action = "PasswordChanged",
+                Action = NotificationEvents.PasswordChanged,
                 EntityType = "Authentication",
                 DetailsJson = "{\"result\":\"succeeded\"}",
                 CreatedAt = DateTimeOffset.UtcNow
@@ -167,6 +168,7 @@ public static class AccountEndpoints
                 Title = "Password changed",
                 Message = "Your account password was changed.",
                 Category = "security",
+                EventType = NotificationEvents.PasswordChanged,
                 CreatedAt = DateTimeOffset.UtcNow
             });
             await db.SaveChangesAsync(cancellationToken);

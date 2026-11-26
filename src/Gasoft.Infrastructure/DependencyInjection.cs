@@ -1,6 +1,7 @@
 using Gasoft.Application.Abstractions;
 using Gasoft.Infrastructure.Authentication;
 using Gasoft.Infrastructure.Persistence;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -17,6 +18,7 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException("Configure ConnectionStrings:Default.");
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddDataProtection().SetApplicationName("Gasoft");
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentTenant, CurrentTenant>();
         services.AddScoped<IPartyService, PartyService>();
@@ -60,6 +62,8 @@ public static class DependencyInjection
         services.AddOptions<EmailOptions>()
             .Bind(configuration.GetSection(EmailOptions.SectionName));
         services.AddTransient<IEmailSender, SmtpEmailSender>();
+        services.AddTransient<ISmtpEmailTransport, SmtpEmailTransport>();
+        services.AddSingleton<IEmailPasswordProtector, EmailPasswordProtector>();
         services.AddOptions<JwtOptions>()
             .Bind(configuration.GetSection(JwtOptions.SectionName))
             .Validate(options =>

@@ -80,9 +80,10 @@
                     [class.created]="record.action === 'Created'"
                     [class.updated]="record.action === 'Updated' || record.action === 'ProfileUpdated' || record.action === 'LogoUpdated'"
                     [class.deleted]="record.action === 'Deleted'"
-                    [class.posted]="record.action === 'Posted'"
-                    [class.security]="record.action.startsWith('Authentication') || record.action.includes('Password')"
-                    [class.exported]="record.action === 'DataExported'">
+                    [class.posted]="isPostedAction(record.action)"
+                    [class.security]="isSecurityAction(record.action)"
+                    [class.exported]="record.action === 'DataExported'"
+                    [class.workflow]="isWorkflowAction(record.action)">
                     {{ formatAction(record.action)
                   }}</span>
                 </td>
