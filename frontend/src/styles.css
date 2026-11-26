@@ -3261,8 +3261,7 @@ html[data-theme='dark']
     .add-item-icon,
     .quantity-control,
     .price-input,
-    .customer-field select,
-    .pos-settings-grid select
+    .customer-field select
   ) {
   border-color: var(--border);
   background: var(--surface);
@@ -3278,7 +3277,7 @@ html[data-theme='dark']
 html[data-theme='dark']
   .app-shell
   .main-content
-  :is(.pos-search, .pos-item:disabled, .pos-settings, .quantity-control button) {
+  :is(.pos-search, .pos-item:disabled, .quantity-control button) {
   border-color: var(--border);
   background: var(--surface-muted);
   color: var(--text-muted);
@@ -3287,7 +3286,7 @@ html[data-theme='dark']
 html[data-theme='dark']
   .app-shell
   .main-content
-  :is(.pos-search button, .add-item-icon, .pos-item-icon, .settings-summary-icon) {
+  :is(.pos-search button, .add-item-icon, .pos-item-icon) {
   border-color: var(--border);
   background: var(--surface-raised);
   color: var(--accent-text);
@@ -3305,8 +3304,6 @@ html[data-theme='dark']
     .price-field,
     .price-input,
     .remove-item,
-    .settings-summary-copy small,
-    .settings-chevron,
     .pos-total span,
     .pos-total small,
     .checkout-hint,
@@ -3326,8 +3323,6 @@ html[data-theme='dark']
     .pos-line-total,
     .price-input input,
     .customer-field label,
-    .pos-settings-grid label,
-    .settings-summary-copy strong,
     .pos-total strong,
     .receipt-lines strong
   ) {
@@ -3338,7 +3333,7 @@ html[data-theme='dark'] .app-shell .main-content :is(.catalog-count, .cart-count
   color: var(--accent-text);
 }
 
-html[data-theme='dark'] .app-shell .main-content :is(.stock-pill, .settings-status.settings-ready) {
+html[data-theme='dark'] .app-shell .main-content .stock-pill {
   color: var(--success-text);
 }
 
@@ -3354,7 +3349,6 @@ html[data-theme='dark']
     .catalog-count,
     .cart-count,
     .pos-item-icon,
-    .settings-summary-icon,
     .pos-no-items .empty-icon,
     .pos-empty-cart .empty-icon
   ) {
@@ -3368,8 +3362,7 @@ html[data-theme='dark']
     .stock-pill.stock-empty,
     .clear-cart,
     .remove-item:hover,
-    .customer-field small.field-validation-error,
-    .settings-status:not(.settings-ready)
+    .customer-field small.field-validation-error
   ) {
   color: var(--error-text);
 }
@@ -3407,8 +3400,7 @@ html[data-theme='dark']
   :is(
     .pos-search:focus-within,
     .price-input:focus-within,
-    .customer-field select:focus,
-    .pos-settings-grid select:focus
+    .customer-field select:focus
   ) {
   border-color: var(--focus-color);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-color) 20%, transparent);

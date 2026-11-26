@@ -3451,11 +3451,106 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 name: "IX_CompanyItemPrices_TenantId_ItemId",
                 table: "CompanyItemPrices",
                 columns: new[] { "TenantId", "ItemId" });
+
+            migrationBuilder.AddColumn<long>(
+                name: "ReversalOfEntryId",
+                table: "JournalEntries",
+                type: "bigint",
+                nullable: true);
+
+            migrationBuilder.CreateIndex(
+                name: "UX_JournalEntries_TenantId_CompanyId_ReversalOfEntryId",
+                table: "JournalEntries",
+                columns: new[] { "TenantId", "CompanyId", "ReversalOfEntryId" },
+                unique: true);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_JournalEntries_JournalEntries_TenantId_CompanyId_ReversalOf~",
+                table: "JournalEntries",
+                columns: new[] { "TenantId", "CompanyId", "ReversalOfEntryId" },
+                principalTable: "JournalEntries",
+                principalColumns: new[] { "TenantId", "CompanyId", "Id" },
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddColumn<string>(
+                name: "EventType",
+                table: "Notifications",
+                type: "character varying(100)",
+                maxLength: 100,
+                nullable: false,
+                defaultValue: "legacy");
+
+            migrationBuilder.CreateTable(
+                name: "NotificationPreferences",
+                columns: table => new
+                {
+                    TenantId = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    EventType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    InAppEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    EmailEnabled = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NotificationPreferences", x => new { x.TenantId, x.UserId, x.EventType });
+                    table.ForeignKey(
+                        name: "FK_NotificationPreferences_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationPreferences_UserId",
+                table: "NotificationPreferences",
+                column: "UserId");
+
+            migrationBuilder.CreateTable(
+                name: "TenantEmailConfigurations",
+                columns: table => new
+                {
+                    TenantId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    SmtpHost = table.Column<string>(type: "character varying(253)", maxLength: 253, nullable: false),
+                    SmtpPort = table.Column<int>(type: "integer", nullable: false),
+                    SmtpUsername = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    ProtectedSmtpPassword = table.Column<string>(type: "character varying(8192)", maxLength: 8192, nullable: true),
+                    FromEmail = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
+                    FromName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TenantEmailConfigurations", x => x.TenantId);
+                });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "NotificationPreferences");
+
+            migrationBuilder.DropTable(
+                name: "TenantEmailConfigurations");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_JournalEntries_JournalEntries_TenantId_CompanyId_ReversalOf~",
+                table: "JournalEntries");
+
+            migrationBuilder.DropIndex(
+                name: "UX_JournalEntries_TenantId_CompanyId_ReversalOfEntryId",
+                table: "JournalEntries");
+
+            migrationBuilder.DropColumn(
+                name: "ReversalOfEntryId",
+                table: "JournalEntries");
+
+            migrationBuilder.DropColumn(
+                name: "EventType",
+                table: "Notifications");
+
             migrationBuilder.DropTable(
                 name: "CompanyItemPrices");
 

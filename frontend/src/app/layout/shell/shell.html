@@ -76,7 +76,6 @@
           @for (link of section.links; track link.path) {
             @if (
               (link.path !== '/settings/audit-history' &&
-                link.path !== '/settings/pos' &&
                 link.path !== '/settings/email') ||
               auth.isAdministrator()
             ) {

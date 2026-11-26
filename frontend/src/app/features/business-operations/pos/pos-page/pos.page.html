@@ -237,11 +237,33 @@
         <p class="field-validation-error" role="alert">{{ fieldMessages('cart')[0] }}</p>
       }
 
-      <section class="pos-quick-settings" aria-label="Register options">
+      <section class="pos-quick-settings" aria-label="Register and accounting settings">
         <div class="pos-quick-settings-heading">
-          <strong>For this register</strong>
-          <small>Changes here don’t update company defaults.</small>
+          <div>
+            <strong>Register setup</strong>
+            <small>
+              @if (auth.isAdministrator()) {
+                Save these selections as company defaults for all registers.
+              } @else {
+                These selections apply to this checkout only.
+              }
+            </small>
+          </div>
+          @if (auth.isAdministrator()) {
+            <button
+              class="button secondary"
+              type="button"
+              [disabled]="savingSettings || !setupComplete || !hasUnsavedSettings"
+              (click)="saveCompanyDefaults()"
+            >
+              <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+              {{ savingSettings ? 'Saving…' : 'Save defaults' }}
+            </button>
+          }
         </div>
+        @if (setupError) {
+          <p class="pos-setup-error" role="alert">{{ setupError }}</p>
+        }
         <div class="pos-quick-settings-grid">
           <label class="customer-field">
             Warehouse
@@ -251,7 +273,7 @@
               required
               aria-label="Warehouse"
               [(ngModel)]="warehouseId"
-              (ngModelChange)="clearFieldError('warehouseId')"
+              (ngModelChange)="onSetupChanged(); clearFieldError('warehouseId')"
             >
               <option [ngValue]="null">Select warehouse</option>
               @for (option of options['warehouses']; track option.value) {
@@ -270,7 +292,7 @@
               required
               aria-label="Journal"
               [(ngModel)]="journalId"
-              (ngModelChange)="clearFieldError('journalId')"
+              (ngModelChange)="onSetupChanged(); clearFieldError('journalId')"
             >
               <option [ngValue]="null">Select journal</option>
               @for (option of options['journals']; track option.value) {
@@ -289,7 +311,7 @@
               required
               aria-label="Open accounting period"
               [(ngModel)]="accountingPeriodId"
-              (ngModelChange)="clearFieldError('accountingPeriodId')"
+              (ngModelChange)="onSetupChanged(); clearFieldError('accountingPeriodId')"
             >
               <option [ngValue]="null">Select period</option>
               @for (option of options['periods']; track option.value) {
@@ -308,7 +330,7 @@
               required
               aria-label="Cash or card account"
               [(ngModel)]="settlementAccountId"
-              (ngModelChange)="clearFieldError('settlementAccountId')"
+              (ngModelChange)="onSetupChanged(); clearFieldError('settlementAccountId')"
             >
               <option [ngValue]="null">Select account</option>
               @for (option of options['assetAccounts']; track option.value) {
@@ -318,6 +340,103 @@
             @if (fieldMessages('settlementAccountId').length) {
               <small class="field-validation-error" role="alert">{{ fieldMessages('settlementAccountId')[0] }}</small>
             }
+          </label>
+          <label class="customer-field">
+            Sales revenue account
+            <select
+              appSearchableSelect
+              name="revenueAccountId"
+              required
+              aria-label="Sales revenue account"
+              [(ngModel)]="revenueAccountId"
+              (ngModelChange)="onSetupChanged(); clearFieldError('revenueAccountId')"
+            >
+              <option [ngValue]="null">Select account</option>
+              @for (option of options['revenueAccounts']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="customer-field">
+            Receivable account
+            <select
+              appSearchableSelect
+              name="receivableAccountId"
+              required
+              aria-label="Receivable account"
+              [(ngModel)]="receivableAccountId"
+              (ngModelChange)="onSetupChanged(); clearFieldError('receivableAccountId')"
+            >
+              <option [ngValue]="null">Select account</option>
+              @for (option of options['assetAccounts']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="customer-field">
+            <span>Tax code <span class="optional">(optional)</span></span>
+            <select
+              appSearchableSelect
+              name="taxCodeId"
+              aria-label="Tax code"
+              [(ngModel)]="taxCodeId"
+              (ngModelChange)="onSetupChanged(); clearFieldError('taxCodeId')"
+            >
+              <option [ngValue]="null">No tax</option>
+              @for (option of options['taxCodes']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          @if (taxCodeId) {
+            <label class="customer-field">
+              Tax liability account
+              <select
+                appSearchableSelect
+                name="taxAccountId"
+                required
+                aria-label="Tax liability account"
+                [(ngModel)]="taxAccountId"
+                (ngModelChange)="onSetupChanged(); clearFieldError('taxAccountId')"
+              >
+                <option [ngValue]="null">Select account</option>
+                @for (option of options['taxAccounts']; track option.value) {
+                  <option [ngValue]="option.value">{{ option.label }}</option>
+                }
+              </select>
+            </label>
+          }
+          <label class="customer-field">
+            Inventory asset account
+            <select
+              appSearchableSelect
+              name="inventoryAccountId"
+              required
+              aria-label="Inventory asset account"
+              [(ngModel)]="inventoryAccountId"
+              (ngModelChange)="onSetupChanged(); clearFieldError('inventoryAccountId')"
+            >
+              <option [ngValue]="null">Select account</option>
+              @for (option of options['assetAccounts']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="customer-field">
+            Cost of goods sold account
+            <select
+              appSearchableSelect
+              name="costOfGoodsSoldAccountId"
+              required
+              aria-label="Cost of goods sold account"
+              [(ngModel)]="costOfGoodsSoldAccountId"
+              (ngModelChange)="onSetupChanged(); clearFieldError('costOfGoodsSoldAccountId')"
+            >
+              <option [ngValue]="null">Select account</option>
+              @for (option of options['expenseAccounts']; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
           </label>
         </div>
       </section>

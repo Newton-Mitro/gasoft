@@ -3,6 +3,8 @@
 -- tenant/company pair. Existing records are preserved except NULL company
 -- prices, which are filled, and a prior stock-only draft journal, which is
 -- upgraded to the full sample opening journal.
+-- For a July-June fiscal year, run create-july-june-fiscal-year-periods.sql
+-- first if no open accounting period contains today's date.
 -- Selling prices are illustrative demo values in the company's functional
 -- currency; review them before using the items for live sales.
 -- Illustrative opening account balances are also added as a draft General

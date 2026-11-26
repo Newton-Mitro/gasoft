@@ -25,11 +25,8 @@ export const SETTINGS_ROUTES: Routes = [
   },
   {
     path: 'settings/pos',
-    loadComponent: () =>
-      import('../business-operations/pos/pos-settings-page/pos-settings.page').then(
-        (module) => module.PosSettingsPageComponent,
-      ),
-    data: { page: 'pos-settings' },
+    redirectTo: '/pos',
+    pathMatch: 'full',
   },
   ...TAX_JURISDICTIONS_ROUTES,
   ...TAX_CODES_ROUTES,

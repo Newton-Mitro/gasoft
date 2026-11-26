@@ -172,6 +172,13 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("DismissedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasDefaultValue("legacy");
+
                     b.Property<string>("Link")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -1777,6 +1784,9 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.Property<long>("JournalId")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("ReversalOfEntryId")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("Revision")
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
@@ -1802,6 +1812,10 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "CompanyId", "AccountingPeriodId");
 
                     b.HasIndex("TenantId", "CompanyId", "JournalId");
+
+                    b.HasIndex("TenantId", "CompanyId", "ReversalOfEntryId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_JournalEntries_TenantId_CompanyId_ReversalOfEntryId");
 
                     b.ToTable("JournalEntries");
                 });
@@ -1873,6 +1887,31 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_JournalLines_Amounts", "\"Debit\" >= 0 AND \"Credit\" >= 0 AND ((\"Debit\" > 0 AND \"Credit\" = 0) OR (\"Credit\" > 0 AND \"Debit\" = 0))");
                         });
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.NotificationPreference", b =>
+                {
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EventType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("EmailEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("InAppEnabled")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("TenantId", "UserId", "EventType");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("NotificationPreferences");
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.Party", b =>
@@ -4610,6 +4649,48 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.ToTable("Tenants");
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.TenantEmailConfiguration", b =>
+                {
+                    b.Property<long>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("TenantId"));
+
+                    b.Property<string>("FromEmail")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("FromName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ProtectedSmtpPassword")
+                        .HasMaxLength(8192)
+                        .HasColumnType("character varying(8192)");
+
+                    b.Property<string>("SmtpHost")
+                        .IsRequired()
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)");
+
+                    b.Property<int>("SmtpPort")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SmtpUsername")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("TenantId");
+
+                    b.ToTable("TenantEmailConfigurations");
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.TenantTaxRegistration", b =>
                 {
                     b.Property<long>("Id")
@@ -5620,6 +5701,12 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .HasPrincipalKey("TenantId", "CompanyId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Gasoft.Domain.Entities.JournalEntry", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CompanyId", "ReversalOfEntryId")
+                        .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.JournalLine", b =>
@@ -5647,6 +5734,15 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .WithMany("Lines")
                         .HasForeignKey("TenantId", "CompanyId", "JournalEntryId")
                         .HasPrincipalKey("TenantId", "CompanyId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.NotificationPreference", b =>
+                {
+                    b.HasOne("Gasoft.Infrastructure.Authentication.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

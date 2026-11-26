@@ -18,6 +18,24 @@
 .currency-badge strong {
   color: var(--text-strong);
 }
+.pos-quick-settings-heading {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+.pos-quick-settings-heading > div {
+  display: grid;
+  gap: 4px;
+}
+.pos-setup-error {
+  margin: 0 0 8px;
+  color: var(--error-text);
+  font-size: 10px;
+}
+.optional {
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 400;
+}
 .pos-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(390px, 0.82fr);

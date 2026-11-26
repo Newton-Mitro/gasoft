@@ -54,7 +54,9 @@ export class PosPageComponent implements OnInit {
   search = '';
   loading = true;
   saving = false;
+  savingSettings = false;
   error = '';
+  setupError = '';
   functionalCurrencyCode = '';
   companyName = '';
   lastSale: PosSaleResult | null = null;
@@ -69,6 +71,7 @@ export class PosPageComponent implements OnInit {
   settlementAccountId: number | null = null;
   inventoryAccountId: number | null = null;
   costOfGoodsSoldAccountId: number | null = null;
+  private savedSettings: PosSettings | null = null;
 
   constructor(
     private readonly api: ApiService,
@@ -132,6 +135,7 @@ export class PosPageComponent implements OnInit {
           taxCodes: result.taxCodes,
         };
         this.setSetupValues(result.posSettings);
+        this.savedSettings = this.currentSettings();
         this.loading = false;
         this.changeDetector.markForCheck();
       },
@@ -175,6 +179,11 @@ export class PosPageComponent implements OnInit {
     );
   }
 
+  get hasUnsavedSettings(): boolean {
+    return this.savedSettings !== null &&
+      JSON.stringify(this.currentSettings()) !== JSON.stringify(this.savedSettings);
+  }
+
   get canCheckout(): boolean {
     return (
       this.cart.length > 0 &&
@@ -191,6 +200,40 @@ export class PosPageComponent implements OnInit {
           Number(line.unitPrice) >= 0,
       )
     );
+  }
+
+  onSetupChanged(): void {
+    this.setupError = '';
+    if (this.taxCodeId === null) this.taxAccountId = null;
+  }
+
+  saveCompanyDefaults(): void {
+    if (!this.auth.isAdministrator()) {
+      this.setupError = 'Only company administrators can save POS defaults.';
+      return;
+    }
+    if (!this.setupComplete) {
+      this.setupError = 'Complete all required POS selections before saving.';
+      return;
+    }
+    if (this.savingSettings) return;
+
+    this.savingSettings = true;
+    this.setupError = '';
+    this.pos.saveSettings(this.currentSettings()).subscribe({
+      next: (settings) => {
+        this.setSetupValues(settings);
+        this.savedSettings = this.currentSettings();
+        this.savingSettings = false;
+        this.notifications.success('Company POS defaults saved.');
+        this.changeDetector.markForCheck();
+      },
+      error: (error) => {
+        this.setupError = errorMessage(error, 'Could not save company POS defaults.');
+        this.savingSettings = false;
+        this.changeDetector.markForCheck();
+      },
+    });
   }
 
   addItem(item: Item): void {
@@ -479,6 +522,21 @@ export class PosPageComponent implements OnInit {
   private hasCustomerSelection(value: number | null): boolean {
     return isPositiveId(value) &&
       (this.walkInCustomer?.id === value || this.customers.some((customer) => customer.id === value));
+  }
+
+  private currentSettings(): PosSettings {
+    return {
+      warehouseId: this.warehouseId,
+      journalId: this.journalId,
+      accountingPeriodId: this.accountingPeriodId,
+      revenueAccountId: this.revenueAccountId,
+      receivableAccountId: this.receivableAccountId,
+      settlementAccountId: this.settlementAccountId,
+      taxCodeId: this.taxCodeId,
+      taxAccountId: this.taxAccountId,
+      inventoryAccountId: this.inventoryAccountId,
+      costOfGoodsSoldAccountId: this.costOfGoodsSoldAccountId,
+    };
   }
 
   private setSetupValues(settings: PosSettings): void {

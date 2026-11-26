@@ -68,6 +68,37 @@ Fiscal years can be closed after they contain accounting periods, all periods ar
 
 ### 4. Start the API
 
+```
+sudo -u postgres psql -d postgres
+```
+
+```
+ALTER DATABASE gasoft OWNER TO gasoft;
+\connect gasoft
+ALTER SCHEMA public OWNER TO gasoft;
+GRANT USAGE, CREATE ON SCHEMA public TO gasoft;
+\q
+```
+
+```
+dotnet ef database update \
+  --project src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj \
+  --startup-project src/Gasoft.Api/Gasoft.Api.csproj \
+  --context AppDbContext
+```
+
+```
+dotnet ef database drop --force \
+  --project src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj \
+  --startup-project src/Gasoft.Api/Gasoft.Api.csproj \
+  --context AppDbContext
+
+dotnet ef database update \
+  --project src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj \
+  --startup-project src/Gasoft.Api/Gasoft.Api.csproj \
+  --context AppDbContext
+```
+
 ```sh
 dotnet run --project src/Gasoft.Api --launch-profile http
 ```

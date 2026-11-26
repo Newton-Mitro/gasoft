@@ -39,9 +39,9 @@ describe('feature routes', () => {
     expect(routedPages.has('budget-vs-actual')).toBe(true);
     expect(routedPages.has('fixed-assets')).toBe(true);
     expect(routedPages.has('pos')).toBe(true);
-    expect(routedPages.has('pos-settings')).toBe(true);
     expect(routedPages.has('notification-settings')).toBe(true);
     expect(routedPages.has('email-configuration')).toBe(true);
+    expect(SETTINGS_ROUTES.find((route) => route.path === 'settings/pos')?.redirectTo).toBe('/pos');
   });
 
   it('routes resource pages through distinct feature components', () => {
@@ -101,7 +101,5 @@ describe('feature routes', () => {
     expect(componentByPage.get('income-statement')).not.toBe(componentByPage.get('balance-sheet'));
     expect(componentByPage.get('budget-vs-actual')).toBeDefined();
     expect(componentByPage.get('fixed-assets')).toBeDefined();
-    expect(componentByPage.get('pos-settings')).toBeDefined();
-    expect(componentByPage.get('pos-settings')).not.toBe(componentByPage.get('pos'));
   });
 });

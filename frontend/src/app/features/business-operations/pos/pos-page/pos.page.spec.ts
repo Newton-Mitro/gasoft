@@ -1,4 +1,4 @@
-import { NEVER } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { FormValidationService } from '../../../../shared/services/form-validation.service';
 import { NotificationService } from '../../../../shared/services/notification.service';
@@ -129,6 +129,55 @@ describe('PosPageComponent checkout validation', () => {
     }));
   });
 
+  it('saves complete register selections as company defaults for administrators', () => {
+    const settings = {
+      warehouseId: 2,
+      journalId: 3,
+      accountingPeriodId: 4,
+      revenueAccountId: 5,
+      receivableAccountId: 6,
+      settlementAccountId: 7,
+      taxCodeId: null,
+      taxAccountId: null,
+      inventoryAccountId: 8,
+      costOfGoodsSoldAccountId: 9,
+    };
+    const saveSettings = vi.fn(() => of(settings));
+    const page = createPage(vi.fn(), true, saveSettings);
+    page.options = {
+      warehouses: [{ value: 2, label: 'Main warehouse' }],
+      journals: [{ value: 3, label: 'Sales journal' }],
+      periods: [{ value: 4, label: 'Open period' }],
+      revenueAccounts: [{ value: 5, label: 'Sales revenue' }],
+      assetAccounts: [
+        { value: 6, label: 'Receivables' },
+        { value: 7, label: 'Cash' },
+        { value: 8, label: 'Inventory' },
+      ],
+      expenseAccounts: [{ value: 9, label: 'Cost of goods sold' }],
+      taxCodes: [],
+      taxAccounts: [],
+    };
+    Object.assign(page, settings);
+
+    page.saveCompanyDefaults();
+
+    expect(saveSettings).toHaveBeenCalledWith(settings);
+    expect(page.savingSettings).toBe(false);
+    expect(page.hasUnsavedSettings).toBe(false);
+    expect(page.notifications.success).toHaveBeenCalledWith('Company POS defaults saved.');
+  });
+
+  it('does not allow non-administrators to save company defaults', () => {
+    const saveSettings = vi.fn();
+    const page = createPage(vi.fn(), false, saveSettings);
+
+    page.saveCompanyDefaults();
+
+    expect(saveSettings).not.toHaveBeenCalled();
+    expect(page.setupError).toBe('Only company administrators can save POS defaults.');
+  });
+
   it('rejects quantities above warehouse stock and invalid unit prices', () => {
     const checkout = vi.fn();
     const page = createPage(checkout);
@@ -189,17 +238,21 @@ describe('PosPageComponent checkout validation', () => {
     ]);
   });
 
-  function createPage(checkout: ReturnType<typeof vi.fn>): PosPageComponent {
+  function createPage(
+    checkout: ReturnType<typeof vi.fn>,
+    isAdministrator = false,
+    saveSettings: ReturnType<typeof vi.fn> = vi.fn(() => NEVER),
+  ): PosPageComponent {
     return TestBed.runInInjectionContext(
       () =>
         new PosPageComponent(
           {} as never,
+          { isAdministrator: () => isAdministrator } as never,
           {} as never,
           {} as never,
           {} as never,
           {} as never,
-          {} as never,
-          { checkout } as never,
+          { checkout, saveSettings } as never,
           { markForCheck: vi.fn() } as never,
         ),
     );
