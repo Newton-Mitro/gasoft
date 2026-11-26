@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Gasoft.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261122104730_InitialCreate")]
+    [Migration("20261126110437_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -1889,6 +1889,74 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Gasoft.Domain.Entities.NotificationEmailOutbox", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset?>("LeaseExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("NotificationId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<long>("TenantId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "NotificationId")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "NextAttemptAt", "LeaseExpiresAt");
+
+                    b.ToTable("NotificationEmailOutbox", t =>
+                        {
+                            t.HasCheckConstraint("CK_NotificationEmailOutbox_Attempts", "\"AttemptCount\" >= 0");
+
+                            t.HasCheckConstraint("CK_NotificationEmailOutbox_Status", "\"Status\" IN ('Pending', 'Processing', 'Sent', 'Failed')");
+                        });
+                });
+
             modelBuilder.Entity("Gasoft.Domain.Entities.NotificationPreference", b =>
                 {
                     b.Property<long>("TenantId")
@@ -2624,6 +2692,10 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     b.Property<long>("CompanyId")
                         .HasColumnType("bigint");
 
+                    b.Property<decimal>("CreditedTotal")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
                     b.Property<string>("CurrencyCode")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -2659,6 +2731,10 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .HasPrecision(20, 6)
                         .HasColumnType("numeric(20,6)");
 
+                    b.Property<decimal>("RefundedTotal")
+                        .HasPrecision(20, 6)
+                        .HasColumnType("numeric(20,6)");
+
                     b.Property<int>("Revision")
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
@@ -2688,7 +2764,7 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
 
                     b.ToTable("SalesInvoices", t =>
                         {
-                            t.HasCheckConstraint("CK_SalesInvoices_Totals", "\"NetTotal\" >= 0 AND \"TaxTotal\" >= 0 AND \"GrandTotal\" = \"NetTotal\" + \"TaxTotal\" AND \"AllocatedTotal\" >= 0 AND \"AllocatedTotal\" <= \"GrandTotal\"");
+                            t.HasCheckConstraint("CK_SalesInvoices_Totals", "\"NetTotal\" >= 0 AND \"TaxTotal\" >= 0 AND \"GrandTotal\" = \"NetTotal\" + \"TaxTotal\" AND \"AllocatedTotal\" >= 0 AND \"AllocatedTotal\" <= \"GrandTotal\" AND \"CreditedTotal\" >= 0 AND \"CreditedTotal\" <= \"GrandTotal\" AND \"RefundedTotal\" >= 0 AND \"RefundedTotal\" <= \"CreditedTotal\"");
                         });
                 });
 
@@ -5736,6 +5812,18 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         .HasPrincipalKey("TenantId", "CompanyId", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Gasoft.Domain.Entities.NotificationEmailOutbox", b =>
+                {
+                    b.HasOne("Gasoft.Domain.Entities.AppNotification", "Notification")
+                        .WithMany()
+                        .HasForeignKey("TenantId", "NotificationId")
+                        .HasPrincipalKey("TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Notification");
                 });
 
             modelBuilder.Entity("Gasoft.Domain.Entities.NotificationPreference", b =>

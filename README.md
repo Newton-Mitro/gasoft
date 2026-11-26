@@ -1,123 +1,130 @@
 # Gasoft
 
-Multi-tenant accounting software starter: .NET 10 API, PostgreSQL, ASP.NET Core Identity/JWT, and Angular 22.
+Gasoft is a multi-tenant accounting and business operations application. It provides a .NET 10 REST API backed by PostgreSQL and an Angular 22 web client. Each workspace can manage its companies, users, accounting, inventory, and operational workflows.
+
+## Features
+
+- **Workspace and access management:** workspace registration, sign-in, company selection, users, and role-based access.
+- **Sales and receivables:** sales quotes, invoices, credit notes, refunds, customer payments, and a point-of-sale checkout.
+- **Purchasing and payables:** purchase orders, purchase bills, and supplier payments.
+- **Accounting:** chart of accounts, journals and entries, general ledger, fiscal years, accounting periods, and close workflows.
+- **Inventory:** item catalog, warehouses and locations, stock receipts/issues, valuation, inventory counts, and stock balances.
+- **Business operations:** expense reports and reimbursements, fixed assets and depreciation, and bank reconciliation.
+- **Reporting:** financial statements, aging, cash flow, budgets, and consolidated reporting.
+- **Administration:** company settings, tax configuration, notification preferences, email configuration, and audit history.
+
+## Technology
+
+- .NET 10 / ASP.NET Core
+- Entity Framework Core 10 and PostgreSQL 16
+- Angular 22, TypeScript, and npm
 
 ## Requirements
 
+- Git
 - .NET 10 SDK
-- Node.js 22.12+ and npm
-- PostgreSQL 16+
+- Node.js 22.12 or later and npm
+- PostgreSQL 16 or later
 
-## Run backend tests
-
-The PostgreSQL outbox integration tests require a disposable test database. Set `GASOFT_TEST_POSTGRES` to its connection string; the tests create a unique schema, apply migrations there, and drop that schema afterward. They do not use or migrate the application database.
+## Clone the repository
 
 ```sh
-GASOFT_TEST_POSTGRES='Host=localhost;Port=5432;Database=gasoft_test;Username=postgres;Password=<test-password>' \
-  dotnet test Gasoft.slnx --configuration Release
+git clone https://github.com/Newton-Mitro/gasoft.git
+cd gasoft
 ```
-
-Without this variable, the PostgreSQL integration tests are skipped.
 
 ## Run locally
 
-Run the API and frontend in separate terminals. The commands below assume you run them from the repository root.
+The API and frontend run in separate terminals. The commands below assume a Linux development environment; use your PostgreSQL service's equivalent commands on other operating systems.
 
-### 1. Prepare PostgreSQL
+### 1. Create a fresh PostgreSQL database
 
-Start PostgreSQL and create a database and user. For a fresh PostgreSQL installation on Ubuntu:
+Create a dedicated database role and an empty database. If you already have a suitable role or database, you can skip the corresponding command.
 
 ```sh
 sudo -u postgres createuser --pwprompt gasoft
 sudo -u postgres createdb --owner=gasoft gasoft
 ```
 
-Choose a local database password when prompted. If you already have a PostgreSQL user and database, use those credentials in the connection string below instead.
+Choose and keep the password entered for `gasoft`; you will use it in the API connection string below.
 
-### 2. Configure API secrets
+### 2. Configure local API secrets
 
-The API requires a database connection string and a JWT signing key of at least 32 bytes. Keep these in .NET User Secrets, not in `appsettings.json`:
+The API project has .NET User Secrets enabled. Store the database connection string and JWT configuration there, not in committed settings files:
 
 ```sh
-dotnet user-secrets init --project src/Gasoft.Api
-dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=gasoft;Username=gasoft;Password=<replace-with-local-postgres-password>" --project src/Gasoft.Api
+dotnet user-secrets set "ConnectionStrings:Default" \
+  "Host=localhost;Port=5432;Database=gasoft;Username=gasoft;Password=<your-local-database-password>" \
+  --project src/Gasoft.Api
+dotnet user-secrets set "Jwt:Issuer" "Gasoft.Local" --project src/Gasoft.Api
+dotnet user-secrets set "Jwt:Audience" "Gasoft.Local" --project src/Gasoft.Api
 dotnet user-secrets set "Jwt:SigningKey" "$(openssl rand -base64 48)" --project src/Gasoft.Api
 ```
 
-The key-generation command requires `openssl`. If you already initialized User Secrets for this project, skip `dotnet user-secrets init`.
+Replace `<your-local-database-password>` with the password you chose. The signing-key command requires `openssl`; alternatively, set a randomly generated key of at least 32 bytes. Never commit real credentials.
 
-Replace `<replace-with-local-postgres-password>` with the password entered for the PostgreSQL `gasoft` user before running the command. Do not commit credentials. If you already have User Secrets configured, set or update the connection string explicitly.
+### 3. Initialize the database
 
-### 3. Apply database migrations
-
-Install the EF Core command-line tool if needed, then apply all pending migrations and seed reference data:
+Install the EF Core CLI tool if it is not already installed, then apply the consolidated baseline migration:
 
 ```sh
 dotnet tool install --global dotnet-ef --version 10.0.14
 dotnet ef database update \
-    --project src/Gasoft.Infrastructure \
-    --startup-project src/Gasoft.Api
+  --context AppDbContext \
+  --project src/Gasoft.Infrastructure \
+  --startup-project src/Gasoft.Api
 ```
 
-If you are starting with a fresh database, this creates the schema and seeds ISO 3166-1 country tax jurisdictions. Existing databases are updated without deleting their data.
-
-### Notifications and audit history
-
-The notification inbox stores important workflow events across sales, purchasing, payments, expenses, inventory, accounting, fixed assets, banking, and account security. Inbox items are personal to each user and can be marked read or dismissed. Configure per-event **in-app** and **email** delivery in **Administration → Notification settings**; in-app delivery stays enabled by default, while email delivery is opt-in. Email notifications are queued with the workflow change and sent by a background worker; temporary delivery failures are retried and terminal failures are logged and retained for diagnosis. Workspace Owners and Admins configure tenant SMTP in **Administration → Email configuration**; tenant SMTP takes priority for notifications and sales quotes. If a tenant has no SMTP configuration, notifications use the optional server-wide `Email` SMTP settings. Configure SMTP passwords through secret storage or the `Email__SmtpPassword` environment variable rather than committing credentials. SMTP passwords saved for a tenant are protected with ASP.NET Core Data Protection; persist and share the Data Protection key ring across application restarts and instances so they remain readable. Account recovery email continues to use server-wide SMTP configuration. Tenant Owners and Admins can review tenant-scoped audit records in **Administration → Audit history**. Workflow audit actions use specific event-style labels, with generic and legacy actions retained for existing records. Changes to sensitive credential and bank-account fields are excluded from audit details.
-
-### Point of sale
-
-The point-of-sale checkout includes a **Walk-in customer** choice for sales where buyer details are not needed. It reuses a tenant-wide Walk-in Customer record, created automatically the first time the POS loads, so invoices and payments remain linked to a customer. Configure selling prices per company on inventory items; the POS displays and prefills the selected company's functional-currency price and blocks items without one.
-
-### Accounting period controls
-
-New companies are created with starter account groups and accounts, plus General, Sales, Purchase, Bank, Cash receipts, and Cash payments journals. Creating a fiscal year automatically creates contiguous monthly accounting periods from its start date through its end date; the final period may be shorter. Add fiscal years before entering transactions.
-
-Accounting periods can be closed or reopened by workspace Owners and Admins. A reason is required and each change is recorded in the period status history. The close checklist blocks periods with draft journal entries or unreconciled imported bank statement transactions; closed periods reject postings until an authorized user reopens them.
-
-Fiscal years can be closed after they contain accounting periods, all periods are closed, and no draft journal entries remain. If posted revenue or expense balances remain, prepare a year-end closing journal from the fiscal-year close checklist, select a postable Equity account (3100 · Retained earnings is the default when available), review the balanced draft, and post it. If no income or expense balances remain, a closing journal is not required. The generated closing journal is dated on year-end in the final closed period and can be posted only through the authorized closing workflow. The fiscal year cannot be locked until any required closing journal is posted. Close and reopen actions require a reason and are audited; reopening a fiscal year does not reopen its accounting periods. For the next fiscal year, first close the prior year and post any required closing journal. Then prepare the opening-balance journal in the new year’s first, open accounting period. It carries forward the prior year’s posted balance-sheet balances; review and post it before using the new year for normal transactions. Repeating the preparation returns the existing journal instead of creating a duplicate. For year-end reporting, the retained-earnings roll-forward can summarize the opening balance, yearly net income, and ending equity position for the selected fiscal year.
+The single `InitialCreate` migration creates the schema and seeds reference data. It is intended for a **new, empty database**; it does not upgrade databases created with the previous migration chain. Do not run it against an existing database with data you need.
 
 ### 4. Start the API
 
-For a fresh local database that needs ownership or schema permissions fixed, run the following using a PostgreSQL administrator:
-
-```
-sudo -u postgres psql -d postgres
-```
-
-```sql
-ALTER DATABASE gasoft OWNER TO gasoft;
-\connect gasoft
-ALTER SCHEMA public OWNER TO gasoft;
-GRANT USAGE, CREATE ON SCHEMA public TO gasoft;
-\q
-```
-
-Apply migrations with the command in step 3. Existing databases are updated without deleting their data.
+In the first terminal, from the repository root:
 
 ```sh
 dotnet run --project src/Gasoft.Api --launch-profile http
 ```
 
-The API listens at `http://localhost:5035`. Check `http://localhost:5035/health` before continuing.
-
-### Optional: reset a disposable local database
-
-**Destructive:** this permanently drops the database selected by the configured connection string. Never use it with a database containing data you need.
+The API listens at `http://localhost:5035`. Check that it is running:
 
 ```sh
-dotnet ef database drop --force \
-  --project src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj \
-  --startup-project src/Gasoft.Api/Gasoft.Api.csproj \
-  --context AppDbContext
-dotnet ef database update \
-  --project src/Gasoft.Infrastructure/Gasoft.Infrastructure.csproj \
-  --startup-project src/Gasoft.Api/Gasoft.Api.csproj \
-  --context AppDbContext
+curl http://localhost:5035/health
 ```
+
+### 5. Start the frontend
+
+In a second terminal:
 
 ```sh
 cd frontend
 npm ci
 npm start
+```
+
+Open [http://localhost:4200](http://localhost:4200). The Angular development server proxies `/api` requests to the local API at `http://localhost:5035`.
+
+Create a workspace through the registration page, then sign in and choose a company to use the application.
+
+## Tests and production build
+
+Run backend tests from the repository root:
+
+```sh
+dotnet test Gasoft.slnx --configuration Release
+```
+
+The PostgreSQL outbox integration tests run when `GASOFT_TEST_POSTGRES` points to a disposable PostgreSQL test database. They create and drop isolated schemas and should not use the application database.
+
+Run frontend tests and build from `frontend/`:
+
+```sh
+npm test -- --watch=false
+npm run build
+```
+
+The production build checks the compressed initial asset budget. To run the Playwright smoke test, install Chromium once and run the test script:
+
+```sh
+npx playwright install chromium
+npm run test:e2e
 ```

@@ -100,6 +100,7 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Message = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
                     Category = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
+                    EventType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false, defaultValue: "legacy"),
                     Link = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     ReadAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
@@ -109,6 +110,7 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Notifications", x => x.Id);
+                    table.UniqueConstraint("AK_Notifications_TenantId_Id", x => new { x.TenantId, x.Id });
                 });
 
             migrationBuilder.CreateTable(
@@ -137,6 +139,25 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_TaxJurisdictions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TenantEmailConfigurations",
+                columns: table => new
+                {
+                    TenantId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    SmtpHost = table.Column<string>(type: "character varying(253)", maxLength: 253, nullable: false),
+                    SmtpPort = table.Column<int>(type: "integer", nullable: false),
+                    SmtpUsername = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    ProtectedSmtpPassword = table.Column<string>(type: "character varying(8192)", maxLength: 8192, nullable: true),
+                    FromEmail = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
+                    FromName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TenantEmailConfigurations", x => x.TenantId);
                 });
 
             migrationBuilder.CreateTable(
@@ -275,6 +296,27 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "NotificationPreferences",
+                columns: table => new
+                {
+                    TenantId = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    EventType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    InAppEnabled = table.Column<bool>(type: "boolean", nullable: false),
+                    EmailEnabled = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NotificationPreferences", x => new { x.TenantId, x.UserId, x.EventType });
+                    table.ForeignKey(
+                        name: "FK_NotificationPreferences_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ExchangeRates",
                 columns: table => new
                 {
@@ -301,6 +343,38 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         principalTable: "Currencies",
                         principalColumn: "Code",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "NotificationEmailOutbox",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    NotificationId = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    EventType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Message = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    AttemptCount = table.Column<int>(type: "integer", nullable: false),
+                    NextAttemptAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    LeaseExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    SentAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    LastError = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    TenantId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NotificationEmailOutbox", x => x.Id);
+                    table.CheckConstraint("CK_NotificationEmailOutbox_Attempts", "\"AttemptCount\" >= 0");
+                    table.CheckConstraint("CK_NotificationEmailOutbox_Status", "\"Status\" IN ('Pending', 'Processing', 'Sent', 'Failed')");
+                    table.ForeignKey(
+                        name: "FK_NotificationEmailOutbox_Notifications_TenantId_Notification~",
+                        columns: x => new { x.TenantId, x.NotificationId },
+                        principalTable: "Notifications",
+                        principalColumns: new[] { "TenantId", "Id" },
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -548,6 +622,36 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         principalTable: "Companies",
                         principalColumns: new[] { "TenantId", "Id" },
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PosSettings",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CompanyId = table.Column<long>(type: "bigint", nullable: false),
+                    WarehouseId = table.Column<long>(type: "bigint", nullable: false),
+                    JournalId = table.Column<long>(type: "bigint", nullable: false),
+                    AccountingPeriodId = table.Column<long>(type: "bigint", nullable: false),
+                    RevenueAccountId = table.Column<long>(type: "bigint", nullable: false),
+                    ReceivableAccountId = table.Column<long>(type: "bigint", nullable: false),
+                    SettlementAccountId = table.Column<long>(type: "bigint", nullable: false),
+                    TaxCodeId = table.Column<long>(type: "bigint", nullable: true),
+                    TaxAccountId = table.Column<long>(type: "bigint", nullable: true),
+                    InventoryAccountId = table.Column<long>(type: "bigint", nullable: false),
+                    CostOfGoodsSoldAccountId = table.Column<long>(type: "bigint", nullable: false),
+                    TenantId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PosSettings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PosSettings_Companies_TenantId_CompanyId",
+                        columns: x => new { x.TenantId, x.CompanyId },
+                        principalTable: "Companies",
+                        principalColumns: new[] { "TenantId", "Id" },
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1066,6 +1170,40 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CompanyItemPrices",
+                columns: table => new
+                {
+                    TenantId = table.Column<long>(type: "bigint", nullable: false),
+                    CompanyId = table.Column<long>(type: "bigint", nullable: false),
+                    ItemId = table.Column<long>(type: "bigint", nullable: false),
+                    UnitSellingPrice = table.Column<decimal>(type: "numeric(20,6)", precision: 20, scale: 6, nullable: true),
+                    CurrencyCode = table.Column<string>(type: "character(3)", fixedLength: true, maxLength: 3, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CompanyItemPrices", x => new { x.TenantId, x.CompanyId, x.ItemId });
+                    table.CheckConstraint("CK_CompanyItemPrices_UnitSellingPrice", "\"UnitSellingPrice\" IS NULL OR \"UnitSellingPrice\" >= 0");
+                    table.ForeignKey(
+                        name: "FK_CompanyItemPrices_Companies_TenantId_CompanyId",
+                        columns: x => new { x.TenantId, x.CompanyId },
+                        principalTable: "Companies",
+                        principalColumns: new[] { "TenantId", "Id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CompanyItemPrices_Currencies_CurrencyCode",
+                        column: x => x.CurrencyCode,
+                        principalTable: "Currencies",
+                        principalColumn: "Code",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CompanyItemPrices_Items_TenantId_ItemId",
+                        columns: x => new { x.TenantId, x.ItemId },
+                        principalTable: "Items",
+                        principalColumns: new[] { "TenantId", "Id" },
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "BankAccounts",
                 columns: table => new
                 {
@@ -1151,6 +1289,7 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     TotalDebit = table.Column<decimal>(type: "numeric(20,6)", precision: 20, scale: 6, nullable: false),
                     TotalCredit = table.Column<decimal>(type: "numeric(20,6)", precision: 20, scale: 6, nullable: false),
                     Revision = table.Column<int>(type: "integer", nullable: false),
+                    ReversalOfEntryId = table.Column<long>(type: "bigint", nullable: true),
                     TenantId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
@@ -1161,6 +1300,12 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                         name: "FK_JournalEntries_AccountingPeriods_TenantId_CompanyId_Account~",
                         columns: x => new { x.TenantId, x.CompanyId, x.AccountingPeriodId },
                         principalTable: "AccountingPeriods",
+                        principalColumns: new[] { "TenantId", "CompanyId", "Id" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_JournalEntries_JournalEntries_TenantId_CompanyId_ReversalOf~",
+                        columns: x => new { x.TenantId, x.CompanyId, x.ReversalOfEntryId },
+                        principalTable: "JournalEntries",
                         principalColumns: new[] { "TenantId", "CompanyId", "Id" },
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -1658,6 +1803,8 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                     TaxTotal = table.Column<decimal>(type: "numeric(20,6)", precision: 20, scale: 6, nullable: false),
                     GrandTotal = table.Column<decimal>(type: "numeric(20,6)", precision: 20, scale: 6, nullable: false),
                     AllocatedTotal = table.Column<decimal>(type: "numeric(20,6)", precision: 20, scale: 6, nullable: false),
+                    CreditedTotal = table.Column<decimal>(type: "numeric(20,6)", precision: 20, scale: 6, nullable: false),
+                    RefundedTotal = table.Column<decimal>(type: "numeric(20,6)", precision: 20, scale: 6, nullable: false),
                     Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Revision = table.Column<int>(type: "integer", nullable: false),
                     TenantId = table.Column<long>(type: "bigint", nullable: false)
@@ -1666,7 +1813,7 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_SalesInvoices", x => x.Id);
                     table.UniqueConstraint("AK_SalesInvoices_TenantId_CompanyId_Id", x => new { x.TenantId, x.CompanyId, x.Id });
-                    table.CheckConstraint("CK_SalesInvoices_Totals", "\"NetTotal\" >= 0 AND \"TaxTotal\" >= 0 AND \"GrandTotal\" = \"NetTotal\" + \"TaxTotal\" AND \"AllocatedTotal\" >= 0 AND \"AllocatedTotal\" <= \"GrandTotal\"");
+                    table.CheckConstraint("CK_SalesInvoices_Totals", "\"NetTotal\" >= 0 AND \"TaxTotal\" >= 0 AND \"GrandTotal\" = \"NetTotal\" + \"TaxTotal\" AND \"AllocatedTotal\" >= 0 AND \"AllocatedTotal\" <= \"GrandTotal\" AND \"CreditedTotal\" >= 0 AND \"CreditedTotal\" <= \"GrandTotal\" AND \"RefundedTotal\" >= 0 AND \"RefundedTotal\" <= \"CreditedTotal\"");
                     table.ForeignKey(
                         name: "FK_SalesInvoices_Companies_TenantId_CompanyId",
                         columns: x => new { x.TenantId, x.CompanyId },
@@ -2728,6 +2875,16 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_CompanyItemPrices_CurrencyCode",
+                table: "CompanyItemPrices",
+                column: "CurrencyCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CompanyItemPrices_TenantId_ItemId",
+                table: "CompanyItemPrices",
+                columns: new[] { "TenantId", "ItemId" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CompanyUsers_TenantId_UserId",
                 table: "CompanyUsers",
                 columns: new[] { "TenantId", "UserId" });
@@ -3017,6 +3174,12 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 columns: new[] { "TenantId", "CompanyId", "JournalId" });
 
             migrationBuilder.CreateIndex(
+                name: "UX_JournalEntries_TenantId_CompanyId_ReversalOfEntryId",
+                table: "JournalEntries",
+                columns: new[] { "TenantId", "CompanyId", "ReversalOfEntryId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_JournalLines_TenantId_CompanyId_AccountId",
                 table: "JournalLines",
                 columns: new[] { "TenantId", "CompanyId", "AccountId" });
@@ -3041,6 +3204,22 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 table: "Journals",
                 columns: new[] { "TenantId", "CompanyId", "Code" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationEmailOutbox_Status_NextAttemptAt_LeaseExpiresAt",
+                table: "NotificationEmailOutbox",
+                columns: new[] { "Status", "NextAttemptAt", "LeaseExpiresAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationEmailOutbox_TenantId_NotificationId",
+                table: "NotificationEmailOutbox",
+                columns: new[] { "TenantId", "NotificationId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationPreferences_UserId",
+                table: "NotificationPreferences",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_TenantId_UserId_DismissedAt_CreatedAt",
@@ -3098,6 +3277,12 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 name: "IX_Payments_TenantId_PartyId",
                 table: "Payments",
                 columns: new[] { "TenantId", "PartyId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PosSettings_TenantId_CompanyId",
+                table: "PosSettings",
+                columns: new[] { "TenantId", "CompanyId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_PurchaseBillLines_TaxCodeId",
@@ -3371,192 +3556,11 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 table: "Warehouses",
                 columns: new[] { "TenantId", "CompanyId", "Code" },
                 unique: true);
-
-            migrationBuilder.CreateTable(
-                name: "PosSettings",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CompanyId = table.Column<long>(type: "bigint", nullable: false),
-                    WarehouseId = table.Column<long>(type: "bigint", nullable: false),
-                    JournalId = table.Column<long>(type: "bigint", nullable: false),
-                    AccountingPeriodId = table.Column<long>(type: "bigint", nullable: false),
-                    RevenueAccountId = table.Column<long>(type: "bigint", nullable: false),
-                    ReceivableAccountId = table.Column<long>(type: "bigint", nullable: false),
-                    SettlementAccountId = table.Column<long>(type: "bigint", nullable: false),
-                    TaxCodeId = table.Column<long>(type: "bigint", nullable: true),
-                    TaxAccountId = table.Column<long>(type: "bigint", nullable: true),
-                    InventoryAccountId = table.Column<long>(type: "bigint", nullable: false),
-                    CostOfGoodsSoldAccountId = table.Column<long>(type: "bigint", nullable: false),
-                    TenantId = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PosSettings", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PosSettings_Companies_TenantId_CompanyId",
-                        columns: x => new { x.TenantId, x.CompanyId },
-                        principalTable: "Companies",
-                        principalColumns: new[] { "TenantId", "Id" },
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PosSettings_TenantId_CompanyId",
-                table: "PosSettings",
-                columns: new[] { "TenantId", "CompanyId" },
-                unique: true);
-
-            migrationBuilder.CreateTable(
-                name: "CompanyItemPrices",
-                columns: table => new
-                {
-                    TenantId = table.Column<long>(type: "bigint", nullable: false),
-                    CompanyId = table.Column<long>(type: "bigint", nullable: false),
-                    ItemId = table.Column<long>(type: "bigint", nullable: false),
-                    UnitSellingPrice = table.Column<decimal>(type: "numeric(20,6)", precision: 20, scale: 6, nullable: true),
-                    CurrencyCode = table.Column<string>(type: "character(3)", fixedLength: true, maxLength: 3, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CompanyItemPrices", x => new { x.TenantId, x.CompanyId, x.ItemId });
-                    table.CheckConstraint("CK_CompanyItemPrices_UnitSellingPrice", "\"UnitSellingPrice\" IS NULL OR \"UnitSellingPrice\" >= 0");
-                    table.ForeignKey(
-                        name: "FK_CompanyItemPrices_Companies_TenantId_CompanyId",
-                        columns: x => new { x.TenantId, x.CompanyId },
-                        principalTable: "Companies",
-                        principalColumns: new[] { "TenantId", "Id" },
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_CompanyItemPrices_Currencies_CurrencyCode",
-                        column: x => x.CurrencyCode,
-                        principalTable: "Currencies",
-                        principalColumn: "Code",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_CompanyItemPrices_Items_TenantId_ItemId",
-                        columns: x => new { x.TenantId, x.ItemId },
-                        principalTable: "Items",
-                        principalColumns: new[] { "TenantId", "Id" },
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CompanyItemPrices_CurrencyCode",
-                table: "CompanyItemPrices",
-                column: "CurrencyCode");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CompanyItemPrices_TenantId_ItemId",
-                table: "CompanyItemPrices",
-                columns: new[] { "TenantId", "ItemId" });
-
-            migrationBuilder.AddColumn<long>(
-                name: "ReversalOfEntryId",
-                table: "JournalEntries",
-                type: "bigint",
-                nullable: true);
-
-            migrationBuilder.CreateIndex(
-                name: "UX_JournalEntries_TenantId_CompanyId_ReversalOfEntryId",
-                table: "JournalEntries",
-                columns: new[] { "TenantId", "CompanyId", "ReversalOfEntryId" },
-                unique: true);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_JournalEntries_JournalEntries_TenantId_CompanyId_ReversalOf~",
-                table: "JournalEntries",
-                columns: new[] { "TenantId", "CompanyId", "ReversalOfEntryId" },
-                principalTable: "JournalEntries",
-                principalColumns: new[] { "TenantId", "CompanyId", "Id" },
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddColumn<string>(
-                name: "EventType",
-                table: "Notifications",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: false,
-                defaultValue: "legacy");
-
-            migrationBuilder.CreateTable(
-                name: "NotificationPreferences",
-                columns: table => new
-                {
-                    TenantId = table.Column<long>(type: "bigint", nullable: false),
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
-                    EventType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    InAppEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    EmailEnabled = table.Column<bool>(type: "boolean", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_NotificationPreferences", x => new { x.TenantId, x.UserId, x.EventType });
-                    table.ForeignKey(
-                        name: "FK_NotificationPreferences_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_NotificationPreferences_UserId",
-                table: "NotificationPreferences",
-                column: "UserId");
-
-            migrationBuilder.CreateTable(
-                name: "TenantEmailConfigurations",
-                columns: table => new
-                {
-                    TenantId = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    SmtpHost = table.Column<string>(type: "character varying(253)", maxLength: 253, nullable: false),
-                    SmtpPort = table.Column<int>(type: "integer", nullable: false),
-                    SmtpUsername = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
-                    ProtectedSmtpPassword = table.Column<string>(type: "character varying(8192)", maxLength: 8192, nullable: true),
-                    FromEmail = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
-                    FromName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TenantEmailConfigurations", x => x.TenantId);
-                });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "NotificationPreferences");
-
-            migrationBuilder.DropTable(
-                name: "TenantEmailConfigurations");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_JournalEntries_JournalEntries_TenantId_CompanyId_ReversalOf~",
-                table: "JournalEntries");
-
-            migrationBuilder.DropIndex(
-                name: "UX_JournalEntries_TenantId_CompanyId_ReversalOfEntryId",
-                table: "JournalEntries");
-
-            migrationBuilder.DropColumn(
-                name: "ReversalOfEntryId",
-                table: "JournalEntries");
-
-            migrationBuilder.DropColumn(
-                name: "EventType",
-                table: "Notifications");
-
-            migrationBuilder.DropTable(
-                name: "CompanyItemPrices");
-
-            migrationBuilder.DropTable(
-                name: "PosSettings");
-
             migrationBuilder.DropTable(
                 name: "AccountingPeriodStatusChanges");
 
@@ -3583,6 +3587,9 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "BudgetLines");
+
+            migrationBuilder.DropTable(
+                name: "CompanyItemPrices");
 
             migrationBuilder.DropTable(
                 name: "CompanyUsers");
@@ -3621,13 +3628,19 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
                 name: "InventoryValuationLayers");
 
             migrationBuilder.DropTable(
-                name: "Notifications");
+                name: "NotificationEmailOutbox");
+
+            migrationBuilder.DropTable(
+                name: "NotificationPreferences");
 
             migrationBuilder.DropTable(
                 name: "PartyAddresses");
 
             migrationBuilder.DropTable(
                 name: "PaymentAllocations");
+
+            migrationBuilder.DropTable(
+                name: "PosSettings");
 
             migrationBuilder.DropTable(
                 name: "PurchaseBillLines");
@@ -3640,6 +3653,9 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "TaxRates");
+
+            migrationBuilder.DropTable(
+                name: "TenantEmailConfigurations");
 
             migrationBuilder.DropTable(
                 name: "TenantTaxRegistrations");
@@ -3673,6 +3689,9 @@ namespace Gasoft.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "StockMovements");
+
+            migrationBuilder.DropTable(
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "Payments");
